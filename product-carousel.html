@@ -1,0 +1,965 @@
+<!-- Product Carousel Section -->
+<div class="product-carousel-section">
+  <div class="container">
+    <h2 class="section-title">{{ section.settings.section_title | default: 'Explore our bestsellers' }}</h2>
+
+    <div class="carousel-wrapper">
+      <button class="carousel-btn carousel-btn--prev" onclick="scrollCarousel(-1)">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+
+      <div class="product-carousel" id="productCarousel">
+        {% assign collection = collections[section.settings.collection] %}
+        {% if collection == blank %}
+          {% assign collection = collections.all %}
+        {% endif %}
+        {% for product in collection.products limit: section.settings.products_limit %}
+          <div class="product-card">
+            <!-- Status Indicators -->
+            {% if product.available == false %}
+              <div class="status-badge status-badge--out-of-stock">{{ section.settings.out_of_stock_badge_text }}</div>
+            {% elsif product.compare_at_price > product.price %}
+              <div class="status-badge status-badge--sale">{{ section.settings.sale_badge_text }}</div>
+            {% elsif product.tags contains section.settings.new_product_tag %}
+              <div class="status-badge status-badge--new">{{ section.settings.new_badge_text }}</div>
+            {% elsif product.tags contains section.settings.editors_pick_tag %}
+              <div class="status-badge status-badge--editors-pick">{{ section.settings.editors_pick_badge_text }}</div>
+            {% endif %}
+
+            <!-- Product Image -->
+            <div class="product-image">
+              {% if product.featured_image %}
+                <a href="{{ product.url }}" style="background-color:transparent;"> <img src="{{ product.featured_image | img_url: '400x400' }}"
+                     alt="{{ product.featured_image.alt | escape }}"
+                     loading="lazy"></a>
+              {% else %}
+                <div class="no-image">No image available</div>
+              {% endif %}
+            </div>
+
+            <!-- Product Info -->
+            <div class="product-info">
+             <div class="product-content">
+              <a href="{{ product.url }}"><h3 class="product-title">{{ product.title }}</h3></a>
+
+              <!-- Mini Description from metafield -->
+              {% if product.metafields.custom.mini_description %}
+                <p class="product-mini-description">{{ product.metafields.custom.mini_description }}</p>
+              {% endif %}
+             </div>
+              <!-- Star Rating (if enabled and metafield exists) -->
+              {% if section.settings.show_ratings %}
+                {% assign rating_namespace = section.settings.rating_metafield_namespace %}
+                {% assign rating_key = section.settings.rating_metafield_key %}
+                {% assign count_key = section.settings.review_count_metafield_key %}
+
+                {% if product.metafields[rating_namespace][rating_key] %}
+                  <div class="rating">
+                    {% assign rating = product.metafields[rating_namespace][rating_key] | times: 1 %}
+                    {% assign review_count = product.metafields[rating_namespace][count_key] | times: 1 %}
+
+                    <div class="stars">
+                      {% for i in (1..5) %}
+                        {% if i <= rating %}
+                          <span class="star star--filled">★</span>
+                        {% else %}
+                          <span class="star">★</span>
+                        {% endif %}
+                      {% endfor %}
+                    </div>
+                    <span class="review-count">{{ review_count }}</span>
+                  </div>
+                {% endif %}
+              {% endif %}
+
+              <!-- Variant Options (if enabled) -->
+              {% if section.settings.show_variant_options and product.variants.size > 1 %}
+                <div class="product-options">
+                  <!-- Store all variant data in a hidden script -->
+                  <script type="application/json" class="variant-data">
+                    {{ product.variants | json }}
+                  </script>
+                  {% for option in product.options_with_values %}
+                    <div class="option-group">
+                      <!--<span class="option-label">{{ option.name }}:</span>-->
+                      <div class="size-options">
+                        {% for value in option.values %}
+                          <button class="size-btn"
+                                  data-option-position="{{ option.position }}"
+                                  data-option-value="{{ value | escape }}"
+                                  onclick="selectVariant(this)"
+                                  {% if forloop.first %}data-selected="true"{% endif %}>
+                            {{ value }}
+                          </button>
+                        {% endfor %}
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+
+              <!-- Add to Cart Button -->
+              <div class="product-actions">
+                <div class="button-container" style="background-color:{{section.settings.button_color}} !important;">
+                  <button class="add-to-cart-btn"
+                          data-variant-id="{{ product.variants.first.id }}"
+                          onclick="addToCart(this)">
+                    <span>{{ section.settings.add_to_cart_text }}</span>
+                    <span class="variant-price">
+                      {% if product.compare_at_price > product.price %}
+                        ${{ product.price | money_without_currency }}
+                      {% else %}
+                        ${{ product.price | money_without_currency }}
+                      {% endif %}
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <button class="carousel-btn carousel-btn--next" onclick="scrollCarousel(1)">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Carousel Dots -->
+    <div class="carousel-dots">
+      {% for i in (1..6) %}
+        <button class="dot {% if forloop.first %}dot--active{% endif %}"
+                onclick="goToSlide({{ forloop.index0 }})"></button>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<style>
+.product-carousel-section {
+  padding: 2% 0;
+  background: #fff;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 80px; /* Increased padding to give space for arrows */
+}
+
+.section-title {
+  text-align: center;
+  font-size: 2rem; /* 32px */
+  margin-bottom: 40px;
+  color: #333;
+  font-weight: 400;
+}
+
+.carousel-wrapper {
+  position: relative;
+  margin: 0 40px;
+}
+
+.product-carousel {
+  display: flex;
+  gap: 20px;
+  overflow-x: scroll;
+  width:100vw;
+  justify-self: center;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 20px 0;
+}
+
+.product-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.product-card {
+  flex: 0 0 280px;
+  background: #fff;
+  border-radius: 8px;
+  position: relative;
+  transition: transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+}
+
+.status-badge {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  z-index: 2;
+  letter-spacing: 0.5px;
+}
+
+.status-badge--new {
+  background: {{ section.settings.new_badge_color | default: '#ff6b6b' }};
+  color: white;
+}
+
+.status-badge--sale {
+  background: {{ section.settings.sale_badge_color | default: '#ff9800' }};
+  color: white;
+}
+
+.status-badge--out-of-stock {
+  background: {{ section.settings.out_of_stock_badge_color | default: '#999' }};
+  color: white;
+}
+
+.status-badge--editors-pick {
+  background: {{ section.settings.editors_pick_badge_color | default: '#8bc34a' }};
+  color: white;
+}
+
+.product-image {
+  width: 100%;
+  height: 300px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.no-image {
+  color: #999;
+  font-size: 0.9rem;
+}
+
+.product-info {
+  padding: 0 10px 15px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.product-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 2px;
+  color: #333;
+  line-height: 1;
+}
+
+.product-description {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 2px;
+  line-height: 1;
+
+}
+
+.product-mini-description{
+    margin-block: 5px !important;
+  font-size:14px;
+}
+
+  .product-content{
+    height: 100%;
+  }
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.stars {
+  display: flex;
+  gap: 2px;
+}
+
+.star {
+  color: #ddd;
+  font-size: 1rem;
+}
+
+.star--filled {
+  color: #ffd700;
+}
+
+.review-count {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.product-options {
+  margin-bottom: 15px;
+}
+
+.variant-data {
+  display: none;
+}
+
+.option-group {
+  margin-bottom: 8px;
+}
+
+.option-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.size-options {
+  display: flex;
+  gap: 8px;
+  font-size:14px;
+  flex-wrap: wrap;
+}
+
+.size-btn {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 999px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.size-btn:hover {
+  border-color: #333;
+}
+
+.size-btn:after {
+  border-color: #333;
+}
+
+.size-btn[data-selected="true"] {
+  background: #333;
+  color: white;
+  border-color: #333;
+}
+
+.product-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.button-container {
+  display: flex;
+  border-radius: 8px;
+  overflow: hidden;
+  min-height: 48px;
+  width: 100%;
+}
+
+.add-to-cart-btn {
+  width: 100%;
+  padding: 12px;
+  background-color:transparent;
+  color: #333;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.add-to-cart-btn:hover {
+  background: rgba(0,0,0,0.05);
+}
+
+.add-to-cart-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10; /* Increased z-index */
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1); /* Added shadow for visibility */
+}
+
+.carousel-btn:hover {
+  background: #f8f9fa;
+  border-color: #333;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.carousel-btn--prev {
+  left: -60px;
+}
+
+.carousel-btn--next {
+  right: -60px;
+}
+
+.carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 30px;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ddd;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.dot--active {
+  background: #333;
+}
+
+@media (max-width: 768px) {
+  .product-card {
+    flex: 0 0 250px;
+  }
+
+
+  .carousel-btn {
+    display: none;
+  }
+
+  .carousel-wrapper {
+    margin: 0px;
+  }
+
+  .container {
+    padding: 0px;
+  }
+
+  .section-title {
+    font-size: 1.5rem; /* 24px */
+  }
+}
+</style>
+
+<script>
+// Simple, working variant selection and cart add
+function selectVariant(button) {
+  const optionGroup = button.closest('.option-group');
+  const productCard = button.closest('.product-card');
+  const addToCartBtn = productCard.querySelector('.add-to-cart-btn');
+
+  // Remove selected from other buttons in this group
+  optionGroup.querySelectorAll('.size-btn').forEach(btn => {
+    btn.removeAttribute('data-selected');
+  });
+
+  // Mark this button as selected
+  button.setAttribute('data-selected', 'true');
+
+  // Get the variant data from the script tag
+  const variantDataScript = productCard.querySelector('.variant-data');
+  if (!variantDataScript) return;
+
+  try {
+    const variants = JSON.parse(variantDataScript.textContent);
+    const selectedValue = button.getAttribute('data-option-value');
+
+    // Find matching variant
+    const matchingVariant = variants.find(variant =>
+      variant.option1 === selectedValue && variant.available
+    );
+
+    if (matchingVariant) {
+      // Update button with new variant ID and price
+      addToCartBtn.setAttribute('data-variant-id', matchingVariant.id);
+      const priceElement = addToCartBtn.querySelector('.variant-price');
+      if (priceElement) {
+        priceElement.textContent = '$' + (matchingVariant.price / 100).toFixed(2);
+      }
+      console.log('Selected variant:', matchingVariant.id, 'Price:', matchingVariant.price);
+    }
+  } catch (error) {
+    console.error('Error selecting variant:', error);
+  }
+}
+
+function addToCart(button) {
+  const variantId = button.getAttribute('data-variant-id');
+
+  if (!variantId) {
+    alert('Please select a variant');
+    return;
+  }
+
+  console.log('Adding variant to cart:', variantId);
+
+  // Show loading state
+  const originalContent = button.innerHTML;
+  button.innerHTML = '<span>Adding...</span>';
+  button.disabled = true;
+
+  // Get cart element
+  const cart = document.querySelector('cart-notification') || document.querySelector('cart-drawer');
+
+  // Prepare form data like your working product-form.js does
+  const formData = new FormData();
+  formData.append('id', variantId);
+  formData.append('quantity', '1');
+
+  if (cart) {
+    // Add sections exactly like your working theme
+    try {
+      const sectionsToRender = cart.getSectionsToRender().map((section) => section.id);
+      formData.append('sections', sectionsToRender);
+      formData.append('sections_url', window.location.pathname);
+      cart.setActiveElement(document.activeElement);
+    } catch (e) {
+      console.log('Cart sections error (non-critical):', e);
+    }
+  }
+
+  // Use AJAX instead of form submission to avoid redirect
+  fetch('/cart/add.js', {
+    method: 'POST',
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    body: formData
+  })
+  .then(response => response.json())
+  .then(response => {
+    console.log('Cart add response:', response);
+
+    if (response.status) {
+      throw new Error(response.description || 'Error adding to cart');
+    }
+
+    // Show success
+    button.innerHTML = '<span>Added!</span>';
+
+    if (!cart) {
+      // No cart drawer, redirect to cart page
+      window.location = '/cart';
+      return;
+    }
+
+    // Use the exact same method as your working product-form.js
+    // Remove empty class before rendering
+    if (cart.classList.contains('is-empty')) {
+      cart.classList.remove('is-empty');
+    }
+
+    // This is the key - use renderContents exactly like your working theme
+    cart.renderContents(response);
+
+    // Reset button after delay
+    setTimeout(() => {
+      button.innerHTML = originalContent;
+      button.disabled = false;
+    }, 1500);
+  })
+  .catch(error => {
+    console.error('Error adding to cart:', error);
+    button.innerHTML = originalContent;
+    button.disabled = false;
+    alert('Error adding to cart: ' + error.message);
+  });
+}
+
+// ========================================
+// ENHANCED CAROUSEL WITH AUTO-SCROLL
+// ========================================
+
+// Carousel state management
+const CarouselAutoScroll = (function() {
+  let animationFrameId = null;
+  let isAutoScrollEnabled = {{ section.settings.auto_scroll | json }};
+  let autoScrollSpeed = {{ section.settings.auto_scroll_speed | default: 0.5 | json }};
+  let isHovered = false;
+  let isManuallyControlled = false;
+  let carousel = null;
+
+  // Initialize the auto-scroll system
+  function init() {
+    carousel = document.getElementById('productCarousel');
+    if (!carousel) return;
+
+    // Add hover listeners to pause auto-scroll
+    carousel.addEventListener('mouseenter', handleMouseEnter);
+    carousel.addEventListener('mouseleave', handleMouseLeave);
+
+    // Add manual scroll detection to stop auto-scroll
+    carousel.addEventListener('scroll', handleManualScroll, { passive: true });
+
+    // Add touch detection for mobile
+    carousel.addEventListener('touchstart', handleTouchStart, { passive: true });
+
+    // Start auto-scroll if enabled
+    if (isAutoScrollEnabled) {
+      startAutoScroll();
+    }
+  }
+
+  function handleMouseEnter() {
+    isHovered = true;
+  }
+
+  function handleMouseLeave() {
+    isHovered = false;
+  }
+
+  let scrollTimeout = null;
+  function handleManualScroll() {
+    // Detect if user is manually scrolling (not from our auto-scroll)
+    if (!animationFrameId) return; // Auto-scroll not running, ignore
+
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => {
+      // If scroll happened but we didn't initiate it via auto-scroll, stop auto-scroll
+      if (isManuallyControlled) {
+        stopAutoScroll();
+      }
+    }, 150);
+  }
+
+  function handleTouchStart() {
+    // User touched the carousel, stop auto-scroll
+    isManuallyControlled = true;
+    stopAutoScroll();
+  }
+
+  function startAutoScroll() {
+    if (!carousel || animationFrameId) return;
+
+    function animate() {
+      if (!isHovered && !isManuallyControlled) {
+        // Smoothly scroll by a small amount
+        carousel.scrollLeft += autoScrollSpeed;
+
+        // Check if we've reached the end, loop back to start
+        const maxScroll = carousel.scrollWidth - carousel.clientWidth;
+        if (carousel.scrollLeft >= maxScroll) {
+          carousel.scrollLeft = 0;
+        }
+      }
+
+      animationFrameId = requestAnimationFrame(animate);
+    }
+
+    animationFrameId = requestAnimationFrame(animate);
+  }
+
+  function stopAutoScroll() {
+    if (animationFrameId) {
+      cancelAnimationFrame(animationFrameId);
+      animationFrameId = null;
+    }
+  }
+
+  function resumeAutoScroll() {
+    isManuallyControlled = false;
+    if (isAutoScrollEnabled && !animationFrameId) {
+      startAutoScroll();
+    }
+  }
+
+  return {
+    init: init,
+    stop: stopAutoScroll,
+    resume: resumeAutoScroll
+  };
+})();
+
+// Carousel manual control functions
+function scrollCarousel(direction) {
+  const carousel = document.getElementById('productCarousel');
+  const scrollAmount = 300;
+  const newScrollPosition = carousel.scrollLeft + (direction * scrollAmount);
+
+  // Stop auto-scroll when user manually controls
+  CarouselAutoScroll.stop();
+
+  carousel.scrollTo({
+    left: newScrollPosition,
+    behavior: 'smooth'
+  });
+
+  updateActiveDot(newScrollPosition);
+}
+
+function updateActiveDot(scrollPosition) {
+  const cardWidth = 300;
+  const currentSlide = Math.round(scrollPosition / cardWidth);
+  const dots = document.querySelectorAll('.dot');
+
+  dots.forEach((dot, index) => {
+    dot.classList.toggle('dot--active', index === currentSlide);
+  });
+}
+
+function goToSlide(index) {
+  const carousel = document.getElementById('productCarousel');
+  const cardWidth = 300;
+  const scrollPosition = index * cardWidth;
+
+  // Stop auto-scroll when user manually controls
+  CarouselAutoScroll.stop();
+
+  carousel.scrollTo({
+    left: scrollPosition,
+    behavior: 'smooth'
+  });
+
+  updateActiveDot(scrollPosition);
+}
+
+// Initialize carousel
+document.addEventListener('DOMContentLoaded', function() {
+  const carousel = document.getElementById('productCarousel');
+  if (carousel) {
+    // Update dots on scroll
+    carousel.addEventListener('scroll', function() {
+      updateActiveDot(carousel.scrollLeft);
+    });
+
+    // Initialize auto-scroll system
+    CarouselAutoScroll.init();
+  }
+});
+</script>
+
+{% schema %}
+{
+  "name": "Product Carousel",
+  "tag": "section",
+  "class": "product-carousel-section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "section_title",
+      "label": "Section Title",
+      "default": "Explore our bestsellers"
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Collection",
+      "info": "Select the collection to display products from"
+    },
+    {
+      "type": "range",
+      "id": "products_limit",
+      "label": "Number of products to show",
+      "min": 4,
+      "max": 20,
+      "step": 1,
+      "default": 10
+    },
+    {
+      "type": "checkbox",
+      "id": "show_ratings",
+      "label": "Show product ratings",
+      "default": true,
+      "info": "Requires review metafields to be set up"
+    },
+    {
+      "type": "text",
+      "id": "rating_metafield_namespace",
+      "label": "Rating metafield namespace",
+      "default": "reviews",
+      "info": "Namespace for rating metafield (e.g., 'reviews')"
+    },
+    {
+      "type": "text",
+      "id": "rating_metafield_key",
+      "label": "Rating metafield key",
+      "default": "rating",
+      "info": "Key for rating metafield (e.g., 'rating')"
+    },
+    {
+      "type": "text",
+      "id": "review_count_metafield_key",
+      "label": "Review count metafield key",
+      "default": "count",
+      "info": "Key for review count metafield (e.g., 'count')"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_variant_options",
+      "label": "Show variant options",
+      "default": true,
+      "info": "Display size/color options for products with variants"
+    },
+    {
+      "type": "header",
+      "content": "Auto-Scroll Settings"
+    },
+    {
+      "type": "checkbox",
+      "id": "auto_scroll",
+      "label": "Enable auto-scroll marquee",
+      "default": false,
+      "info": "Smoothly scrolls products continuously. Pauses on hover and stops when manually controlled."
+    },
+    {
+      "type": "range",
+      "id": "auto_scroll_speed",
+      "label": "Auto-scroll speed",
+      "min": 0.2,
+      "max": 2,
+      "step": 0.1,
+      "default": 0.5,
+      "info": "Speed in pixels per frame (0.2 = very slow, 2 = fast)"
+    },
+    {
+      "type": "header",
+      "content": "Status Badge Settings"
+    },
+    {
+      "type": "text",
+      "id": "new_product_tag",
+      "label": "Tag for 'NEW' products",
+      "default": "new",
+      "info": "Products with this tag will show a 'NEW' badge"
+    },
+    {
+      "type": "text",
+      "id": "editors_pick_tag",
+      "label": "Tag for 'Editor's Pick' products",
+      "default": "editors-pick",
+      "info": "Products with this tag will show an 'Editor's Pick' badge"
+    },
+    {
+      "type": "text",
+      "id": "new_badge_text",
+      "label": "NEW badge text",
+      "default": "NEW"
+    },
+    {
+      "type": "text",
+      "id": "sale_badge_text",
+      "label": "SALE badge text",
+      "default": "SALE"
+    },
+    {
+      "type": "text",
+      "id": "out_of_stock_badge_text",
+      "label": "Out of stock badge text",
+      "default": "OUT OF STOCK"
+    },
+    {
+      "type": "text",
+      "id": "editors_pick_badge_text",
+      "label": "Editor's Pick badge text",
+      "default": "Editor's Pick"
+    },
+    {
+      "type": "header",
+      "content": "Button Settings"
+    },
+    {
+      "type": "text",
+      "id": "add_to_cart_text",
+      "label": "Add to cart button text",
+      "default": "ADD TO BAG"
+    },
+    {
+      "type": "text",
+      "id": "out_of_stock_button_text",
+      "label": "Out of stock button text",
+      "default": "OUT OF STOCK"
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "new_badge_color",
+      "label": "NEW badge color",
+      "default": "#ff6b6b"
+    },
+    {
+      "type": "color",
+      "id": "sale_badge_color",
+      "label": "SALE badge color",
+      "default": "#ff9800"
+    },
+    {
+      "type": "color",
+      "id": "editors_pick_badge_color",
+      "label": "Editor's Pick badge color",
+      "default": "#8bc34a"
+    },
+    {
+      "type": "color",
+      "id": "out_of_stock_badge_color",
+      "label": "Out of stock badge color",
+      "default": "#999999"
+    },
+    {
+      "type": "color",
+      "id": "button_color",
+      "label": "Button background color",
+      "default": "#dae2c7"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Button text color",
+      "default": "#ffffff"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Product Carousel",
+      "settings": {
+        "section_title": "Explore our bestsellers",
+        "products_limit": 10,
+        "show_ratings": true,
+        "show_variant_options": true,
+        "auto_scroll": false,
+        "auto_scroll_speed": 0.5,
+        "new_product_tag": "new",
+        "editors_pick_tag": "editors-pick"
+      }
+    }
+  ]
+}
+{% endschema %}
