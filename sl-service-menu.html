@@ -261,7 +261,7 @@
               {% endif %}
               </h3>
               <span class="dotted-line"></span>
-              <span class="service-price">${{ block.settings.service_price }}</span>
+              <span class="service-price">{% if block.settings.is_complimentary %}Complimentary{% else %}${{ block.settings.service_price }}{% endif %}</span>
               {% if block.settings.show_button %}
                 <a href="{{ block.settings.button_link }}" class="book-button" target="_self">
                   {{ block.settings.button_text }}
@@ -835,6 +835,13 @@
           "label": "Price",
           "default": "55",
           "info": "Enter price without $"
+        },
+        {
+          "type": "checkbox",
+          "id": "is_complimentary",
+          "label": "Show as Complimentary",
+          "default": false,
+          "info": "When enabled, shows 'Complimentary' instead of price"
         },
         {
           "type": "checkbox",
