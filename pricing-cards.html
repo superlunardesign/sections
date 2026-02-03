@@ -1,4 +1,20 @@
 <!-- Pricing Cards Section -->
+{% if section.settings.enable_anchor %}
+<div id="{{ section.settings.anchor_id }}" class="section-anchor-wrapper">
+
+  {% if request.design_mode %}
+    <div style="background: #f0f8ff; border: 1px solid #4a90e2; padding: 15px; margin: 10px auto 20px; max-width: 500px; text-align: center; font-family: monospace; border-radius: 5px;">
+      <strong style="color: #333; display: block; margin-bottom: 8px;">🔗 Anchor Link Enabled</strong>
+      <code style="background: white; padding: 8px 12px; border-radius: 3px; display: inline-block; color: #4a90e2; font-size: 14px; user-select: all;">
+        #{{ section.settings.anchor_id }}
+      </code>
+      <p style="margin: 10px 0 0; color: #666; font-size: 12px; font-family: sans-serif;">
+        Copy this link for buttons/navigation to scroll to this section
+      </p>
+    </div>
+  {% endif %}
+{% endif %}
+
 <div class="pricing-cards-section">
   <!-- Background Image -->
   {% if section.settings.background_image != blank %}
@@ -85,7 +101,19 @@
   </div>
 </div>
 
+{% if section.settings.enable_anchor %}
+</div><!-- End anchor wrapper -->
+{% endif %}
+
 <style>
+/* Anchor offset for fixed headers */
+{% if section.settings.enable_anchor %}
+  #{{ section.settings.anchor_id }} {
+    scroll-margin-top: {{ section.settings.anchor_offset }}px;
+    display: block;
+  }
+{% endif %}
+
 .pricing-cards-section {
   position: relative;
   padding: {{ section.settings.padding_top }}px 20px {{ section.settings.padding_bottom }}px;
@@ -376,6 +404,47 @@
 }
 </style>
 
+{% if section.settings.enable_anchor %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    function scrollToSection() {
+      const hash = window.location.hash;
+      if (hash === '#{{ section.settings.anchor_id }}') {
+        const target = document.getElementById('{{ section.settings.anchor_id }}');
+        if (target) {
+          const actualSection = document.querySelector('#shopify-section-{{ section.id }}');
+          if (actualSection) {
+            const yOffset = -{{ section.settings.anchor_offset }};
+            const y = actualSection.getBoundingClientRect().top + window.pageYOffset + yOffset;
+            window.scrollTo({ top: y, behavior: 'smooth' });
+          }
+          return true;
+        }
+      }
+      return false;
+    }
+
+    document.addEventListener('click', function(e) {
+      const link = e.target.closest('a');
+      if (link) {
+        const href = link.getAttribute('href');
+        if (href === '#{{ section.settings.anchor_id }}') {
+          e.preventDefault();
+          history.pushState(null, null, '#{{ section.settings.anchor_id }}');
+          scrollToSection();
+        }
+      }
+    });
+
+    window.addEventListener('hashchange', scrollToSection);
+
+    if (window.location.hash === '#{{ section.settings.anchor_id }}') {
+      setTimeout(scrollToSection, 100);
+    }
+  });
+</script>
+{% endif %}
+
 {% schema %}
 {
   "name": "Pricing Cards",
@@ -439,6 +508,35 @@
       "label": "Padding Bottom",
       "min": 0,
       "max": 150,
+      "step": 10,
+      "default": 80,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Anchor Link Settings"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_anchor",
+      "label": "Enable Anchor Link",
+      "default": false,
+      "info": "Allow direct linking to this section"
+    },
+    {
+      "type": "text",
+      "id": "anchor_id",
+      "label": "Anchor ID",
+      "default": "pricing",
+      "info": "Use only letters, numbers, and hyphens. No spaces."
+    },
+    {
+      "type": "range",
+      "id": "anchor_offset",
+      "label": "Scroll Offset",
+      "info": "Pixels to offset scroll (useful for fixed headers)",
+      "min": 0,
+      "max": 200,
       "step": 10,
       "default": 80,
       "unit": "px"
