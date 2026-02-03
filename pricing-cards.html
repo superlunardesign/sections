@@ -2,14 +2,13 @@
 <div class="pricing-cards-section">
   <!-- Background Image -->
   {% if section.settings.background_image != blank %}
-    <div class="pricing-cards-bg">
+    <div class="pricing-cards-bg" style="background-color: {{ section.settings.overlay_color }};">
       <img src="{{ section.settings.background_image | image_url: width: 1920 }}"
            alt=""
+           style="opacity: {{ section.settings.overlay_opacity | times: 0.01 }};"
            loading="lazy">
     </div>
   {% endif %}
-
-  <div class="pricing-cards-overlay" style="background-color: {{ section.settings.overlay_color }}; opacity: {{ section.settings.overlay_opacity | times: 0.01 }};"></div>
 
   <div class="pricing-cards-container">
     <h2 class="pricing-cards-title" style="color: {{ section.settings.title_color }};">
@@ -106,15 +105,6 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-
-.pricing-cards-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
 }
 
 .pricing-cards-container {
