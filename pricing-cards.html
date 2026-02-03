@@ -1,0 +1,609 @@
+<!-- Pricing Cards Section -->
+<div class="pricing-cards-section">
+  <!-- Background Image -->
+  {% if section.settings.background_image != blank %}
+    <div class="pricing-cards-bg">
+      <img src="{{ section.settings.background_image | image_url: width: 1920 }}"
+           alt=""
+           loading="lazy">
+    </div>
+  {% endif %}
+
+  <div class="pricing-cards-overlay" style="background-color: {{ section.settings.overlay_color }}; opacity: {{ section.settings.overlay_opacity | times: 0.01 }};"></div>
+
+  <div class="pricing-cards-container">
+    <h2 class="pricing-cards-title" style="color: {{ section.settings.title_color }};">
+      {{ section.settings.section_title }}
+    </h2>
+
+    <div class="pricing-cards-grid">
+      {% for block in section.blocks %}
+        <div class="pricing-card-wrapper {% if block.settings.show_badge %}has-badge{% endif %}" {{ block.shopify_attributes }}>
+          <div class="pricing-card-badge-space">
+            {% if block.settings.show_badge %}
+              <span class="pricing-card-badge" style="color: {{ block.settings.badge_color }};">
+                ★ {{ block.settings.badge_text }}
+              </span>
+            {% endif %}
+          </div>
+
+          <div class="pricing-card">
+            <!-- Card Header -->
+            <div class="pricing-card-header" style="background-color: {{ block.settings.header_color }};">
+              <h3 class="pricing-card-name" style="color: {{ block.settings.header_text_color }};">
+                {{ block.settings.card_title }}
+              </h3>
+            </div>
+
+            <!-- Card Body -->
+            <div class="pricing-card-body">
+              <!-- Price -->
+              <div class="pricing-card-price">
+                <span class="price-currency">$</span><span class="price-amount">{{ block.settings.price }}</span>
+              </div>
+
+              <!-- Description -->
+              <div class="pricing-card-description">
+                {{ block.settings.description }}
+              </div>
+
+              <!-- Features List -->
+              {% if block.settings.features != blank %}
+                <ul class="pricing-card-features">
+                  {% assign features = block.settings.features | split: '|' %}
+                  {% for feature in features %}
+                    <li>{{ feature | strip }}</li>
+                  {% endfor %}
+                </ul>
+              {% endif %}
+
+              <!-- Duration -->
+              {% if block.settings.duration != blank %}
+                <div class="pricing-card-duration">
+                  {{ block.settings.duration }}
+                </div>
+              {% endif %}
+
+              <!-- CTA Button -->
+              <div class="pricing-card-actions">
+                <div class="button-container {% if block.settings.button_style == 'outlined' %}button-container--outlined{% endif %}" style="background-color: {% if block.settings.button_style == 'filled' %}{{ block.settings.button_color }}{% else %}transparent{% endif %}; border: 2px solid {{ block.settings.button_color }};">
+                  <a href="{{ block.settings.button_url }}"
+                     class="pricing-card-btn"
+                     style="color: {% if block.settings.button_style == 'filled' %}{{ block.settings.button_text_color }}{% else %}{{ block.settings.button_color }}{% endif %};">
+                    {{ block.settings.button_text }}
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<style>
+.pricing-cards-section {
+  position: relative;
+  padding: {{ section.settings.padding_top }}px 20px {{ section.settings.padding_bottom }}px;
+  min-height: 600px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.pricing-cards-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.pricing-cards-bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pricing-cards-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.pricing-cards-container {
+  position: relative;
+  z-index: 2;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.pricing-cards-title {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 400;
+  margin-bottom: 60px;
+}
+
+.pricing-cards-grid {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 40px;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.pricing-card-wrapper {
+  flex: 0 1 450px;
+  max-width: 450px;
+  display: flex;
+  flex-direction: column;
+}
+
+.pricing-card-badge-space {
+  height: 39px; /* Fixed height for alignment */
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.pricing-card-badge {
+  font-size: 1rem;
+  font-weight: 500;
+  padding-bottom: 15px;
+}
+
+.pricing-card {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.pricing-card-header {
+  padding: 25px 30px;
+  text-align: center;
+}
+
+.pricing-card-name {
+  font-size: 1.5rem;
+  font-weight: 400;
+  margin: 0;
+}
+
+.pricing-card-body {
+  padding: 30px 35px 40px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.pricing-card-price {
+  text-align: center;
+  margin-bottom: 25px;
+  line-height: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.price-currency {
+  font-size: 1.5rem;
+  line-height: 1;
+  margin-top: 0.5em;
+  margin-right: 2px;
+}
+
+.price-amount {
+  font-size: 5.5rem;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+.pricing-card-description {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.pricing-card-features {
+  list-style: disc;
+  padding-left: 20px;
+  margin: 0 0 25px 0;
+}
+
+.pricing-card-features li {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #333;
+  margin-bottom: 6px;
+}
+
+.pricing-card-duration {
+  text-align: center;
+  font-size: 1rem;
+  color: #333;
+  margin-bottom: 15px;
+  margin-top: auto;
+}
+
+.pricing-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pricing-card-actions .button-container {
+  display: flex;
+  border-radius: 30px;
+  overflow: hidden;
+  min-height: 48px;
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+  transition: all 0.2s ease;
+}
+
+.pricing-card-actions .button-container:hover {
+  opacity: 0.9;
+}
+
+.pricing-card-actions .button-container--outlined:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.pricing-card-btn {
+  width: 100%;
+  padding: 14px 30px;
+  background-color: transparent;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-decoration: none;
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .pricing-cards-grid {
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .pricing-card-wrapper {
+    flex: 0 1 100%;
+    max-width: 600px;
+    width: 100%;
+  }
+
+  .pricing-card-badge-space {
+    height: auto;
+    min-height: 0;
+  }
+
+  .pricing-card-wrapper:not(.has-badge) .pricing-card-badge-space {
+    display: none;
+  }
+
+  .pricing-card-badge {
+    padding-top: 20px;
+    padding-bottom: 15px;
+  }
+
+  .pricing-cards-title {
+    font-size: 2rem;
+    margin-bottom: 40px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .pricing-cards-section {
+    padding: {{ section.settings.padding_top | times: 0.6 | round }}px 15px {{ section.settings.padding_bottom | times: 0.6 | round }}px;
+    min-height: auto;
+  }
+
+  .pricing-cards-title {
+    font-size: 1.75rem;
+    margin-bottom: 30px;
+    line-height: 1.3;
+  }
+
+  .pricing-card-wrapper {
+    max-width: 100%;
+  }
+
+  .pricing-card-header {
+    padding: 20px 20px;
+  }
+
+  .pricing-card-name {
+    font-size: 1.25rem;
+  }
+
+  .pricing-card-body {
+    padding: 25px 20px 30px;
+  }
+
+  .price-currency {
+    font-size: 1.25rem;
+  }
+
+  .price-amount {
+    font-size: 4rem;
+  }
+
+  .pricing-card-description {
+    font-size: 0.95rem;
+  }
+
+  .pricing-card-features li {
+    font-size: 0.95rem;
+  }
+
+  .pricing-card-actions .button-container {
+    max-width: 100%;
+  }
+
+  .pricing-card-btn {
+    padding: 12px 25px;
+  }
+}
+</style>
+
+{% schema %}
+{
+  "name": "Pricing Cards",
+  "tag": "section",
+  "class": "pricing-cards-section-wrapper",
+  "settings": [
+    {
+      "type": "text",
+      "id": "section_title",
+      "label": "Section Title",
+      "default": "Choose Your Starting Point"
+    },
+    {
+      "type": "color",
+      "id": "title_color",
+      "label": "Title Color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "header",
+      "content": "Background"
+    },
+    {
+      "type": "image_picker",
+      "id": "background_image",
+      "label": "Background Image"
+    },
+    {
+      "type": "color",
+      "id": "overlay_color",
+      "label": "Overlay Color",
+      "default": "#000000"
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "label": "Overlay Opacity",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "default": 40,
+      "unit": "%"
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding Top",
+      "min": 0,
+      "max": 150,
+      "step": 10,
+      "default": 80,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding Bottom",
+      "min": 0,
+      "max": 150,
+      "step": 10,
+      "default": 80,
+      "unit": "px"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "pricing_card",
+      "name": "Pricing Card",
+      "settings": [
+        {
+          "type": "header",
+          "content": "Badge"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_badge",
+          "label": "Show Badge",
+          "default": false
+        },
+        {
+          "type": "text",
+          "id": "badge_text",
+          "label": "Badge Text",
+          "default": "Most Popular"
+        },
+        {
+          "type": "color",
+          "id": "badge_color",
+          "label": "Badge Color",
+          "default": "#ffffff"
+        },
+        {
+          "type": "header",
+          "content": "Card Header"
+        },
+        {
+          "type": "text",
+          "id": "card_title",
+          "label": "Card Title",
+          "default": "Service Name"
+        },
+        {
+          "type": "color",
+          "id": "header_color",
+          "label": "Header Background Color",
+          "default": "#9b7bb8"
+        },
+        {
+          "type": "color",
+          "id": "header_text_color",
+          "label": "Header Text Color",
+          "default": "#ffffff"
+        },
+        {
+          "type": "header",
+          "content": "Pricing"
+        },
+        {
+          "type": "text",
+          "id": "price",
+          "label": "Price (number only)",
+          "default": "65"
+        },
+        {
+          "type": "header",
+          "content": "Description"
+        },
+        {
+          "type": "textarea",
+          "id": "description",
+          "label": "Description",
+          "default": "Education-focused visit to review your skin, understand your acne, and build your personalized treatment plan."
+        },
+        {
+          "type": "textarea",
+          "id": "features",
+          "label": "Features (separate with |)",
+          "default": "Comprehensive skin analysis|Acne education & expectation setting|Sensitivity check for your skin|Personalized treatment plan creation|Homecare routine recommendations",
+          "info": "Enter each feature separated by a | character"
+        },
+        {
+          "type": "text",
+          "id": "duration",
+          "label": "Duration",
+          "default": "45 minutes"
+        },
+        {
+          "type": "header",
+          "content": "Button"
+        },
+        {
+          "type": "text",
+          "id": "button_text",
+          "label": "Button Text",
+          "default": "BOOK NOW"
+        },
+        {
+          "type": "url",
+          "id": "button_url",
+          "label": "Button URL"
+        },
+        {
+          "type": "select",
+          "id": "button_style",
+          "label": "Button Style",
+          "options": [
+            {
+              "value": "outlined",
+              "label": "Outlined"
+            },
+            {
+              "value": "filled",
+              "label": "Filled"
+            }
+          ],
+          "default": "outlined"
+        },
+        {
+          "type": "color",
+          "id": "button_color",
+          "label": "Button Color",
+          "default": "#9b7bb8"
+        },
+        {
+          "type": "color",
+          "id": "button_text_color",
+          "label": "Button Text Color (for filled)",
+          "default": "#ffffff"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Pricing Cards",
+      "blocks": [
+        {
+          "type": "pricing_card",
+          "settings": {
+            "card_title": "Pre-Treatment Assessment",
+            "header_color": "#9b7bb8",
+            "price": "65",
+            "description": "Education-focused visit to review your skin, understand your acne, and build your personalized treatment plan.",
+            "features": "Comprehensive skin analysis|Acne education & expectation setting|Sensitivity check for your skin|Personalized treatment plan creation|Homecare routine recommendations",
+            "duration": "45 minutes",
+            "button_text": "BOOK NOW",
+            "button_style": "outlined",
+            "button_color": "#9b7bb8"
+          }
+        },
+        {
+          "type": "pricing_card",
+          "settings": {
+            "show_badge": true,
+            "badge_text": "Most Popular",
+            "card_title": "Assessment + First Treatment",
+            "header_color": "#a8b88c",
+            "price": "145",
+            "description": "Combines everything in the Assessment PLUS your first professional acne treatment with extractions — all in one visit.",
+            "features": "Everything in the Assessment|Full acne treatment with extractions|Customized treatment for your skin type|Leave with guidance AND treatment complete|Best value for getting started",
+            "duration": "90 minutes",
+            "button_text": "BOOK NOW",
+            "button_style": "filled",
+            "button_color": "#a8b88c"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
