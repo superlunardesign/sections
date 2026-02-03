@@ -1,0 +1,888 @@
+{% comment %}
+  Services Menu Section
+  Expandable service items with pricing and booking buttons
+  Supports anchor links for smooth scrolling navigation
+{% endcomment %}
+
+<style>
+  /* Anchor offset for fixed headers */
+  {% if section.settings.enable_anchor %}
+    #{{ section.settings.anchor_id }} {
+      scroll-margin-top: {{ section.settings.anchor_offset }}px;
+      display: block;
+    }
+    
+    .section-anchor-wrapper {
+      position: relative;
+    }
+  {% endif %}
+  #shopify-section-{{ section.id }} {
+    background-color: {{ section.settings.background_color }};
+    padding: {{ section.settings.section_padding }}px 0;
+  }
+
+  #shopify-section-{{ section.id }} .services-container {
+    max-width: {{ section.settings.max_width }}px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  #shopify-section-{{ section.id }} .section-header {
+    margin-bottom: {{ section.settings.header_margin }}px;
+  }
+
+  #shopify-section-{{ section.id }} .section-header h2 {
+    color: {{ section.settings.header_color }};
+    font-size: {{ section.settings.header_size }}px;
+    font-weight: {{ section.settings.header_weight }};
+    text-transform: {{ section.settings.header_text_transform }};
+    margin: 0 0 10px 0;
+  }
+
+  /* Service Item Styles */
+  #shopify-section-{{ section.id }} .service-item {
+    border-bottom: 1px solid {{ section.settings.border_color }};
+    padding: {{ section.settings.item_padding }}px 0;
+  }
+
+  #shopify-section-{{ section.id }} .service-item:last-child {
+    border-bottom: none;
+  }
+
+  /* Main Service Row */
+  #shopify-section-{{ section.id }} .service-row {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    position: relative;
+  }
+
+  #shopify-section-{{ section.id }} .service-name {
+    color: {{ section.settings.service_name_color }};
+    font-size: {{ section.settings.service_name_size }}px;
+    font-weight: {{ section.settings.service_name_weight }};
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* Dotted Line */
+  #shopify-section-{{ section.id }} .dotted-line {
+    flex-grow: 1;
+    height: 1px;
+    background-image: linear-gradient(to right, {{ section.settings.dot_color }} 50%, transparent 50%);
+    background-size: 8px 1px;
+    background-repeat: repeat-x;
+    background-position: center;
+    margin: 0 10px;
+  }
+
+  #shopify-section-{{ section.id }} .service-price {
+    color: {{ section.settings.price_color }};
+    font-size: {{ section.settings.price_size }}px;
+    font-weight: {{ section.settings.price_weight }};
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  #shopify-section-{{ section.id }} .book-button {
+    background-color: {{ section.settings.button_background }};
+    color: {{ section.settings.button_text_color }};
+    padding: {{ section.settings.button_padding_y }}px {{ section.settings.button_padding_x }}px;
+    text-decoration: none;
+    font-size: {{ section.settings.button_font_size }}px;
+    font-weight: {{ section.settings.button_weight }};
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+    display: inline-block;
+    text-transform: {{ section.settings.button_text_transform }};
+    {% if section.settings.button_border_radius > 0 %}
+      border-radius: {{ section.settings.button_border_radius }}px;
+    {% endif %}
+  }
+
+  #shopify-section-{{ section.id }} .book-button:hover {
+    background-color: {{ section.settings.button_hover_background }};
+    color: {{ section.settings.button_hover_text_color }};
+  }
+
+  /* More Info Toggle */
+  #shopify-section-{{ section.id }} .more-info-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: {{ section.settings.toggle_color }};
+    font-size: {{ section.settings.toggle_size }}px;
+    cursor: pointer;
+    margin-top: 10px;
+    padding: 5px 0;
+    background: none;
+    border: none;
+    transition: color 0.3s ease;
+  }
+
+  #shopify-section-{{ section.id }} .more-info-toggle:hover {
+    color: {{ section.settings.toggle_hover_color }};
+  }
+
+  #shopify-section-{{ section.id }} .toggle-icon {
+    width: 16px;
+    height: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease;
+  }
+
+  #shopify-section-{{ section.id }} .toggle-icon svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  #shopify-section-{{ section.id }} .service-item.expanded .toggle-icon {
+    transform: rotate(45deg);
+  }
+
+  /* More Info Content */
+  #shopify-section-{{ section.id }} .more-info-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, padding 0.4s ease;
+  }
+
+  #shopify-section-{{ section.id }} .service-item.expanded .more-info-content {
+    max-height: 500px;
+    padding: 20px 0;
+  }
+
+  #shopify-section-{{ section.id }} .more-info-inner {
+    color: {{ section.settings.description_color }};
+    font-size: {{ section.settings.description_size }}px;
+    line-height: 1.6;
+    padding-left: 24px;
+  }
+
+  #shopify-section-{{ section.id }} .more-info-inner ul {
+    margin: 10px 0;
+    padding-left: 20px;
+  }
+
+  #shopify-section-{{ section.id }} .more-info-inner li {
+    margin: 5px 0;
+  }
+
+  /* Mobile Styles */
+  @media (max-width: 767px) {
+    #shopify-section-{{ section.id }} .services-container {
+      padding: 0 15px;
+    }
+
+    #shopify-section-{{ section.id }} .section-header h2 {
+      font-size: {{ section.settings.mobile_header_size }}px;
+    }
+
+    #shopify-section-{{ section.id }} .service-row {
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    #shopify-section-{{ section.id }} .service-name {
+      font-size: {{ section.settings.mobile_service_name_size }}px;
+      width: 100%;
+    }
+
+    #shopify-section-{{ section.id }} .dotted-line {
+      display: none;
+    }
+
+    #shopify-section-{{ section.id }} .service-price {
+      font-size: {{ section.settings.mobile_price_size }}px;
+    }
+
+    #shopify-section-{{ section.id }} .book-button {
+      font-size: {{ section.settings.mobile_button_size }}px;
+      padding: {{ section.settings.mobile_button_padding_y }}px {{ section.settings.mobile_button_padding_x }}px;
+      margin-left: auto;
+    }
+
+    #shopify-section-{{ section.id }} .more-info-inner {
+      font-size: {{ section.settings.mobile_description_size }}px;
+    }
+  }
+
+  /* Tablet adjustments */
+  @media (max-width: 1100px) and (min-width: 768px) {
+    #shopify-section-{{ section.id }} .service-name {
+      font-size: calc({{ section.settings.service_name_size }}px * 0.9);
+    }
+
+    #shopify-section-{{ section.id }} .dotted-line {
+      min-width: 50px;
+    }
+  }
+</style>
+
+{% if section.settings.enable_anchor %}
+  <div id="{{ section.settings.anchor_id }}" class="section-anchor-wrapper">
+  
+  {% comment %} Show anchor info in theme editor only {% endcomment %}
+  {% if request.design_mode %}
+    <div style="background: #f0f8ff; border: 1px solid #4a90e2; padding: 15px; margin: 10px auto 20px; max-width: 500px; text-align: center; font-family: monospace; border-radius: 5px;">
+      <strong style="color: #333; display: block; margin-bottom: 8px;">🔗 Anchor Link Enabled</strong>
+      <code style="background: white; padding: 8px 12px; border-radius: 3px; display: inline-block; color: #4a90e2; font-size: 14px; user-select: all;">
+        #{{ section.settings.anchor_id }}
+      </code>
+      <p style="margin: 10px 0 0; color: #666; font-size: 12px; font-family: sans-serif;">
+        Copy this link for buttons/navigation to scroll to this section
+      </p>
+    </div>
+  {% endif %}
+{% endif %}
+
+<div class="services-container">
+  {% if section.settings.section_title != blank %}
+    <div class="section-header">
+      <h2>{{ section.settings.section_title }}</h2>
+    </div>
+  {% endif %}
+
+  <div class="services-list">
+    {% for block in section.blocks %}
+      {% case block.type %}
+        {% when 'service_item' %}
+          <div class="service-item" {{ block.shopify_attributes }}>
+            <div class="service-row">
+              <h3 class="service-name">{{ block.settings.service_name }}
+                
+              {% if block.settings.add_line %}
+              <br>{{ block.settings.service_extra }}
+              {% endif %}
+              </h3>
+              <span class="dotted-line"></span>
+              <span class="service-price">${{ block.settings.service_price }}</span>
+              {% if block.settings.show_button %}
+                <a href="{{ block.settings.button_link }}" class="book-button" target="_self">
+                  {{ block.settings.button_text }}
+                </a>
+              {% endif %}
+            </div>
+            
+            {% if block.settings.service_description != blank %}
+              <button class="more-info-toggle" aria-expanded="false" aria-controls="info-{{ block.id }}">
+                <span class="toggle-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                </span>
+                <span class="toggle-text">More Info</span>
+              </button>
+              
+              <div class="more-info-content" id="info-{{ block.id }}">
+                <div class="more-info-inner">
+                  {{ block.settings.service_description }}
+                </div>
+              </div>
+            {% endif %}
+          </div>
+      {% endcase %}
+    {% endfor %}
+  </div>
+</div>
+
+{% if section.settings.enable_anchor %}
+  </div><!-- End anchor wrapper -->
+{% endif %}
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const section = document.querySelector('#shopify-section-{{ section.id }}');
+    const toggleButtons = section.querySelectorAll('.more-info-toggle');
+    
+    toggleButtons.forEach(function(button) {
+      button.addEventListener('click', function() {
+        const serviceItem = this.closest('.service-item');
+        const isExpanded = serviceItem.classList.contains('expanded');
+        const toggleText = this.querySelector('.toggle-text');
+        const content = serviceItem.querySelector('.more-info-content');
+        
+        if (isExpanded) {
+          serviceItem.classList.remove('expanded');
+          this.setAttribute('aria-expanded', 'false');
+          toggleText.textContent = 'More Info';
+        } else {
+          serviceItem.classList.add('expanded');
+          this.setAttribute('aria-expanded', 'true');
+          toggleText.textContent = 'Close';
+          
+          // Smooth scroll to make sure expanded content is visible
+          setTimeout(() => {
+            const rect = content.getBoundingClientRect();
+            if (rect.bottom > window.innerHeight) {
+              content.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+          }, 300);
+        }
+      });
+    });
+    
+    {% if section.settings.enable_anchor %}
+      // Enhanced smooth scroll for anchor links
+      // This handles both hash changes and direct clicks
+      
+      function scrollToSection() {
+        const hash = window.location.hash;
+        if (hash === '#{{ section.settings.anchor_id }}') {
+          const target = document.getElementById('{{ section.settings.anchor_id }}');
+          if (target) {
+            // Get the actual section element
+            const actualSection = document.querySelector('#shopify-section-{{ section.id }}');
+            if (actualSection) {
+              const yOffset = -{{ section.settings.anchor_offset }};
+              const y = actualSection.getBoundingClientRect().top + window.pageYOffset + yOffset;
+              
+              window.scrollTo({
+                top: y,
+                behavior: 'smooth'
+              });
+              return true;
+            }
+          }
+        }
+        return false;
+      }
+      
+      // Handle clicks on all anchor links
+      document.addEventListener('click', function(e) {
+        // Check if clicked element or its parent is a link
+        const link = e.target.closest('a');
+        if (link) {
+          const href = link.getAttribute('href');
+          if (href === '#{{ section.settings.anchor_id }}') {
+            e.preventDefault();
+            // Update URL hash
+            history.pushState(null, null, '#{{ section.settings.anchor_id }}');
+            // Scroll to section
+            scrollToSection();
+          }
+        }
+      });
+      
+      // Handle browser back/forward buttons
+      window.addEventListener('hashchange', scrollToSection);
+      
+      // Check if we should scroll on page load
+      if (window.location.hash === '#{{ section.settings.anchor_id }}') {
+        setTimeout(scrollToSection, 100);
+      }
+    {% endif %}
+  });
+</script>
+
+{% schema %}
+{
+  "name": "Services Menu",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Anchor Link Settings"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_anchor",
+      "label": "Enable Anchor Link",
+      "default": false,
+      "info": "Allow direct linking to this section"
+    },
+    {
+      "type": "text",
+      "id": "anchor_id",
+      "label": "Anchor ID",
+      "default": "services",
+      "info": "Use only letters, numbers, and hyphens. No spaces."
+    },
+    {
+      "type": "paragraph",
+      "content": "To link to this section, use this in any button or link:"
+    },
+    {
+      "type": "paragraph",
+      "content": "#services"
+    },
+    {
+      "type": "paragraph",
+      "content": "Example: Set a button link to '#services' for smooth scrolling"
+    },
+    {
+      "type": "range",
+      "id": "anchor_offset",
+      "label": "Scroll Offset",
+      "info": "Pixels to offset scroll (useful for fixed headers)",
+      "min": 0,
+      "max": 200,
+      "step": 10,
+      "default": 80
+    },
+    {
+      "type": "header",
+      "content": "Section Settings"
+    },
+    {
+      "type": "text",
+      "id": "section_title",
+      "label": "Section Title",
+      "default": "BODY WAXING"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background Color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "range",
+      "id": "section_padding",
+      "label": "Section Padding",
+      "min": 0,
+      "max": 100,
+      "step": 10,
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "max_width",
+      "label": "Maximum Width",
+      "min": 800,
+      "max": 1400,
+      "step": 50,
+      "default": 1000
+    },
+    {
+      "type": "range",
+      "id": "item_padding",
+      "label": "Item Padding",
+      "min": 10,
+      "max": 40,
+      "step": 5,
+      "default": 20
+    },
+    {
+      "type": "header",
+      "content": "Header Styling"
+    },
+    {
+      "type": "color",
+      "id": "header_color",
+      "label": "Header Color",
+      "default": "#000000"
+    },
+    {
+      "type": "range",
+      "id": "header_size",
+      "label": "Header Size",
+      "min": 16,
+      "max": 40,
+      "step": 2,
+      "default": 24
+    },
+    {
+      "type": "select",
+      "id": "header_weight",
+      "label": "Header Weight",
+      "options": [
+        { "value": "300", "label": "Light" },
+        { "value": "400", "label": "Normal" },
+        { "value": "500", "label": "Medium" },
+        { "value": "600", "label": "Semi-Bold" },
+        { "value": "700", "label": "Bold" }
+      ],
+      "default": "400"
+    },
+    {
+      "type": "select",
+      "id": "header_text_transform",
+      "label": "Header Text Transform",
+      "options": [
+        { "value": "none", "label": "None" },
+        { "value": "uppercase", "label": "UPPERCASE" },
+        { "value": "lowercase", "label": "lowercase" },
+        { "value": "capitalize", "label": "Capitalize" }
+      ],
+      "default": "uppercase"
+    },
+    {
+      "type": "range",
+      "id": "header_margin",
+      "label": "Header Bottom Margin",
+      "min": 0,
+      "max": 60,
+      "step": 5,
+      "default": 30
+    },
+    {
+      "type": "header",
+      "content": "Service Name"
+    },
+    {
+      "type": "color",
+      "id": "service_name_color",
+      "label": "Service Name Color",
+      "default": "#000000"
+    },
+    {
+      "type": "range",
+      "id": "service_name_size",
+      "label": "Service Name Size",
+      "min": 14,
+      "max": 28,
+      "step": 1,
+      "default": 18
+    },
+    {
+      "type": "select",
+      "id": "service_name_weight",
+      "label": "Service Name Weight",
+      "options": [
+        { "value": "300", "label": "Light" },
+        { "value": "400", "label": "Normal" },
+        { "value": "500", "label": "Medium" },
+        { "value": "600", "label": "Semi-Bold" },
+        { "value": "700", "label": "Bold" }
+      ],
+      "default": "400"
+    },
+    {
+      "type": "header",
+      "content": "Pricing"
+    },
+    {
+      "type": "color",
+      "id": "price_color",
+      "label": "Price Color",
+      "default": "#000000"
+    },
+    {
+      "type": "range",
+      "id": "price_size",
+      "label": "Price Size",
+      "min": 14,
+      "max": 28,
+      "step": 1,
+      "default": 18
+    },
+    {
+      "type": "select",
+      "id": "price_weight",
+      "label": "Price Weight",
+      "options": [
+        { "value": "300", "label": "Light" },
+        { "value": "400", "label": "Normal" },
+        { "value": "500", "label": "Medium" },
+        { "value": "600", "label": "Semi-Bold" },
+        { "value": "700", "label": "Bold" }
+      ],
+      "default": "400"
+    },
+    {
+      "type": "header",
+      "content": "Dotted Line"
+    },
+    {
+      "type": "color",
+      "id": "dot_color",
+      "label": "Dot Color",
+      "default": "#cccccc"
+    },
+    {
+      "type": "color",
+      "id": "border_color",
+      "label": "Item Border Color",
+      "default": "#eeeeee"
+    },
+    {
+      "type": "header",
+      "content": "Button Styling"
+    },
+    {
+      "type": "color",
+      "id": "button_background",
+      "label": "Button Background",
+      "default": "#cccccc"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Button Text Color",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "button_hover_background",
+      "label": "Button Hover Background",
+      "default": "#aaaaaa"
+    },
+    {
+      "type": "color",
+      "id": "button_hover_text_color",
+      "label": "Button Hover Text Color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "range",
+      "id": "button_padding_x",
+      "label": "Button Horizontal Padding",
+      "min": 10,
+      "max": 40,
+      "step": 2,
+      "default": 20
+    },
+    {
+      "type": "range",
+      "id": "button_padding_y",
+      "label": "Button Vertical Padding",
+      "min": 5,
+      "max": 20,
+      "step": 1,
+      "default": 10
+    },
+    {
+      "type": "range",
+      "id": "button_font_size",
+      "label": "Button Font Size",
+      "min": 12,
+      "max": 20,
+      "step": 1,
+      "default": 14
+    },
+    {
+      "type": "select",
+      "id": "button_weight",
+      "label": "Button Font Weight",
+      "options": [
+        { "value": "300", "label": "Light" },
+        { "value": "400", "label": "Normal" },
+        { "value": "500", "label": "Medium" },
+        { "value": "600", "label": "Semi-Bold" },
+        { "value": "700", "label": "Bold" }
+      ],
+      "default": "500"
+    },
+    {
+      "type": "select",
+      "id": "button_text_transform",
+      "label": "Button Text Transform",
+      "options": [
+        { "value": "none", "label": "None" },
+        { "value": "uppercase", "label": "UPPERCASE" },
+        { "value": "lowercase", "label": "lowercase" },
+        { "value": "capitalize", "label": "Capitalize" }
+      ],
+      "default": "uppercase"
+    },
+    {
+      "type": "range",
+      "id": "button_border_radius",
+      "label": "Button Border Radius",
+      "min": 0,
+      "max": 30,
+      "step": 1,
+      "default": 0
+    },
+    {
+      "type": "header",
+      "content": "More Info Toggle"
+    },
+    {
+      "type": "color",
+      "id": "toggle_color",
+      "label": "Toggle Color",
+      "default": "#666666"
+    },
+    {
+      "type": "color",
+      "id": "toggle_hover_color",
+      "label": "Toggle Hover Color",
+      "default": "#000000"
+    },
+    {
+      "type": "range",
+      "id": "toggle_size",
+      "label": "Toggle Text Size",
+      "min": 12,
+      "max": 18,
+      "step": 1,
+      "default": 14
+    },
+    {
+      "type": "header",
+      "content": "Description"
+    },
+    {
+      "type": "color",
+      "id": "description_color",
+      "label": "Description Color",
+      "default": "#333333"
+    },
+    {
+      "type": "range",
+      "id": "description_size",
+      "label": "Description Size",
+      "min": 12,
+      "max": 18,
+      "step": 1,
+      "default": 14
+    },
+    {
+      "type": "header",
+      "content": "Mobile Settings"
+    },
+    {
+      "type": "range",
+      "id": "mobile_header_size",
+      "label": "Mobile Header Size",
+      "min": 14,
+      "max": 32,
+      "step": 2,
+      "default": 20
+    },
+    {
+      "type": "range",
+      "id": "mobile_service_name_size",
+      "label": "Mobile Service Name Size",
+      "min": 14,
+      "max": 24,
+      "step": 1,
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "mobile_price_size",
+      "label": "Mobile Price Size",
+      "min": 14,
+      "max": 24,
+      "step": 1,
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "mobile_button_size",
+      "label": "Mobile Button Font Size",
+      "min": 11,
+      "max": 18,
+      "step": 1,
+      "default": 13
+    },
+    {
+      "type": "range",
+      "id": "mobile_button_padding_x",
+      "label": "Mobile Button H-Padding",
+      "min": 8,
+      "max": 30,
+      "step": 2,
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "mobile_button_padding_y",
+      "label": "Mobile Button V-Padding",
+      "min": 4,
+      "max": 16,
+      "step": 1,
+      "default": 8
+    },
+    {
+      "type": "range",
+      "id": "mobile_description_size",
+      "label": "Mobile Description Size",
+      "min": 12,
+      "max": 16,
+      "step": 1,
+      "default": 13
+    }
+  ],
+  "blocks": [
+    {
+      "type": "service_item",
+      "name": "Service Item",
+      "settings": [
+        {
+          "type": "text",
+          "id": "service_name",
+          "label": "Service Name",
+          "default": "INGROWN HAIR TREATMENT"
+        },
+        {
+          "type": "checkbox",
+          "id": "add_line",
+          "label": "Add Line",
+          "default": false
+        },
+        {
+      "type": "header",
+      "content": "Dotted Line"
+    },
+                {
+          "type": "text",
+          "id": "service_extra",
+          "label": "Extra Link",
+          "default": "(Single Session or Pack)"
+        },
+        {
+          "type": "text",
+          "id": "service_price",
+          "label": "Price",
+          "default": "55",
+          "info": "Enter price without $"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_button",
+          "label": "Show Book Button",
+          "default": true
+        },
+        {
+          "type": "text",
+          "id": "button_text",
+          "label": "Button Text",
+          "default": "BOOK NOW"
+        },
+        {
+          "type": "url",
+          "id": "button_link",
+          "label": "Button Link"
+        },
+        {
+          "type": "richtext",
+          "id": "service_description",
+          "label": "Service Description",
+          "default": "<p>A must if you are suffering from ingrown hairs on the body.</p><p>Its purpose is to:<br>- Remove dead skin.<br>- Smooth bumps around the bikini line.<br>- Prevent more ingrowns.</p><p>*Can be paired with brazilian, bikini, underarms, or butt.</p>"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Services Menu",
+      "category": "Custom",
+      "blocks": [
+        {
+          "type": "service_item",
+          "settings": {
+            "service_name": "INGROWN HAIR TREATMENT",
+            "service_price": "55"
+          }
+        },
+        {
+          "type": "service_item",
+          "settings": {
+            "service_name": "CALM & COOL POST WAX TREATMENT",
+            "service_price": "30"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
