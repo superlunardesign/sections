@@ -325,10 +325,13 @@
   /* Heading */
   #CriminalHero-{{ section.id }} .criminal-hero__heading {
     font-size: {{ section.settings.heading_size_mobile }}px;
-    font-weight: 700;
+    font-weight: {{ section.settings.heading_font_weight }};
     line-height: 1.1;
     margin: 0 0 15px 0;
     font-family: var(--font-heading-family, inherit);
+    letter-spacing: {{ section.settings.heading_letter_spacing }}em;
+    text-transform: {{ section.settings.heading_text_transform }};
+    color: {{ section.settings.heading_color }};
   }
 
   @media screen and (min-width: 750px) {
@@ -363,16 +366,16 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 12px 24px;
-    font-size: 12px;
+    padding: {{ section.settings.button_padding_vertical }}px {{ section.settings.button_padding_horizontal }}px;
+    font-size: {{ section.settings.button_font_size }}px;
     font-weight: 600;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     text-decoration: none;
     background-color: {{ section.settings.button_background }};
     color: {{ section.settings.button_text_color }};
-    border: none;
-    border-radius: 0;
+    border: {{ section.settings.button_border_width }}px solid {{ section.settings.button_border_color }};
+    border-radius: {{ section.settings.button_border_radius }}px;
     cursor: pointer;
     transition: all 0.3s ease;
     margin-right: 10px;
@@ -382,6 +385,7 @@
   #CriminalHero-{{ section.id }} .criminal-hero__button:hover {
     background-color: {{ section.settings.button_background_hover }};
     color: {{ section.settings.button_text_color_hover }};
+    border-color: {{ section.settings.button_border_color_hover }};
   }
 
   #CriminalHero-{{ section.id }} .criminal-hero__button[aria-disabled="true"] {
@@ -390,14 +394,16 @@
   }
 
   #CriminalHero-{{ section.id }} .criminal-hero__button--secondary {
-    background-color: transparent;
-    border: 2px solid {{ section.settings.text_color }};
-    color: {{ section.settings.text_color }};
+    background-color: {{ section.settings.secondary_button_background }};
+    border: {{ section.settings.secondary_button_border_width }}px solid {{ section.settings.secondary_button_border_color }};
+    border-radius: {{ section.settings.secondary_button_border_radius }}px;
+    color: {{ section.settings.secondary_button_text_color }};
   }
 
   #CriminalHero-{{ section.id }} .criminal-hero__button--secondary:hover {
-    background-color: {{ section.settings.text_color }};
-    color: {{ section.settings.background_color }};
+    background-color: {{ section.settings.secondary_button_background_hover }};
+    border-color: {{ section.settings.secondary_button_border_color_hover }};
+    color: {{ section.settings.secondary_button_text_color_hover }};
   }
 
   #CriminalHero-{{ section.id }} .criminal-hero__button-arrow {
@@ -411,8 +417,7 @@
 
   @media screen and (min-width: 750px) {
     #CriminalHero-{{ section.id }} .criminal-hero__button {
-      padding: 14px 28px;
-      font-size: 13px;
+      padding: {{ section.settings.button_padding_vertical | plus: 2 }}px {{ section.settings.button_padding_horizontal | plus: 4 }}px;
     }
   }
 
@@ -997,6 +1002,56 @@
     },
     {
       "type": "header",
+      "content": "Heading Style"
+    },
+    {
+      "type": "color",
+      "id": "heading_color",
+      "label": "Heading Color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "select",
+      "id": "heading_font_weight",
+      "label": "Heading Font Weight",
+      "options": [
+        { "value": "400", "label": "Normal (400)" },
+        { "value": "500", "label": "Medium (500)" },
+        { "value": "600", "label": "Semi-Bold (600)" },
+        { "value": "700", "label": "Bold (700)" },
+        { "value": "800", "label": "Extra-Bold (800)" },
+        { "value": "900", "label": "Black (900)" }
+      ],
+      "default": "700"
+    },
+    {
+      "type": "select",
+      "id": "heading_letter_spacing",
+      "label": "Heading Letter Spacing",
+      "options": [
+        { "value": "-0.05", "label": "Tight (-0.05em)" },
+        { "value": "-0.025", "label": "Slightly Tight (-0.025em)" },
+        { "value": "0", "label": "Normal (0)" },
+        { "value": "0.025", "label": "Slightly Wide (0.025em)" },
+        { "value": "0.05", "label": "Wide (0.05em)" },
+        { "value": "0.1", "label": "Very Wide (0.1em)" }
+      ],
+      "default": "0"
+    },
+    {
+      "type": "select",
+      "id": "heading_text_transform",
+      "label": "Heading Text Transform",
+      "options": [
+        { "value": "none", "label": "None" },
+        { "value": "uppercase", "label": "UPPERCASE" },
+        { "value": "lowercase", "label": "lowercase" },
+        { "value": "capitalize", "label": "Capitalize" }
+      ],
+      "default": "none"
+    },
+    {
+      "type": "header",
       "content": "Primary Button"
     },
     {
@@ -1041,6 +1096,68 @@
       "default": "#ffffff"
     },
     {
+      "type": "color",
+      "id": "button_border_color",
+      "label": "Button Border Color",
+      "default": "#6B2D2D"
+    },
+    {
+      "type": "color",
+      "id": "button_border_color_hover",
+      "label": "Button Border Hover Color",
+      "default": "#8B3D3D"
+    },
+    {
+      "type": "range",
+      "id": "button_border_width",
+      "label": "Button Border Width",
+      "min": 0,
+      "max": 5,
+      "step": 1,
+      "default": 0,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "button_border_radius",
+      "label": "Button Border Radius",
+      "min": 0,
+      "max": 30,
+      "step": 1,
+      "default": 0,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "button_padding_vertical",
+      "label": "Button Padding (Vertical)",
+      "min": 8,
+      "max": 24,
+      "step": 1,
+      "default": 12,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "button_padding_horizontal",
+      "label": "Button Padding (Horizontal)",
+      "min": 16,
+      "max": 48,
+      "step": 2,
+      "default": 24,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "button_font_size",
+      "label": "Button Font Size",
+      "min": 10,
+      "max": 18,
+      "step": 1,
+      "default": 12,
+      "unit": "px"
+    },
+    {
       "type": "header",
       "content": "Secondary Button"
     },
@@ -1053,6 +1170,62 @@
       "type": "url",
       "id": "secondary_button_link",
       "label": "Secondary Button Link"
+    },
+    {
+      "type": "color",
+      "id": "secondary_button_background",
+      "label": "Secondary Button Background",
+      "default": "transparent"
+    },
+    {
+      "type": "color",
+      "id": "secondary_button_text_color",
+      "label": "Secondary Button Text Color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "secondary_button_background_hover",
+      "label": "Secondary Button Hover Background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "secondary_button_text_color_hover",
+      "label": "Secondary Button Hover Text Color",
+      "default": "#1a1a1a"
+    },
+    {
+      "type": "color",
+      "id": "secondary_button_border_color",
+      "label": "Secondary Button Border Color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "secondary_button_border_color_hover",
+      "label": "Secondary Button Border Hover Color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "range",
+      "id": "secondary_button_border_width",
+      "label": "Secondary Button Border Width",
+      "min": 0,
+      "max": 5,
+      "step": 1,
+      "default": 2,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "secondary_button_border_radius",
+      "label": "Secondary Button Border Radius",
+      "min": 0,
+      "max": 30,
+      "step": 1,
+      "default": 0,
+      "unit": "px"
     },
     {
       "type": "header",
