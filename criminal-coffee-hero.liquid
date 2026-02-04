@@ -690,7 +690,7 @@
       {%- if section.settings.button_label != blank -%}
         <a
           href="{{ section.settings.button_link }}"
-          class="criminal-hero__button button"
+          class="criminal-hero__button"
           {% if section.settings.button_link == blank %}aria-disabled="true"{% endif %}
         >
           {{ section.settings.button_label }}
@@ -705,7 +705,7 @@
       {%- if section.settings.secondary_button_label != blank -%}
         <a
           href="{{ section.settings.secondary_button_link }}"
-          class="criminal-hero__button criminal-hero__button--secondary button button--secondary"
+          class="criminal-hero__button criminal-hero__button--secondary"
           {% if section.settings.secondary_button_link == blank %}aria-disabled="true"{% endif %}
         >
           {{ section.settings.secondary_button_label }}
