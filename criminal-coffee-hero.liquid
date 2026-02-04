@@ -1,0 +1,706 @@
+{{ 'criminal-coffee-hero.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+
+  .criminal-hero-{{ section.id }} {
+    --hero-height-mobile: {{ section.settings.mobile_height }}px;
+    --hero-height-desktop: {{ section.settings.desktop_height }}px;
+    --hero-bg-color: {{ section.settings.background_color }};
+    --hero-overlay-opacity: {{ section.settings.overlay_opacity | divided_by: 100.0 }};
+    --hero-overlay-color: {{ section.settings.overlay_color }};
+    --hero-text-color: {{ section.settings.text_color }};
+    --hero-heading-size-mobile: {{ section.settings.heading_size_mobile }}px;
+    --hero-heading-size-desktop: {{ section.settings.heading_size_desktop }}px;
+    --hero-subtext-size-mobile: {{ section.settings.subtext_size_mobile }}px;
+    --hero-subtext-size-desktop: {{ section.settings.subtext_size_desktop }}px;
+    --hero-content-max-width: {{ section.settings.content_max_width }}px;
+    --hero-button-bg: {{ section.settings.button_background }};
+    --hero-button-text: {{ section.settings.button_text_color }};
+    --hero-button-bg-hover: {{ section.settings.button_background_hover }};
+    --hero-button-text-hover: {{ section.settings.button_text_color_hover }};
+  }
+{%- endstyle -%}
+
+<section
+  id="CriminalHero-{{ section.id }}"
+  class="criminal-hero criminal-hero-{{ section.id }} section-{{ section.id }}-padding"
+  data-section-id="{{ section.id }}"
+  data-slideshow-enabled="{{ section.settings.enable_slideshow }}"
+  data-slideshow-speed="{{ section.settings.slideshow_speed }}"
+  data-slideshow-transition="{{ section.settings.slideshow_transition }}"
+>
+  {%- comment -%} Background Container {%- endcomment -%}
+  <div class="criminal-hero__background">
+    {%- comment -%} Overlay {%- endcomment -%}
+    <div class="criminal-hero__overlay"></div>
+
+    {%- comment -%} Background Color Fallback {%- endcomment -%}
+    <div class="criminal-hero__bg-color"></div>
+
+    {%- comment -%} Single Background or Slideshow Container {%- endcomment -%}
+    {%- if section.settings.enable_slideshow and section.blocks.size > 0 -%}
+      <div class="criminal-hero__slideshow" data-slideshow>
+        {%- for block in section.blocks -%}
+          {%- if block.type == 'slide' -%}
+            <div
+              class="criminal-hero__slide {% if forloop.first %}is-active{% endif %}"
+              data-slide-index="{{ forloop.index0 }}"
+              {{ block.shopify_attributes }}
+            >
+              {%- if block.settings.video != blank -%}
+                <video
+                  class="criminal-hero__video"
+                  autoplay
+                  muted
+                  loop
+                  playsinline
+                  style="object-position: {{ block.settings.background_position }};"
+                >
+                  {{ block.settings.video | video_tag }}
+                </video>
+              {%- elsif block.settings.video_url != blank -%}
+                {%- if block.settings.video_url.type == 'youtube' -%}
+                  <iframe
+                    class="criminal-hero__video-embed"
+                    src="https://www.youtube.com/embed/{{ block.settings.video_url.id }}?autoplay=1&mute=1&loop=1&playlist={{ block.settings.video_url.id }}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1"
+                    allow="autoplay; encrypted-media"
+                    allowfullscreen
+                    style="object-position: {{ block.settings.background_position }};"
+                  ></iframe>
+                {%- elsif block.settings.video_url.type == 'vimeo' -%}
+                  <iframe
+                    class="criminal-hero__video-embed"
+                    src="https://player.vimeo.com/video/{{ block.settings.video_url.id }}?autoplay=1&muted=1&loop=1&background=1&playsinline=1"
+                    allow="autoplay; encrypted-media"
+                    allowfullscreen
+                    style="object-position: {{ block.settings.background_position }};"
+                  ></iframe>
+                {%- endif -%}
+              {%- elsif block.settings.image != blank -%}
+                {%- assign image = block.settings.image -%}
+                <picture class="criminal-hero__picture">
+                  <source
+                    media="(min-width: 750px)"
+                    srcset="{{ image | image_url: width: 1920 }} 1920w,
+                            {{ image | image_url: width: 2560 }} 2560w,
+                            {{ image | image_url: width: 3840 }} 3840w"
+                    sizes="100vw"
+                  >
+                  <source
+                    srcset="{{ image | image_url: width: 750 }} 750w,
+                            {{ image | image_url: width: 1080 }} 1080w,
+                            {{ image | image_url: width: 1500 }} 1500w"
+                    sizes="100vw"
+                  >
+                  <img
+                    class="criminal-hero__image"
+                    src="{{ image | image_url: width: 1920 }}"
+                    alt="{{ image.alt | escape }}"
+                    loading="{% if forloop.first %}eager{% else %}lazy{% endif %}"
+                    fetchpriority="{% if forloop.first %}high{% else %}low{% endif %}"
+                    style="object-position: {{ block.settings.background_position }};"
+                  >
+                </picture>
+              {%- else -%}
+                {{ 'lifestyle-1' | placeholder_svg_tag: 'criminal-hero__placeholder' }}
+              {%- endif -%}
+            </div>
+          {%- endif -%}
+        {%- endfor -%}
+
+        {%- comment -%} Slideshow Indicators {%- endcomment -%}
+        {%- if section.settings.show_slideshow_indicators and section.blocks.size > 1 -%}
+          <div class="criminal-hero__indicators">
+            {%- for block in section.blocks -%}
+              {%- if block.type == 'slide' -%}
+                <button
+                  class="criminal-hero__indicator {% if forloop.first %}is-active{% endif %}"
+                  data-slide-indicator="{{ forloop.index0 }}"
+                  aria-label="Go to slide {{ forloop.index }}"
+                ></button>
+              {%- endif -%}
+            {%- endfor -%}
+          </div>
+        {%- endif -%}
+      </div>
+    {%- else -%}
+      {%- comment -%} Single Background {%- endcomment -%}
+      <div class="criminal-hero__single-bg">
+        {%- if section.settings.video != blank -%}
+          <video
+            class="criminal-hero__video"
+            autoplay
+            muted
+            loop
+            playsinline
+            style="object-position: {{ section.settings.background_position }};"
+          >
+            {{ section.settings.video | video_tag }}
+          </video>
+        {%- elsif section.settings.video_url != blank -%}
+          {%- if section.settings.video_url.type == 'youtube' -%}
+            <iframe
+              class="criminal-hero__video-embed"
+              src="https://www.youtube.com/embed/{{ section.settings.video_url.id }}?autoplay=1&mute=1&loop=1&playlist={{ section.settings.video_url.id }}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1"
+              allow="autoplay; encrypted-media"
+              allowfullscreen
+              style="object-position: {{ section.settings.background_position }};"
+            ></iframe>
+          {%- elsif section.settings.video_url.type == 'vimeo' -%}
+            <iframe
+              class="criminal-hero__video-embed"
+              src="https://player.vimeo.com/video/{{ section.settings.video_url.id }}?autoplay=1&muted=1&loop=1&background=1&playsinline=1"
+              allow="autoplay; encrypted-media"
+              allowfullscreen
+              style="object-position: {{ section.settings.background_position }};"
+            ></iframe>
+          {%- endif -%}
+        {%- elsif section.settings.image != blank -%}
+          {%- assign image = section.settings.image -%}
+          <picture class="criminal-hero__picture">
+            <source
+              media="(min-width: 750px)"
+              srcset="{{ image | image_url: width: 1920 }} 1920w,
+                      {{ image | image_url: width: 2560 }} 2560w,
+                      {{ image | image_url: width: 3840 }} 3840w"
+              sizes="100vw"
+            >
+            <source
+              srcset="{{ image | image_url: width: 750 }} 750w,
+                      {{ image | image_url: width: 1080 }} 1080w,
+                      {{ image | image_url: width: 1500 }} 1500w"
+              sizes="100vw"
+            >
+            <img
+              class="criminal-hero__image"
+              src="{{ image | image_url: width: 1920 }}"
+              alt="{{ image.alt | escape }}"
+              loading="eager"
+              fetchpriority="high"
+              style="object-position: {{ section.settings.background_position }};"
+            >
+          </picture>
+        {%- else -%}
+          {{ 'lifestyle-1' | placeholder_svg_tag: 'criminal-hero__placeholder' }}
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+  </div>
+
+  {%- comment -%} Content Container {%- endcomment -%}
+  <div class="criminal-hero__content-wrapper page-width">
+    <div
+      class="criminal-hero__content criminal-hero__content--{{ section.settings.content_position }} criminal-hero__content--v-{{ section.settings.content_vertical_position }}"
+    >
+      {%- if section.settings.subheading != blank -%}
+        <p class="criminal-hero__subheading">{{ section.settings.subheading }}</p>
+      {%- endif -%}
+
+      {%- if section.settings.heading != blank -%}
+        <{{ section.settings.heading_tag }} class="criminal-hero__heading">
+          {{ section.settings.heading }}
+        </{{ section.settings.heading_tag }}>
+      {%- endif -%}
+
+      {%- if section.settings.text != blank -%}
+        <div class="criminal-hero__text">{{ section.settings.text }}</div>
+      {%- endif -%}
+
+      {%- if section.settings.button_label != blank -%}
+        <a
+          href="{{ section.settings.button_link }}"
+          class="criminal-hero__button button"
+          {% if section.settings.button_link == blank %}aria-disabled="true"{% endif %}
+        >
+          {{ section.settings.button_label }}
+          {%- if section.settings.show_button_arrow -%}
+            <svg class="criminal-hero__button-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          {%- endif -%}
+        </a>
+      {%- endif -%}
+
+      {%- if section.settings.secondary_button_label != blank -%}
+        <a
+          href="{{ section.settings.secondary_button_link }}"
+          class="criminal-hero__button criminal-hero__button--secondary button button--secondary"
+          {% if section.settings.secondary_button_link == blank %}aria-disabled="true"{% endif %}
+        >
+          {{ section.settings.secondary_button_label }}
+        </a>
+      {%- endif -%}
+    </div>
+  </div>
+</section>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const hero = document.querySelector('#CriminalHero-{{ section.id }}');
+    if (!hero) return;
+
+    const slideshowEnabled = hero.dataset.slideshowEnabled === 'true';
+    const slideshowSpeed = parseInt(hero.dataset.slideshowSpeed) || 5000;
+    const transitionType = hero.dataset.slideshowTransition || 'fade';
+
+    if (!slideshowEnabled) return;
+
+    const slideshow = hero.querySelector('[data-slideshow]');
+    if (!slideshow) return;
+
+    const slides = slideshow.querySelectorAll('.criminal-hero__slide');
+    const indicators = hero.querySelectorAll('.criminal-hero__indicator');
+
+    if (slides.length <= 1) return;
+
+    let currentIndex = 0;
+    let interval;
+
+    function showSlide(index) {
+      slides.forEach((slide, i) => {
+        slide.classList.remove('is-active', 'is-exiting');
+        if (i === currentIndex && i !== index) {
+          slide.classList.add('is-exiting');
+        }
+      });
+
+      slides[index].classList.add('is-active');
+
+      indicators.forEach((indicator, i) => {
+        indicator.classList.toggle('is-active', i === index);
+      });
+
+      currentIndex = index;
+    }
+
+    function nextSlide() {
+      const next = (currentIndex + 1) % slides.length;
+      showSlide(next);
+    }
+
+    function startSlideshow() {
+      interval = setInterval(nextSlide, slideshowSpeed);
+    }
+
+    function stopSlideshow() {
+      clearInterval(interval);
+    }
+
+    indicators.forEach((indicator, i) => {
+      indicator.addEventListener('click', () => {
+        stopSlideshow();
+        showSlide(i);
+        startSlideshow();
+      });
+    });
+
+    hero.addEventListener('mouseenter', stopSlideshow);
+    hero.addEventListener('mouseleave', startSlideshow);
+
+    startSlideshow();
+
+    slideshow.classList.add('criminal-hero__slideshow--' + transitionType);
+  });
+</script>
+
+{% schema %}
+{
+  "name": "Criminal Coffee Hero",
+  "tag": "section",
+  "class": "section criminal-coffee-hero-section",
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "Background Settings"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background Color",
+      "default": "#1a1a1a"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Background Image"
+    },
+    {
+      "type": "video",
+      "id": "video",
+      "label": "Background Video (Shopify Hosted)"
+    },
+    {
+      "type": "video_url",
+      "id": "video_url",
+      "label": "Background Video URL (YouTube/Vimeo)",
+      "accept": ["youtube", "vimeo"]
+    },
+    {
+      "type": "select",
+      "id": "background_position",
+      "label": "Background Position",
+      "options": [
+        { "value": "center center", "label": "Center" },
+        { "value": "center top", "label": "Center Top" },
+        { "value": "center bottom", "label": "Center Bottom" },
+        { "value": "left center", "label": "Left Center" },
+        { "value": "left top", "label": "Left Top" },
+        { "value": "left bottom", "label": "Left Bottom" },
+        { "value": "right center", "label": "Right Center" },
+        { "value": "right top", "label": "Right Top" },
+        { "value": "right bottom", "label": "Right Bottom" }
+      ],
+      "default": "center center"
+    },
+    {
+      "type": "header",
+      "content": "Overlay Settings"
+    },
+    {
+      "type": "color",
+      "id": "overlay_color",
+      "label": "Overlay Color",
+      "default": "#000000"
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "label": "Overlay Opacity",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "default": 30,
+      "unit": "%"
+    },
+    {
+      "type": "header",
+      "content": "Height Settings"
+    },
+    {
+      "type": "range",
+      "id": "desktop_height",
+      "label": "Desktop Height",
+      "min": 300,
+      "max": 1000,
+      "step": 10,
+      "default": 600,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "mobile_height",
+      "label": "Mobile Height",
+      "min": 200,
+      "max": 800,
+      "step": 10,
+      "default": 450,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Content Settings"
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": "Subheading"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "New Flavor Loading..."
+    },
+    {
+      "type": "select",
+      "id": "heading_tag",
+      "label": "Heading Tag",
+      "options": [
+        { "value": "h1", "label": "H1" },
+        { "value": "h2", "label": "H2" },
+        { "value": "h3", "label": "H3" },
+        { "value": "p", "label": "Paragraph" }
+      ],
+      "default": "h1"
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "Description Text",
+      "default": "<p>You asked, we listened. But we're not going to make it that easy. Search our site to see if you can find the clues for our new flavor will be... we recommend checking the coffee page.</p>"
+    },
+    {
+      "type": "header",
+      "content": "Content Position"
+    },
+    {
+      "type": "select",
+      "id": "content_position",
+      "label": "Horizontal Position",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "right", "label": "Right" }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "select",
+      "id": "content_vertical_position",
+      "label": "Vertical Position",
+      "options": [
+        { "value": "top", "label": "Top" },
+        { "value": "center", "label": "Center" },
+        { "value": "bottom", "label": "Bottom" }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "range",
+      "id": "content_max_width",
+      "label": "Content Max Width",
+      "min": 300,
+      "max": 800,
+      "step": 10,
+      "default": 500,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Typography"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text Color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "range",
+      "id": "heading_size_desktop",
+      "label": "Heading Size (Desktop)",
+      "min": 24,
+      "max": 80,
+      "step": 2,
+      "default": 48,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "heading_size_mobile",
+      "label": "Heading Size (Mobile)",
+      "min": 18,
+      "max": 60,
+      "step": 2,
+      "default": 32,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "subtext_size_desktop",
+      "label": "Description Size (Desktop)",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "default": 16,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "subtext_size_mobile",
+      "label": "Description Size (Mobile)",
+      "min": 10,
+      "max": 20,
+      "step": 1,
+      "default": 14,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Primary Button"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Button Label",
+      "default": "SHOP COFFEE"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "Button Link"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_button_arrow",
+      "label": "Show Arrow Icon",
+      "default": true
+    },
+    {
+      "type": "color",
+      "id": "button_background",
+      "label": "Button Background",
+      "default": "#6B2D2D"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Button Text Color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "button_background_hover",
+      "label": "Button Hover Background",
+      "default": "#8B3D3D"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color_hover",
+      "label": "Button Hover Text Color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "header",
+      "content": "Secondary Button"
+    },
+    {
+      "type": "text",
+      "id": "secondary_button_label",
+      "label": "Secondary Button Label"
+    },
+    {
+      "type": "url",
+      "id": "secondary_button_link",
+      "label": "Secondary Button Link"
+    },
+    {
+      "type": "header",
+      "content": "Slideshow Settings"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_slideshow",
+      "label": "Enable Background Slideshow",
+      "default": false,
+      "info": "When enabled, add slides using the blocks below. Text content stays static while backgrounds rotate."
+    },
+    {
+      "type": "range",
+      "id": "slideshow_speed",
+      "label": "Slide Duration",
+      "min": 2000,
+      "max": 10000,
+      "step": 500,
+      "default": 5000,
+      "unit": "ms"
+    },
+    {
+      "type": "select",
+      "id": "slideshow_transition",
+      "label": "Transition Style",
+      "options": [
+        { "value": "fade", "label": "Fade" },
+        { "value": "slide", "label": "Slide" },
+        { "value": "zoom", "label": "Zoom" }
+      ],
+      "default": "fade"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_slideshow_indicators",
+      "label": "Show Slide Indicators",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Section Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Top Padding",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "default": 0,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Bottom Padding",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "default": 0,
+      "unit": "px"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "slide",
+      "name": "Slide",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Slide Image"
+        },
+        {
+          "type": "video",
+          "id": "video",
+          "label": "Slide Video (Shopify Hosted)"
+        },
+        {
+          "type": "video_url",
+          "id": "video_url",
+          "label": "Slide Video URL (YouTube/Vimeo)",
+          "accept": ["youtube", "vimeo"]
+        },
+        {
+          "type": "select",
+          "id": "background_position",
+          "label": "Background Position",
+          "options": [
+            { "value": "center center", "label": "Center" },
+            { "value": "center top", "label": "Center Top" },
+            { "value": "center bottom", "label": "Center Bottom" },
+            { "value": "left center", "label": "Left Center" },
+            { "value": "left top", "label": "Left Top" },
+            { "value": "left bottom", "label": "Left Bottom" },
+            { "value": "right center", "label": "Right Center" },
+            { "value": "right top", "label": "Right Top" },
+            { "value": "right bottom", "label": "Right Bottom" }
+          ],
+          "default": "center center"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Criminal Coffee Hero",
+      "settings": {
+        "heading": "New Flavor Loading...",
+        "text": "<p>You asked, we listened. But we're not going to make it that easy. Search our site to see if you can find the clues for our new flavor will be... we recommend checking the coffee page.</p>",
+        "button_label": "SHOP COFFEE"
+      }
+    }
+  ]
+}
+{% endschema %}
