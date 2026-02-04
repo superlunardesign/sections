@@ -4,12 +4,6 @@
     <h2 class="carousel-section-title">{{ section.settings.section_title | default: 'Explore our bestsellers' }}</h2>
 
     <div class="carousel-wrapper">
-      <button class="carousel-btn carousel-btn--prev" aria-label="Previous products">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
-
       <div class="product-carousel">
         {% assign collection = collections[section.settings.collection] %}
         {% if collection == blank %}
@@ -46,6 +40,16 @@
               <div class="product-content">
                 <a href="{{ product.url }}"><p class="product-title">{{ product.title }}</p></a>
 
+                <!-- Price Display -->
+                {% if section.settings.show_price %}
+                  <div class="product-price">
+                    {% if product.compare_at_price > product.price %}
+                      <span class="price-compare">{{ product.compare_at_price | money }}</span>
+                    {% endif %}
+                    <span class="price-current">{{ product.price | money }}</span>
+                  </div>
+                {% endif %}
+
                 <!-- Mini Description from metafield -->
                 {% if section.settings.show_mini_description and product.metafields.custom.mini_description %}
                   <p class="product-mini-description">{{ product.metafields.custom.mini_description }}</p>
@@ -78,7 +82,7 @@
               {% endif %}
 
               <!-- Variant Options (if enabled) -->
-              {% if section.settings.show_variant_options and product.variants.size > 1 %}
+              {% if section.settings.show_variant_options and section.settings.show_variants_and_button and product.variants.size > 1 %}
                 <div class="product-options">
                   <!-- Store all variant data in a hidden script -->
                   <script type="application/json" class="variant-data">
@@ -102,39 +106,46 @@
               {% endif %}
 
               <!-- Add to Cart Button -->
-              <div class="product-actions">
-                <div class="button-container">
-                  {% if product.available %}
-                    <button class="add-to-cart-btn"
-                            data-variant-id="{{ product.variants.first.id }}">
-                      <span>{{ section.settings.add_to_cart_text }}</span>
-                      <span class="variant-price">
-                        {{ product.price | money }}
-                      </span>
-                    </button>
-                  {% else %}
-                    <button class="add-to-cart-btn" disabled>
-                      <span>{{ section.settings.out_of_stock_button_text }}</span>
-                    </button>
-                  {% endif %}
+              {% if section.settings.show_variants_and_button %}
+                <div class="product-actions">
+                  <div class="button-container">
+                    {% if product.available %}
+                      <button class="add-to-cart-btn"
+                              data-variant-id="{{ product.variants.first.id }}">
+                        <span>{{ section.settings.add_to_cart_text }}</span>
+                      </button>
+                    {% else %}
+                      <button class="add-to-cart-btn" disabled>
+                        <span>{{ section.settings.out_of_stock_button_text }}</span>
+                      </button>
+                    {% endif %}
+                  </div>
                 </div>
-              </div>
+              {% endif %}
             </div>
           </div>
         {% endfor %}
       </div>
+    </div>
 
-      <button class="carousel-btn carousel-btn--next" aria-label="Next products">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Navigation: Arrows + Dots together -->
+    <div class="carousel-navigation">
+      <button class="carousel-nav-btn carousel-nav-btn--prev" aria-label="Previous products">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+
+      {% if section.settings.show_dots %}
+        <div class="carousel-dots"></div>
+      {% endif %}
+
+      <button class="carousel-nav-btn carousel-nav-btn--next" aria-label="Next products">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </button>
     </div>
-
-    <!-- Carousel Dots (generated dynamically via JS) -->
-    {% if section.settings.show_dots %}
-      <div class="carousel-dots"></div>
-    {% endif %}
   </div>
 </div>
 
@@ -286,6 +297,27 @@
     text-decoration: none;
   }
 
+  /* Product Price */
+  #CustomProductCarousel-{{ section.id }} .product-price {
+    margin: 8px 0 12px 0;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  #CustomProductCarousel-{{ section.id }} .price-current {
+    font-size: {{ section.settings.price_font_size }}px;
+    color: {{ section.settings.price_color }};
+    font-weight: 400;
+  }
+
+  #CustomProductCarousel-{{ section.id }} .price-compare {
+    font-size: {{ section.settings.price_font_size }}px;
+    color: {{ section.settings.price_compare_color }};
+    text-decoration: line-through;
+    font-weight: 400;
+  }
+
   #CustomProductCarousel-{{ section.id }} .product-mini-description {
     margin-block: 5px !important;
     font-size: 14px;
@@ -336,12 +368,12 @@
   }
 
   #CustomProductCarousel-{{ section.id }} .size-btn {
-    padding: 6px 12px;
+    padding: 4px 14px;
     border: {{ section.settings.variant_button_border_width }}px solid {{ section.settings.variant_button_border_color }};
     background: {{ section.settings.variant_button_background }};
     color: {{ section.settings.variant_button_text_color }};
     border-radius: {{ section.settings.variant_button_border_radius }}px;
-    font-size: 14px;
+    font-size: 12px;
     cursor: pointer;
     transition: all 0.2s ease;
   }
@@ -386,7 +418,7 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
   }
 
@@ -399,11 +431,16 @@
     cursor: not-allowed;
   }
 
-  /* Carousel Navigation Buttons */
-  #CustomProductCarousel-{{ section.id }} .carousel-btn {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
+  /* Carousel Navigation - Arrows + Dots inline */
+  #CustomProductCarousel-{{ section.id }} .carousel-navigation {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: {{ section.settings.nav_gap }}px;
+    margin-top: {{ section.settings.dot_margin_top }}px;
+  }
+
+  #CustomProductCarousel-{{ section.id }} .carousel-nav-btn {
     background: {{ section.settings.nav_button_background }};
     border: {{ section.settings.nav_button_border_width }}px solid {{ section.settings.nav_button_border_color }};
     border-radius: {{ section.settings.nav_button_border_radius }}px;
@@ -413,30 +450,23 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    z-index: 10;
     transition: all 0.2s ease;
     color: {{ section.settings.nav_button_color }};
+    padding: 0;
   }
 
-  #CustomProductCarousel-{{ section.id }} .carousel-btn:hover {
+  #CustomProductCarousel-{{ section.id }} .carousel-nav-btn:hover {
     background: {{ section.settings.nav_button_hover_background }};
     border-color: {{ section.settings.nav_button_hover_border_color }};
-  }
-
-  #CustomProductCarousel-{{ section.id }} .carousel-btn--prev {
-    left: -{{ section.settings.nav_button_size | plus: 15 }}px;
-  }
-
-  #CustomProductCarousel-{{ section.id }} .carousel-btn--next {
-    right: -{{ section.settings.nav_button_size | plus: 15 }}px;
+    color: {{ section.settings.nav_button_hover_color }};
   }
 
   /* Carousel Dots */
   #CustomProductCarousel-{{ section.id }} .carousel-dots {
     display: flex;
     justify-content: center;
+    align-items: center;
     gap: {{ section.settings.dot_gap }}px;
-    margin-top: {{ section.settings.dot_margin_top }}px;
   }
 
   #CustomProductCarousel-{{ section.id }} .dot {
@@ -465,7 +495,7 @@
       flex: 0 0 {{ section.settings.card_width_mobile }}px;
     }
 
-    #CustomProductCarousel-{{ section.id }} .carousel-btn {
+    #CustomProductCarousel-{{ section.id }} .carousel-nav-btn {
       display: none;
     }
 
@@ -488,6 +518,10 @@
     #CustomProductCarousel-{{ section.id }} {
       padding: {{ section.settings.padding_top_mobile }}px 0 {{ section.settings.padding_bottom_mobile }}px;
     }
+
+    #CustomProductCarousel-{{ section.id }} .carousel-navigation {
+      gap: {{ section.settings.dot_gap }}px;
+    }
   }
 {%- endstyle -%}
 
@@ -498,8 +532,8 @@
   if (!section) return;
 
   const carousel = section.querySelector('.product-carousel');
-  const prevBtn = section.querySelector('.carousel-btn--prev');
-  const nextBtn = section.querySelector('.carousel-btn--next');
+  const prevBtn = section.querySelector('.carousel-nav-btn--prev');
+  const nextBtn = section.querySelector('.carousel-nav-btn--next');
   const dotsContainer = section.querySelector('.carousel-dots');
   const totalProducts = {{ collection.products.size | at_most: section.settings.products_limit }};
   const cardWidthDesktop = {{ section.settings.card_width }};
@@ -535,11 +569,22 @@
         );
 
         if (matchingVariant) {
-          // Update button with new variant ID and price
+          // Update button with new variant ID
           addToCartBtn.setAttribute('data-variant-id', matchingVariant.id);
-          const priceElement = addToCartBtn.querySelector('.variant-price');
+
+          // Update price display
+          const priceElement = productCard.querySelector('.price-current');
           if (priceElement) {
             priceElement.textContent = Shopify.formatMoney ? Shopify.formatMoney(matchingVariant.price) : '$' + (matchingVariant.price / 100).toFixed(2);
+          }
+
+          // Update compare price if exists
+          const comparePriceElement = productCard.querySelector('.price-compare');
+          if (comparePriceElement && matchingVariant.compare_at_price) {
+            comparePriceElement.textContent = Shopify.formatMoney ? Shopify.formatMoney(matchingVariant.compare_at_price) : '$' + (matchingVariant.compare_at_price / 100).toFixed(2);
+            comparePriceElement.style.display = 'inline';
+          } else if (comparePriceElement) {
+            comparePriceElement.style.display = 'none';
           }
         }
       } catch (error) {
@@ -1003,7 +1048,35 @@
       "type": "color",
       "id": "product_title_color",
       "label": "Product title color",
-      "default": "#333333"
+      "default": "#ffffff"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_price",
+      "label": "Show price",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "price_font_size",
+      "label": "Price font size",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "default": 16,
+      "unit": "px"
+    },
+    {
+      "type": "color",
+      "id": "price_color",
+      "label": "Price color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "price_compare_color",
+      "label": "Compare at price color",
+      "default": "#999999"
     },
     {
       "type": "checkbox",
@@ -1055,7 +1128,14 @@
     },
     {
       "type": "header",
-      "content": "Variant Options"
+      "content": "Variant Options & Add to Cart"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_variants_and_button",
+      "label": "Show variants and add to cart button",
+      "default": true,
+      "info": "Toggle to show/hide variant options and add to cart button"
     },
     {
       "type": "checkbox",
@@ -1068,7 +1148,7 @@
       "type": "color",
       "id": "variant_button_background",
       "label": "Unselected button background",
-      "default": "#1a1a1a"
+      "default": "#3a3a3a"
     },
     {
       "type": "color",
@@ -1080,13 +1160,13 @@
       "type": "color",
       "id": "variant_button_border_color",
       "label": "Unselected button border color",
-      "default": "#1a1a1a"
+      "default": "#3a3a3a"
     },
     {
       "type": "color",
       "id": "variant_button_hover_border_color",
       "label": "Button hover border color",
-      "default": "#8B0000"
+      "default": "#555555"
     },
     {
       "type": "range",
@@ -1095,7 +1175,7 @@
       "min": 0,
       "max": 3,
       "step": 1,
-      "default": 1,
+      "default": 0,
       "unit": "px"
     },
     {
@@ -1105,14 +1185,14 @@
       "min": 0,
       "max": 50,
       "step": 1,
-      "default": 0,
+      "default": 20,
       "unit": "px"
     },
     {
       "type": "color",
       "id": "variant_button_selected_background",
       "label": "Selected button background",
-      "default": "#8B0000"
+      "default": "#4a4a4a"
     },
     {
       "type": "color",
@@ -1124,7 +1204,7 @@
       "type": "color",
       "id": "variant_button_selected_border_color",
       "label": "Selected button border color",
-      "default": "#8B0000"
+      "default": "#4a4a4a"
     },
     {
       "type": "header",
@@ -1146,19 +1226,19 @@
       "type": "color",
       "id": "button_background_color",
       "label": "Button background color",
-      "default": "#8B0000"
+      "default": "#ffffff"
     },
     {
       "type": "color",
       "id": "button_text_color",
       "label": "Button text color",
-      "default": "#ffffff"
+      "default": "#333333"
     },
     {
       "type": "color",
       "id": "button_border_color",
       "label": "Button border color",
-      "default": "#8B0000"
+      "default": "#ffffff"
     },
     {
       "type": "range",
@@ -1288,16 +1368,26 @@
     },
     {
       "type": "header",
-      "content": "Arrow Navigation"
+      "content": "Navigation"
+    },
+    {
+      "type": "range",
+      "id": "nav_gap",
+      "label": "Gap between arrows and dots",
+      "min": 5,
+      "max": 30,
+      "step": 5,
+      "default": 15,
+      "unit": "px"
     },
     {
       "type": "range",
       "id": "nav_button_size",
       "label": "Arrow button size",
-      "min": 30,
-      "max": 60,
+      "min": 20,
+      "max": 50,
       "step": 5,
-      "default": 40,
+      "default": 30,
       "unit": "px"
     },
     {
@@ -1317,7 +1407,7 @@
       "min": 0,
       "max": 3,
       "step": 1,
-      "default": 1,
+      "default": 0,
       "unit": "px"
     },
     {
@@ -1330,25 +1420,31 @@
       "type": "color",
       "id": "nav_button_color",
       "label": "Arrow button icon color",
-      "default": "#ffffff"
+      "default": "#666666"
     },
     {
       "type": "color",
       "id": "nav_button_border_color",
       "label": "Arrow button border color",
-      "default": "#ffffff"
+      "default": "transparent"
     },
     {
       "type": "color",
       "id": "nav_button_hover_background",
       "label": "Arrow button hover background",
-      "default": "#8B0000"
+      "default": "transparent"
     },
     {
       "type": "color",
       "id": "nav_button_hover_border_color",
       "label": "Arrow button hover border color",
-      "default": "#8B0000"
+      "default": "transparent"
+    },
+    {
+      "type": "color",
+      "id": "nav_button_hover_color",
+      "label": "Arrow button hover icon color",
+      "default": "#ffffff"
     },
     {
       "type": "header",
@@ -1432,21 +1528,30 @@
         "products_limit": 10,
         "background_color": "#000000",
         "title_color": "#ffffff",
+        "product_title_color": "#ffffff",
+        "show_price": true,
+        "price_color": "#ffffff",
         "show_ratings": false,
+        "show_variants_and_button": true,
         "show_variant_options": true,
         "show_mini_description": false,
         "auto_scroll": false,
         "auto_scroll_speed": 0.5,
         "new_product_tag": "new",
         "editors_pick_tag": "editors-pick",
-        "button_background_color": "#8B0000",
-        "button_text_color": "#ffffff",
+        "button_background_color": "#ffffff",
+        "button_text_color": "#333333",
         "button_border_radius": 0,
-        "variant_button_background": "#1a1a1a",
+        "variant_button_background": "#3a3a3a",
         "variant_button_text_color": "#ffffff",
-        "variant_button_selected_background": "#8B0000",
+        "variant_button_selected_background": "#4a4a4a",
         "variant_button_selected_text_color": "#ffffff",
-        "variant_button_border_radius": 0
+        "variant_button_border_radius": 20,
+        "nav_button_background": "transparent",
+        "nav_button_border_width": 0,
+        "nav_button_color": "#666666",
+        "dot_color": "#666666",
+        "dot_active_color": "#ffffff"
       }
     }
   ]
