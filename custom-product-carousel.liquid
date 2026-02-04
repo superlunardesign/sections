@@ -1,0 +1,1300 @@
+<!-- Custom Product Carousel Section -->
+<div id="CustomProductCarousel-{{ section.id }}" class="custom-product-carousel-section">
+  <div class="carousel-container">
+    <h2 class="carousel-section-title">{{ section.settings.section_title | default: 'Explore our bestsellers' }}</h2>
+
+    <div class="carousel-wrapper">
+      <button class="carousel-btn carousel-btn--prev" aria-label="Previous products">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+
+      <div class="product-carousel">
+        {% assign collection = collections[section.settings.collection] %}
+        {% if collection == blank %}
+          {% assign collection = collections.all %}
+        {% endif %}
+        {% for product in collection.products limit: section.settings.products_limit %}
+          <div class="product-card" data-product-id="{{ product.id }}">
+            <!-- Status Indicators -->
+            {% if product.available == false %}
+              <div class="status-badge status-badge--out-of-stock">{{ section.settings.out_of_stock_badge_text }}</div>
+            {% elsif product.compare_at_price > product.price %}
+              <div class="status-badge status-badge--sale">{{ section.settings.sale_badge_text }}</div>
+            {% elsif product.tags contains section.settings.new_product_tag %}
+              <div class="status-badge status-badge--new">{{ section.settings.new_badge_text }}</div>
+            {% elsif product.tags contains section.settings.editors_pick_tag %}
+              <div class="status-badge status-badge--editors-pick">{{ section.settings.editors_pick_badge_text }}</div>
+            {% endif %}
+
+            <!-- Product Image -->
+            <div class="product-image">
+              {% if product.featured_image %}
+                <a href="{{ product.url }}">
+                  <img src="{{ product.featured_image | img_url: '400x400' }}"
+                       alt="{{ product.featured_image.alt | escape }}"
+                       loading="lazy">
+                </a>
+              {% else %}
+                <div class="no-image">No image available</div>
+              {% endif %}
+            </div>
+
+            <!-- Product Info -->
+            <div class="product-info">
+              <div class="product-content">
+                <a href="{{ product.url }}"><h3 class="product-title">{{ product.title }}</h3></a>
+
+                <!-- Mini Description from metafield -->
+                {% if product.metafields.custom.mini_description %}
+                  <p class="product-mini-description">{{ product.metafields.custom.mini_description }}</p>
+                {% endif %}
+              </div>
+
+              <!-- Star Rating (if enabled and metafield exists) -->
+              {% if section.settings.show_ratings %}
+                {% assign rating_namespace = section.settings.rating_metafield_namespace %}
+                {% assign rating_key = section.settings.rating_metafield_key %}
+                {% assign count_key = section.settings.review_count_metafield_key %}
+
+                {% if product.metafields[rating_namespace][rating_key] %}
+                  <div class="rating">
+                    {% assign rating = product.metafields[rating_namespace][rating_key] | times: 1 %}
+                    {% assign review_count = product.metafields[rating_namespace][count_key] | times: 1 %}
+
+                    <div class="stars">
+                      {% for i in (1..5) %}
+                        {% if i <= rating %}
+                          <span class="star star--filled">★</span>
+                        {% else %}
+                          <span class="star">★</span>
+                        {% endif %}
+                      {% endfor %}
+                    </div>
+                    <span class="review-count">{{ review_count }}</span>
+                  </div>
+                {% endif %}
+              {% endif %}
+
+              <!-- Variant Options (if enabled) -->
+              {% if section.settings.show_variant_options and product.variants.size > 1 %}
+                <div class="product-options">
+                  <!-- Store all variant data in a hidden script -->
+                  <script type="application/json" class="variant-data">
+                    {{ product.variants | json }}
+                  </script>
+                  {% for option in product.options_with_values %}
+                    <div class="option-group">
+                      <div class="size-options">
+                        {% for value in option.values %}
+                          <button class="size-btn"
+                                  data-option-position="{{ option.position }}"
+                                  data-option-value="{{ value | escape }}"
+                                  {% if forloop.first %}data-selected="true"{% endif %}>
+                            {{ value }}
+                          </button>
+                        {% endfor %}
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+
+              <!-- Add to Cart Button -->
+              <div class="product-actions">
+                <div class="button-container">
+                  {% if product.available %}
+                    <button class="add-to-cart-btn"
+                            data-variant-id="{{ product.variants.first.id }}">
+                      <span>{{ section.settings.add_to_cart_text }}</span>
+                      <span class="variant-price">
+                        {{ product.price | money }}
+                      </span>
+                    </button>
+                  {% else %}
+                    <button class="add-to-cart-btn" disabled>
+                      <span>{{ section.settings.out_of_stock_button_text }}</span>
+                    </button>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <button class="carousel-btn carousel-btn--next" aria-label="Next products">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Carousel Dots -->
+    {% if section.settings.show_dots %}
+      <div class="carousel-dots">
+        {% assign dot_count = collection.products.size | divided_by: 3 | plus: 1 %}
+        {% if dot_count > 10 %}{% assign dot_count = 10 %}{% endif %}
+        {% for i in (1..dot_count) %}
+          <button class="dot {% if forloop.first %}dot--active{% endif %}"
+                  data-slide="{{ forloop.index0 }}"
+                  aria-label="Go to slide {{ forloop.index }}"></button>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+{%- style -%}
+  /* =============================================
+     CUSTOM PRODUCT CAROUSEL - SCOPED STYLES
+     Section ID: {{ section.id }}
+     ============================================= */
+
+  #CustomProductCarousel-{{ section.id }} {
+    padding: {{ section.settings.padding_top }}px 0 {{ section.settings.padding_bottom }}px;
+    background-color: {{ section.settings.background_color }};
+  }
+
+  #CustomProductCarousel-{{ section.id }} .carousel-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 80px;
+  }
+
+  #CustomProductCarousel-{{ section.id }} .carousel-section-title {
+    text-align: {{ section.settings.title_alignment }};
+    font-size: {{ section.settings.title_font_size }}px;
+    margin-bottom: 40px;
+    color: {{ section.settings.title_color }};
+    font-weight: {{ section.settings.title_font_weight }};
+    letter-spacing: {{ section.settings.title_letter_spacing }}em;
+    text-transform: {{ section.settings.title_text_transform }};
+  }
+
+  #CustomProductCarousel-{{ section.id }} .carousel-wrapper {
+    position: relative;
+    margin: 0 40px;
+  }
+
+  #CustomProductCarousel-{{ section.id }} .product-carousel {
+    display: flex;
+    gap: {{ section.settings.card_gap }}px;
+    overflow-x: scroll;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding: 20px 0;
+  }
+
+  #CustomProductCarousel-{{ section.id }} .product-carousel::-webkit-scrollbar {
+    display: none;
+  }
+
+  #CustomProductCarousel-{{ section.id }} .product-card {
+    flex: 0 0 {{ section.settings.card_width }}px;
+    background: {{ section.settings.card_background_color }};
+    border-radius: {{ section.settings.card_border_radius }}px;
+    position: relative;
+    transition: transform 0.3s ease;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #CustomProductCarousel-{{ section.id }} .product-card:hover {
+    transform: translateY(-5px);
+  }
+
+  /* Status Badges */
+  #CustomProductCarousel-{{ section.id }} .status-badge {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    z-index: 2;
+    letter-spacing: 0.5px;
+  }
+
+  #CustomProductCarousel-{{ section.id }} .status-badge--new {
+    background: {{ section.settings.new_badge_color }};
+    color: {{ section.settings.badge_text_color }};
+  }
+
+  #CustomProductCarousel-{{ section.id }} .status-badge--sale {
+    background: {{ section.settings.sale_badge_color }};
+    color: {{ section.settings.badge_text_color }};
+  }
+
+  #CustomProductCarousel-{{ section.id }} .status-badge--out-of-stock {
+    background: {{ section.settings.out_of_stock_badge_color }};
+    color: {{ section.settings.badge_text_color }};
+  }
+
+  #CustomProductCarousel-{{ section.id }} .status-badge--editors-pick {
+    background: {{ section.settings.editors_pick_badge_color }};
+    color: {{ section.settings.badge_text_color }};
+  }
+
+  /* Product Image */
+  #CustomProductCarousel-{{ section.id }} .product-image {
+    width: 100%;
+    height: {{ section.settings.image_height }}px;
+    background: {{ section.settings.image_background_color }};
+    border-radius: {{ section.settings.card_border_radius }}px {{ section.settings.card_border_radius }}px 0 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #CustomProductCarousel-{{ section.id }} .product-image a {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+  }
+
+  #CustomProductCarousel-{{ section.id }} .product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  #CustomProductCarousel-{{ section.id }} .no-image {
+    color: #999;
+    font-size: 0.9rem;
+  }
+
+  /* Product Info */
+  #CustomProductCarousel-{{ section.id }} .product-info {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+  }
+
+  #CustomProductCarousel-{{ section.id }} .product-content {
+    height: 100%;
+  }
+
+  #CustomProductCarousel-{{ section.id }} .product-title {
+    font-size: {{ section.settings.product_title_font_size }}px;
+    font-weight: {{ section.settings.product_title_font_weight }};
+    margin-bottom: 2px;
+    color: {{ section.settings.product_title_color }};
+    line-height: 1.2;
+  }
+
+  #CustomProductCarousel-{{ section.id }} .product-info a {
+    text-decoration: none;
+  }
+
+  #CustomProductCarousel-{{ section.id }} .product-mini-description {
+    margin-block: 5px !important;
+    font-size: 14px;
+    color: {{ section.settings.description_color }};
+  }
+
+  /* Rating */
+  #CustomProductCarousel-{{ section.id }} .rating {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 15px;
+  }
+
+  #CustomProductCarousel-{{ section.id }} .stars {
+    display: flex;
+    gap: 2px;
+  }
+
+  #CustomProductCarousel-{{ section.id }} .star {
+    color: #ddd;
+    font-size: 1rem;
+  }
+
+  #CustomProductCarousel-{{ section.id }} .star--filled {
+    color: {{ section.settings.star_color }};
+  }
+
+  #CustomProductCarousel-{{ section.id }} .review-count {
+    color: {{ section.settings.description_color }};
+    font-size: 0.9rem;
+  }
+
+  /* Variant Options */
+  #CustomProductCarousel-{{ section.id }} .product-options {
+    margin-bottom: 15px;
+  }
+
+  #CustomProductCarousel-{{ section.id }} .option-group {
+    margin-bottom: 8px;
+  }
+
+  #CustomProductCarousel-{{ section.id }} .size-options {
+    display: flex;
+    gap: 8px;
+    font-size: 14px;
+    flex-wrap: wrap;
+  }
+
+  #CustomProductCarousel-{{ section.id }} .size-btn {
+    padding: 6px 12px;
+    border: 1px solid {{ section.settings.variant_button_border_color }};
+    background: {{ section.settings.variant_button_background }};
+    color: {{ section.settings.variant_button_text_color }};
+    border-radius: 999px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  #CustomProductCarousel-{{ section.id }} .size-btn:hover {
+    border-color: {{ section.settings.variant_button_active_background }};
+  }
+
+  #CustomProductCarousel-{{ section.id }} .size-btn[data-selected="true"] {
+    background: {{ section.settings.variant_button_active_background }};
+    color: {{ section.settings.variant_button_active_text_color }};
+    border-color: {{ section.settings.variant_button_active_background }};
+  }
+
+  /* Add to Cart Button */
+  #CustomProductCarousel-{{ section.id }} .product-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: auto;
+  }
+
+  #CustomProductCarousel-{{ section.id }} .button-container {
+    display: flex;
+    border-radius: {{ section.settings.button_border_radius }}px;
+    overflow: hidden;
+    min-height: 48px;
+    width: 100%;
+    background-color: {{ section.settings.button_background_color }};
+  }
+
+  #CustomProductCarousel-{{ section.id }} .add-to-cart-btn {
+    width: 100%;
+    padding: {{ section.settings.button_padding_vertical }}px {{ section.settings.button_padding_horizontal }}px;
+    background-color: transparent;
+    color: {{ section.settings.button_text_color }};
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: {{ section.settings.button_font_size }}px;
+    transition: background 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  #CustomProductCarousel-{{ section.id }} .add-to-cart-btn:hover {
+    background: rgba(0,0,0,0.05);
+  }
+
+  #CustomProductCarousel-{{ section.id }} .add-to-cart-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  /* Carousel Navigation Buttons */
+  #CustomProductCarousel-{{ section.id }} .carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: {{ section.settings.nav_button_background }};
+    border: 1px solid {{ section.settings.nav_button_border_color }};
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    color: {{ section.settings.nav_button_color }};
+  }
+
+  #CustomProductCarousel-{{ section.id }} .carousel-btn:hover {
+    background: {{ section.settings.nav_button_hover_background }};
+    border-color: {{ section.settings.nav_button_hover_border_color }};
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+
+  #CustomProductCarousel-{{ section.id }} .carousel-btn--prev {
+    left: -60px;
+  }
+
+  #CustomProductCarousel-{{ section.id }} .carousel-btn--next {
+    right: -60px;
+  }
+
+  /* Carousel Dots */
+  #CustomProductCarousel-{{ section.id }} .carousel-dots {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 30px;
+  }
+
+  #CustomProductCarousel-{{ section.id }} .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: {{ section.settings.dot_color }};
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+
+  #CustomProductCarousel-{{ section.id }} .dot--active {
+    background: {{ section.settings.dot_active_color }};
+  }
+
+  /* Mobile Styles */
+  @media (max-width: 768px) {
+    #CustomProductCarousel-{{ section.id }} .product-card {
+      flex: 0 0 {{ section.settings.card_width_mobile }}px;
+    }
+
+    #CustomProductCarousel-{{ section.id }} .carousel-btn {
+      display: none;
+    }
+
+    #CustomProductCarousel-{{ section.id }} .carousel-wrapper {
+      margin: 0;
+    }
+
+    #CustomProductCarousel-{{ section.id }} .carousel-container {
+      padding: 0 15px;
+    }
+
+    #CustomProductCarousel-{{ section.id }} .carousel-section-title {
+      font-size: {{ section.settings.title_font_size_mobile }}px;
+    }
+
+    #CustomProductCarousel-{{ section.id }} .product-image {
+      height: {{ section.settings.image_height_mobile }}px;
+    }
+
+    #CustomProductCarousel-{{ section.id }} {
+      padding: {{ section.settings.padding_top_mobile }}px 0 {{ section.settings.padding_bottom_mobile }}px;
+    }
+  }
+{%- endstyle -%}
+
+<script>
+(function() {
+  const sectionId = '{{ section.id }}';
+  const section = document.getElementById('CustomProductCarousel-' + sectionId);
+  if (!section) return;
+
+  const carousel = section.querySelector('.product-carousel');
+  const prevBtn = section.querySelector('.carousel-btn--prev');
+  const nextBtn = section.querySelector('.carousel-btn--next');
+  const dots = section.querySelectorAll('.dot');
+
+  // Variant Selection
+  section.querySelectorAll('.size-btn').forEach(button => {
+    button.addEventListener('click', function() {
+      const optionGroup = this.closest('.option-group');
+      const productCard = this.closest('.product-card');
+      const addToCartBtn = productCard.querySelector('.add-to-cart-btn');
+
+      // Remove selected from other buttons in this group
+      optionGroup.querySelectorAll('.size-btn').forEach(btn => {
+        btn.removeAttribute('data-selected');
+      });
+
+      // Mark this button as selected
+      this.setAttribute('data-selected', 'true');
+
+      // Get the variant data from the script tag
+      const variantDataScript = productCard.querySelector('.variant-data');
+      if (!variantDataScript) return;
+
+      try {
+        const variants = JSON.parse(variantDataScript.textContent);
+        const selectedValue = this.getAttribute('data-option-value');
+
+        // Find matching variant
+        const matchingVariant = variants.find(variant =>
+          variant.option1 === selectedValue && variant.available
+        );
+
+        if (matchingVariant) {
+          // Update button with new variant ID and price
+          addToCartBtn.setAttribute('data-variant-id', matchingVariant.id);
+          const priceElement = addToCartBtn.querySelector('.variant-price');
+          if (priceElement) {
+            priceElement.textContent = Shopify.formatMoney ? Shopify.formatMoney(matchingVariant.price) : '$' + (matchingVariant.price / 100).toFixed(2);
+          }
+        }
+      } catch (error) {
+        console.error('Error selecting variant:', error);
+      }
+    });
+  });
+
+  // Add to Cart
+  section.querySelectorAll('.add-to-cart-btn').forEach(button => {
+    button.addEventListener('click', function() {
+      const variantId = this.getAttribute('data-variant-id');
+
+      if (!variantId) {
+        alert('Please select a variant');
+        return;
+      }
+
+      // Show loading state
+      const originalContent = this.innerHTML;
+      this.innerHTML = '<span>Adding...</span>';
+      this.disabled = true;
+
+      // Get cart element
+      const cart = document.querySelector('cart-notification') || document.querySelector('cart-drawer');
+
+      // Prepare form data
+      const formData = new FormData();
+      formData.append('id', variantId);
+      formData.append('quantity', '1');
+
+      if (cart) {
+        try {
+          const sectionsToRender = cart.getSectionsToRender().map((section) => section.id);
+          formData.append('sections', sectionsToRender);
+          formData.append('sections_url', window.location.pathname);
+          cart.setActiveElement(document.activeElement);
+        } catch (e) {
+          console.log('Cart sections error (non-critical):', e);
+        }
+      }
+
+      const btn = this;
+      fetch('/cart/add.js', {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+      })
+      .then(response => response.json())
+      .then(response => {
+        if (response.status) {
+          throw new Error(response.description || 'Error adding to cart');
+        }
+
+        btn.innerHTML = '<span>Added!</span>';
+
+        if (!cart) {
+          window.location = '/cart';
+          return;
+        }
+
+        if (cart.classList.contains('is-empty')) {
+          cart.classList.remove('is-empty');
+        }
+
+        cart.renderContents(response);
+
+        setTimeout(() => {
+          btn.innerHTML = originalContent;
+          btn.disabled = false;
+        }, 1500);
+      })
+      .catch(error => {
+        console.error('Error adding to cart:', error);
+        btn.innerHTML = originalContent;
+        btn.disabled = false;
+        alert('Error adding to cart: ' + error.message);
+      });
+    });
+  });
+
+  // Carousel Navigation
+  const cardWidth = {{ section.settings.card_width }} + {{ section.settings.card_gap }};
+
+  function scrollCarouselBy(direction) {
+    const scrollAmount = cardWidth * 2;
+    carousel.scrollBy({
+      left: direction * scrollAmount,
+      behavior: 'smooth'
+    });
+  }
+
+  function goToSlide(index) {
+    const scrollPosition = index * cardWidth * 2;
+    carousel.scrollTo({
+      left: scrollPosition,
+      behavior: 'smooth'
+    });
+  }
+
+  function updateActiveDot() {
+    const currentSlide = Math.round(carousel.scrollLeft / (cardWidth * 2));
+    dots.forEach((dot, index) => {
+      dot.classList.toggle('dot--active', index === currentSlide);
+    });
+  }
+
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => scrollCarouselBy(-1));
+  }
+
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => scrollCarouselBy(1));
+  }
+
+  dots.forEach((dot, index) => {
+    dot.addEventListener('click', () => goToSlide(index));
+  });
+
+  carousel.addEventListener('scroll', updateActiveDot);
+
+  // Auto-scroll functionality
+  {% if section.settings.auto_scroll %}
+  let animationFrameId = null;
+  let isHovered = false;
+  let isManuallyControlled = false;
+  const autoScrollSpeed = {{ section.settings.auto_scroll_speed }};
+
+  function startAutoScroll() {
+    if (animationFrameId) return;
+
+    function animate() {
+      if (!isHovered && !isManuallyControlled) {
+        carousel.scrollLeft += autoScrollSpeed;
+
+        const maxScroll = carousel.scrollWidth - carousel.clientWidth;
+        if (carousel.scrollLeft >= maxScroll) {
+          carousel.scrollLeft = 0;
+        }
+      }
+      animationFrameId = requestAnimationFrame(animate);
+    }
+
+    animationFrameId = requestAnimationFrame(animate);
+  }
+
+  function stopAutoScroll() {
+    if (animationFrameId) {
+      cancelAnimationFrame(animationFrameId);
+      animationFrameId = null;
+    }
+  }
+
+  carousel.addEventListener('mouseenter', () => { isHovered = true; });
+  carousel.addEventListener('mouseleave', () => { isHovered = false; });
+  carousel.addEventListener('touchstart', () => {
+    isManuallyControlled = true;
+    stopAutoScroll();
+  }, { passive: true });
+
+  if (prevBtn) prevBtn.addEventListener('click', () => { isManuallyControlled = true; stopAutoScroll(); });
+  if (nextBtn) nextBtn.addEventListener('click', () => { isManuallyControlled = true; stopAutoScroll(); });
+
+  startAutoScroll();
+  {% endif %}
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Custom Product Carousel",
+  "tag": "section",
+  "class": "custom-product-carousel",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Collection Settings"
+    },
+    {
+      "type": "text",
+      "id": "section_title",
+      "label": "Section Title",
+      "default": "NEW ARRIVALS"
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Collection",
+      "info": "Select the collection to display products from"
+    },
+    {
+      "type": "range",
+      "id": "products_limit",
+      "label": "Number of products to show",
+      "min": 4,
+      "max": 20,
+      "step": 1,
+      "default": 10
+    },
+    {
+      "type": "header",
+      "content": "Title Styling"
+    },
+    {
+      "type": "select",
+      "id": "title_alignment",
+      "label": "Title alignment",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "right", "label": "Right" }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "range",
+      "id": "title_font_size",
+      "label": "Title font size (desktop)",
+      "min": 16,
+      "max": 72,
+      "step": 2,
+      "default": 32,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "title_font_size_mobile",
+      "label": "Title font size (mobile)",
+      "min": 14,
+      "max": 48,
+      "step": 2,
+      "default": 24,
+      "unit": "px"
+    },
+    {
+      "type": "select",
+      "id": "title_font_weight",
+      "label": "Title font weight",
+      "options": [
+        { "value": "300", "label": "Light" },
+        { "value": "400", "label": "Normal" },
+        { "value": "500", "label": "Medium" },
+        { "value": "600", "label": "Semi-bold" },
+        { "value": "700", "label": "Bold" }
+      ],
+      "default": "400"
+    },
+    {
+      "type": "range",
+      "id": "title_letter_spacing",
+      "label": "Title letter spacing",
+      "min": 0,
+      "max": 0.5,
+      "step": 0.05,
+      "default": 0,
+      "unit": "em"
+    },
+    {
+      "type": "select",
+      "id": "title_text_transform",
+      "label": "Title text transform",
+      "options": [
+        { "value": "none", "label": "None" },
+        { "value": "uppercase", "label": "Uppercase" },
+        { "value": "lowercase", "label": "Lowercase" },
+        { "value": "capitalize", "label": "Capitalize" }
+      ],
+      "default": "uppercase"
+    },
+    {
+      "type": "color",
+      "id": "title_color",
+      "label": "Title color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "header",
+      "content": "Layout Settings"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding top (desktop)",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "default": 40,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding bottom (desktop)",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "default": 40,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "label": "Padding top (mobile)",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "default": 30,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "label": "Padding bottom (mobile)",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "default": 30,
+      "unit": "px"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Section background color",
+      "default": "#000000"
+    },
+    {
+      "type": "header",
+      "content": "Card Settings"
+    },
+    {
+      "type": "range",
+      "id": "card_width",
+      "label": "Card width (desktop)",
+      "min": 200,
+      "max": 400,
+      "step": 10,
+      "default": 280,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "card_width_mobile",
+      "label": "Card width (mobile)",
+      "min": 180,
+      "max": 300,
+      "step": 10,
+      "default": 250,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "card_gap",
+      "label": "Gap between cards",
+      "min": 10,
+      "max": 40,
+      "step": 5,
+      "default": 20,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "card_border_radius",
+      "label": "Card border radius",
+      "min": 0,
+      "max": 20,
+      "step": 2,
+      "default": 8,
+      "unit": "px"
+    },
+    {
+      "type": "color",
+      "id": "card_background_color",
+      "label": "Card background color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "header",
+      "content": "Image Settings"
+    },
+    {
+      "type": "range",
+      "id": "image_height",
+      "label": "Image height (desktop)",
+      "min": 200,
+      "max": 450,
+      "step": 10,
+      "default": 300,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "image_height_mobile",
+      "label": "Image height (mobile)",
+      "min": 150,
+      "max": 350,
+      "step": 10,
+      "default": 250,
+      "unit": "px"
+    },
+    {
+      "type": "color",
+      "id": "image_background_color",
+      "label": "Image placeholder background",
+      "default": "#f8f9fa"
+    },
+    {
+      "type": "header",
+      "content": "Product Info Settings"
+    },
+    {
+      "type": "range",
+      "id": "product_title_font_size",
+      "label": "Product title font size",
+      "min": 14,
+      "max": 24,
+      "step": 1,
+      "default": 18,
+      "unit": "px"
+    },
+    {
+      "type": "select",
+      "id": "product_title_font_weight",
+      "label": "Product title font weight",
+      "options": [
+        { "value": "400", "label": "Normal" },
+        { "value": "500", "label": "Medium" },
+        { "value": "600", "label": "Semi-bold" },
+        { "value": "700", "label": "Bold" }
+      ],
+      "default": "600"
+    },
+    {
+      "type": "color",
+      "id": "product_title_color",
+      "label": "Product title color",
+      "default": "#333333"
+    },
+    {
+      "type": "color",
+      "id": "description_color",
+      "label": "Description and review count color",
+      "default": "#666666"
+    },
+    {
+      "type": "header",
+      "content": "Rating Settings"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_ratings",
+      "label": "Show product ratings",
+      "default": true,
+      "info": "Requires review metafields to be set up"
+    },
+    {
+      "type": "text",
+      "id": "rating_metafield_namespace",
+      "label": "Rating metafield namespace",
+      "default": "reviews"
+    },
+    {
+      "type": "text",
+      "id": "rating_metafield_key",
+      "label": "Rating metafield key",
+      "default": "rating"
+    },
+    {
+      "type": "text",
+      "id": "review_count_metafield_key",
+      "label": "Review count metafield key",
+      "default": "count"
+    },
+    {
+      "type": "color",
+      "id": "star_color",
+      "label": "Star rating color",
+      "default": "#ffd700"
+    },
+    {
+      "type": "header",
+      "content": "Variant Options"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_variant_options",
+      "label": "Show variant options",
+      "default": true,
+      "info": "Display size/color options for products with variants"
+    },
+    {
+      "type": "color",
+      "id": "variant_button_background",
+      "label": "Variant button background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "variant_button_text_color",
+      "label": "Variant button text color",
+      "default": "#333333"
+    },
+    {
+      "type": "color",
+      "id": "variant_button_border_color",
+      "label": "Variant button border color",
+      "default": "#dddddd"
+    },
+    {
+      "type": "color",
+      "id": "variant_button_active_background",
+      "label": "Variant button active background",
+      "default": "#333333"
+    },
+    {
+      "type": "color",
+      "id": "variant_button_active_text_color",
+      "label": "Variant button active text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "header",
+      "content": "Add to Cart Button"
+    },
+    {
+      "type": "text",
+      "id": "add_to_cart_text",
+      "label": "Add to cart button text",
+      "default": "ADD TO BAG"
+    },
+    {
+      "type": "text",
+      "id": "out_of_stock_button_text",
+      "label": "Out of stock button text",
+      "default": "OUT OF STOCK"
+    },
+    {
+      "type": "color",
+      "id": "button_background_color",
+      "label": "Button background color",
+      "default": "#dae2c7"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Button text color",
+      "default": "#333333"
+    },
+    {
+      "type": "range",
+      "id": "button_font_size",
+      "label": "Button font size",
+      "min": 12,
+      "max": 18,
+      "step": 1,
+      "default": 14,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "button_border_radius",
+      "label": "Button border radius",
+      "min": 0,
+      "max": 20,
+      "step": 2,
+      "default": 8,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "button_padding_vertical",
+      "label": "Button padding (vertical)",
+      "min": 8,
+      "max": 20,
+      "step": 2,
+      "default": 12,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "button_padding_horizontal",
+      "label": "Button padding (horizontal)",
+      "min": 10,
+      "max": 30,
+      "step": 2,
+      "default": 12,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Status Badge Settings"
+    },
+    {
+      "type": "text",
+      "id": "new_product_tag",
+      "label": "Tag for 'NEW' products",
+      "default": "new",
+      "info": "Products with this tag will show a 'NEW' badge"
+    },
+    {
+      "type": "text",
+      "id": "editors_pick_tag",
+      "label": "Tag for 'Editor's Pick' products",
+      "default": "editors-pick",
+      "info": "Products with this tag will show an 'Editor's Pick' badge"
+    },
+    {
+      "type": "text",
+      "id": "new_badge_text",
+      "label": "NEW badge text",
+      "default": "NEW"
+    },
+    {
+      "type": "text",
+      "id": "sale_badge_text",
+      "label": "SALE badge text",
+      "default": "SALE"
+    },
+    {
+      "type": "text",
+      "id": "out_of_stock_badge_text",
+      "label": "Out of stock badge text",
+      "default": "OUT OF STOCK"
+    },
+    {
+      "type": "text",
+      "id": "editors_pick_badge_text",
+      "label": "Editor's Pick badge text",
+      "default": "Editor's Pick"
+    },
+    {
+      "type": "header",
+      "content": "Badge Colors"
+    },
+    {
+      "type": "color",
+      "id": "new_badge_color",
+      "label": "NEW badge color",
+      "default": "#ff6b6b"
+    },
+    {
+      "type": "color",
+      "id": "sale_badge_color",
+      "label": "SALE badge color",
+      "default": "#ff9800"
+    },
+    {
+      "type": "color",
+      "id": "editors_pick_badge_color",
+      "label": "Editor's Pick badge color",
+      "default": "#8bc34a"
+    },
+    {
+      "type": "color",
+      "id": "out_of_stock_badge_color",
+      "label": "Out of stock badge color",
+      "default": "#999999"
+    },
+    {
+      "type": "color",
+      "id": "badge_text_color",
+      "label": "Badge text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "header",
+      "content": "Navigation"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_dots",
+      "label": "Show navigation dots",
+      "default": true
+    },
+    {
+      "type": "color",
+      "id": "nav_button_background",
+      "label": "Arrow button background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "nav_button_color",
+      "label": "Arrow button icon color",
+      "default": "#333333"
+    },
+    {
+      "type": "color",
+      "id": "nav_button_border_color",
+      "label": "Arrow button border color",
+      "default": "#dddddd"
+    },
+    {
+      "type": "color",
+      "id": "nav_button_hover_background",
+      "label": "Arrow button hover background",
+      "default": "#f8f9fa"
+    },
+    {
+      "type": "color",
+      "id": "nav_button_hover_border_color",
+      "label": "Arrow button hover border color",
+      "default": "#333333"
+    },
+    {
+      "type": "color",
+      "id": "dot_color",
+      "label": "Dot color",
+      "default": "#dddddd"
+    },
+    {
+      "type": "color",
+      "id": "dot_active_color",
+      "label": "Active dot color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "header",
+      "content": "Auto-Scroll Settings"
+    },
+    {
+      "type": "checkbox",
+      "id": "auto_scroll",
+      "label": "Enable auto-scroll marquee",
+      "default": false,
+      "info": "Smoothly scrolls products continuously. Pauses on hover and stops when manually controlled."
+    },
+    {
+      "type": "range",
+      "id": "auto_scroll_speed",
+      "label": "Auto-scroll speed",
+      "min": 0.2,
+      "max": 2,
+      "step": 0.1,
+      "default": 0.5,
+      "info": "Speed in pixels per frame (0.2 = very slow, 2 = fast)"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Custom Product Carousel",
+      "settings": {
+        "section_title": "NEW ARRIVALS",
+        "products_limit": 10,
+        "background_color": "#000000",
+        "title_color": "#ffffff",
+        "show_ratings": true,
+        "show_variant_options": true,
+        "auto_scroll": false,
+        "auto_scroll_speed": 0.5,
+        "new_product_tag": "new",
+        "editors_pick_tag": "editors-pick"
+      }
+    }
+  ]
+}
+{% endschema %}
