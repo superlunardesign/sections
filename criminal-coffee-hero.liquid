@@ -33,7 +33,7 @@
     }
   }
 
-  /* Background Container */
+  /* Background Container - holds overlay color */
   #CriminalHero-{{ section.id }} .criminal-hero__background {
     position: absolute;
     top: 0;
@@ -41,30 +41,7 @@
     width: 100%;
     height: 100%;
     z-index: 1;
-  }
-
-  /* Background Color Layer */
-  #CriminalHero-{{ section.id }} .criminal-hero__bg-color {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: {{ section.settings.background_color }};
-    z-index: 1;
-  }
-
-  /* Overlay Layer */
-  #CriminalHero-{{ section.id }} .criminal-hero__overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
     background-color: {{ section.settings.overlay_color }};
-    opacity: {{ section.settings.overlay_opacity | divided_by: 100.0 }};
-    z-index: 10;
-    pointer-events: none;
   }
 
   /* Single Background Container */
@@ -74,7 +51,6 @@
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 2;
   }
 
   /* Background Image Styles */
@@ -154,7 +130,6 @@
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 2;
   }
 
   #CriminalHero-{{ section.id }} .criminal-hero__slide {
@@ -524,6 +499,9 @@
   }
 {%- endstyle -%}
 
+{%- comment -%} Calculate image opacity: higher overlay = lower image opacity {%- endcomment -%}
+{%- assign image_opacity = 100 | minus: section.settings.overlay_opacity | times: 0.01 -%}
+
 <section
   id="CriminalHero-{{ section.id }}"
   class="criminal-hero criminal-hero-{{ section.id }} section-{{ section.id }}-padding"
@@ -532,13 +510,8 @@
   data-slideshow-speed="{{ section.settings.slideshow_speed }}"
   data-slideshow-transition="{{ section.settings.slideshow_transition }}"
 >
-  {%- comment -%} Background Container {%- endcomment -%}
-  <div class="criminal-hero__background">
-    {%- comment -%} Overlay {%- endcomment -%}
-    <div class="criminal-hero__overlay"></div>
-
-    {%- comment -%} Background Color Fallback {%- endcomment -%}
-    <div class="criminal-hero__bg-color"></div>
+  {%- comment -%} Background Container - overlay color is the background {%- endcomment -%}
+  <div class="criminal-hero__background" style="background-color: {{ section.settings.overlay_color }};">
 
     {%- comment -%} Single Background or Slideshow Container {%- endcomment -%}
     {%- if section.settings.enable_slideshow and section.blocks.size > 0 -%}
@@ -557,7 +530,7 @@
                   muted
                   loop
                   playsinline
-                  style="object-position: {{ block.settings.background_position }};"
+                  style="object-position: {{ block.settings.background_position }}; opacity: {{ image_opacity }};"
                 >
                   {{ block.settings.video | video_tag }}
                 </video>
@@ -568,7 +541,7 @@
                     src="https://www.youtube.com/embed/{{ block.settings.video_url.id }}?autoplay=1&mute=1&loop=1&playlist={{ block.settings.video_url.id }}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1"
                     allow="autoplay; encrypted-media"
                     allowfullscreen
-                    style="object-position: {{ block.settings.background_position }};"
+                    style="object-position: {{ block.settings.background_position }}; opacity: {{ image_opacity }};"
                   ></iframe>
                 {%- elsif block.settings.video_url.type == 'vimeo' -%}
                   <iframe
@@ -576,7 +549,7 @@
                     src="https://player.vimeo.com/video/{{ block.settings.video_url.id }}?autoplay=1&muted=1&loop=1&background=1&playsinline=1"
                     allow="autoplay; encrypted-media"
                     allowfullscreen
-                    style="object-position: {{ block.settings.background_position }};"
+                    style="object-position: {{ block.settings.background_position }}; opacity: {{ image_opacity }};"
                   ></iframe>
                 {%- endif -%}
               {%- elsif block.settings.image != blank -%}
@@ -601,7 +574,7 @@
                     alt="{{ image.alt | escape }}"
                     loading="{% if forloop.first %}eager{% else %}lazy{% endif %}"
                     fetchpriority="{% if forloop.first %}high{% else %}low{% endif %}"
-                    style="object-position: {{ block.settings.background_position }};"
+                    style="object-position: {{ block.settings.background_position }}; opacity: {{ image_opacity }};"
                   >
                 </picture>
               {%- else -%}
@@ -636,7 +609,7 @@
             muted
             loop
             playsinline
-            style="object-position: {{ section.settings.background_position }};"
+            style="object-position: {{ section.settings.background_position }}; opacity: {{ image_opacity }};"
           >
             {{ section.settings.video | video_tag }}
           </video>
@@ -647,7 +620,7 @@
               src="https://www.youtube.com/embed/{{ section.settings.video_url.id }}?autoplay=1&mute=1&loop=1&playlist={{ section.settings.video_url.id }}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1"
               allow="autoplay; encrypted-media"
               allowfullscreen
-              style="object-position: {{ section.settings.background_position }};"
+              style="object-position: {{ section.settings.background_position }}; opacity: {{ image_opacity }};"
             ></iframe>
           {%- elsif section.settings.video_url.type == 'vimeo' -%}
             <iframe
@@ -655,7 +628,7 @@
               src="https://player.vimeo.com/video/{{ section.settings.video_url.id }}?autoplay=1&muted=1&loop=1&background=1&playsinline=1"
               allow="autoplay; encrypted-media"
               allowfullscreen
-              style="object-position: {{ section.settings.background_position }};"
+              style="object-position: {{ section.settings.background_position }}; opacity: {{ image_opacity }};"
             ></iframe>
           {%- endif -%}
         {%- elsif section.settings.image != blank -%}
@@ -680,7 +653,7 @@
               alt="{{ image.alt | escape }}"
               loading="eager"
               fetchpriority="high"
-              style="object-position: {{ section.settings.background_position }};"
+              style="object-position: {{ section.settings.background_position }}; opacity: {{ image_opacity }};"
             >
           </picture>
         {%- else -%}
@@ -876,7 +849,8 @@
       "max": 100,
       "step": 5,
       "default": 30,
-      "unit": "%"
+      "unit": "%",
+      "info": "Higher value = more overlay color visible"
     },
     {
       "type": "header",
