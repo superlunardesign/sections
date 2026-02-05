@@ -89,16 +89,76 @@
                     {{ product.variants | json }}
                   </script>
                   {% for option in product.options_with_values %}
-                    <div class="option-group">
+                    {% assign option_name_lower = option.name | downcase %}
+                    {% assign is_color = false %}
+                    {% if option_name_lower contains 'color' or option_name_lower contains 'colour' %}
+                      {% assign is_color = true %}
+                    {% endif %}
+
+                    <div class="option-group" data-option-type="{% if is_color %}color{% else %}size{% endif %}">
                       <div class="size-options">
+                        {% assign max_visible = section.settings.max_visible_variants %}
+                        {% assign total_values = option.values.size %}
+                        {% assign remaining = total_values | minus: max_visible %}
+
                         {% for value in option.values %}
-                          <button class="size-btn"
-                                  data-option-position="{{ option.position }}"
-                                  data-option-value="{{ value | escape }}"
-                                  {% if forloop.first %}data-selected="true"{% endif %}>
-                            {{ value }}
-                          </button>
+                          {% if is_color %}
+                            {%- assign color_value = value | downcase | strip -%}
+                            {%- assign swatch_color = '#888888' -%}
+                            {%- case color_value -%}
+                              {%- when 'black' -%}{% assign swatch_color = '#000000' %}
+                              {%- when 'white' -%}{% assign swatch_color = '#ffffff' %}
+                              {%- when 'red' -%}{% assign swatch_color = '#cc0000' %}
+                              {%- when 'blue' -%}{% assign swatch_color = '#0066cc' %}
+                              {%- when 'navy' or 'navy blue' -%}{% assign swatch_color = '#001f3f' %}
+                              {%- when 'green' -%}{% assign swatch_color = '#228b22' %}
+                              {%- when 'yellow' -%}{% assign swatch_color = '#ffd700' %}
+                              {%- when 'orange' -%}{% assign swatch_color = '#ff6600' %}
+                              {%- when 'purple' -%}{% assign swatch_color = '#663399' %}
+                              {%- when 'pink' -%}{% assign swatch_color = '#ff69b4' %}
+                              {%- when 'brown' -%}{% assign swatch_color = '#8b4513' %}
+                              {%- when 'gray' or 'grey' -%}{% assign swatch_color = '#808080' %}
+                              {%- when 'beige' -%}{% assign swatch_color = '#f5f5dc' %}
+                              {%- when 'cream' -%}{% assign swatch_color = '#fffdd0' %}
+                              {%- when 'tan' -%}{% assign swatch_color = '#d2b48c' %}
+                              {%- when 'burgundy' -%}{% assign swatch_color = '#800020' %}
+                              {%- when 'maroon' -%}{% assign swatch_color = '#800000' %}
+                              {%- when 'coral' -%}{% assign swatch_color = '#ff7f50' %}
+                              {%- when 'teal' -%}{% assign swatch_color = '#008080' %}
+                              {%- when 'olive' -%}{% assign swatch_color = '#808000' %}
+                              {%- when 'gold' -%}{% assign swatch_color = '#ffd700' %}
+                              {%- when 'silver' -%}{% assign swatch_color = '#c0c0c0' %}
+                              {%- when 'charcoal' -%}{% assign swatch_color = '#36454f' %}
+                              {%- when 'ivory' -%}{% assign swatch_color = '#fffff0' %}
+                              {%- when 'khaki' -%}{% assign swatch_color = '#c3b091' %}
+                              {%- when 'lavender' -%}{% assign swatch_color = '#e6e6fa' %}
+                              {%- when 'mint' -%}{% assign swatch_color = '#98ff98' %}
+                              {%- when 'rose' -%}{% assign swatch_color = '#ff007f' %}
+                              {%- when 'sage' -%}{% assign swatch_color = '#9dc183' %}
+                              {%- when 'natural' -%}{% assign swatch_color = '#f5f5dc' %}
+                            {%- endcase -%}
+                            <button class="color-swatch"
+                                    data-option-position="{{ option.position }}"
+                                    data-option-value="{{ value | escape }}"
+                                    style="background-color: {{ swatch_color }};"
+                                    title="{{ value }}"
+                                    {% if forloop.first %}data-selected="true"{% endif %}>
+                            </button>
+                          {% else %}
+                            {% if forloop.index <= max_visible %}
+                              <button class="size-btn"
+                                      data-option-position="{{ option.position }}"
+                                      data-option-value="{{ value | escape }}"
+                                      {% if forloop.first %}data-selected="true"{% endif %}>
+                                {{ value }}
+                              </button>
+                            {% endif %}
+                          {% endif %}
                         {% endfor %}
+
+                        {% if remaining > 0 and is_color == false %}
+                          <a href="{{ product.url }}" class="more-options">+{{ remaining }} More</a>
+                        {% endif %}
                       </div>
                     </div>
                   {% endfor %}
@@ -388,6 +448,79 @@
     border-color: {{ section.settings.variant_button_selected_border_color }};
   }
 
+  /* Unavailable Variant Styles */
+  #CustomProductCarousel-{{ section.id }} .size-btn[data-unavailable="true"] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    position: relative;
+  }
+
+  #CustomProductCarousel-{{ section.id }} .size-btn[data-unavailable="true"]::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: currentColor;
+    transform: rotate(-15deg);
+  }
+
+  /* Color Swatches */
+  #CustomProductCarousel-{{ section.id }} .color-swatch {
+    width: {{ section.settings.color_swatch_size }}px;
+    height: {{ section.settings.color_swatch_size }}px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1);
+  }
+
+  #CustomProductCarousel-{{ section.id }} .color-swatch:hover {
+    transform: scale(1.1);
+  }
+
+  #CustomProductCarousel-{{ section.id }} .color-swatch[data-selected="true"] {
+    border-color: {{ section.settings.color_swatch_selected_border }};
+    box-shadow: 0 0 0 2px {{ section.settings.color_swatch_selected_border }};
+  }
+
+  #CustomProductCarousel-{{ section.id }} .color-swatch[data-unavailable="true"] {
+    opacity: 0.4;
+    cursor: not-allowed;
+    position: relative;
+  }
+
+  #CustomProductCarousel-{{ section.id }} .color-swatch[data-unavailable="true"]::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -2px;
+    right: -2px;
+    height: 2px;
+    background: #cc0000;
+    transform: rotate(-45deg);
+  }
+
+  /* +X More Link */
+  #CustomProductCarousel-{{ section.id }} .more-options {
+    padding: 4px 10px;
+    font-size: 12px;
+    color: {{ section.settings.variant_button_text_color }};
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+  }
+
+  #CustomProductCarousel-{{ section.id }} .more-options:hover {
+    opacity: 1;
+    text-decoration: underline;
+  }
+
   /* Add to Cart Button */
   #CustomProductCarousel-{{ section.id }} .product-actions {
     display: flex;
@@ -547,15 +680,46 @@
   const cardWidthMobile = {{ section.settings.card_width_mobile }};
   const cardGap = {{ section.settings.card_gap }};
 
-  // Variant Selection
-  section.querySelectorAll('.size-btn').forEach(button => {
+  // Mark unavailable variants on page load
+  section.querySelectorAll('.product-card').forEach(productCard => {
+    const variantDataScript = productCard.querySelector('.variant-data');
+    if (!variantDataScript) return;
+
+    try {
+      const variants = JSON.parse(variantDataScript.textContent);
+
+      // Check each option button for availability
+      productCard.querySelectorAll('.size-btn, .color-swatch').forEach(btn => {
+        const optionPosition = parseInt(btn.getAttribute('data-option-position'));
+        const optionValue = btn.getAttribute('data-option-value');
+
+        // Check if ANY variant with this option value is available
+        const hasAvailableVariant = variants.some(variant => {
+          const optionKey = 'option' + optionPosition;
+          return variant[optionKey] === optionValue && variant.available;
+        });
+
+        if (!hasAvailableVariant) {
+          btn.setAttribute('data-unavailable', 'true');
+        }
+      });
+    } catch (error) {
+      console.error('Error checking variant availability:', error);
+    }
+  });
+
+  // Variant Selection (size buttons and color swatches)
+  section.querySelectorAll('.size-btn, .color-swatch').forEach(button => {
     button.addEventListener('click', function() {
+      // Don't allow selection of unavailable variants
+      if (this.getAttribute('data-unavailable') === 'true') return;
+
       const optionGroup = this.closest('.option-group');
       const productCard = this.closest('.product-card');
       const addToCartBtn = productCard.querySelector('.add-to-cart-btn');
 
       // Remove selected from other buttons in this group
-      optionGroup.querySelectorAll('.size-btn').forEach(btn => {
+      optionGroup.querySelectorAll('.size-btn, .color-swatch').forEach(btn => {
         btn.removeAttribute('data-selected');
       });
 
@@ -568,12 +732,19 @@
 
       try {
         const variants = JSON.parse(variantDataScript.textContent);
-        const selectedValue = this.getAttribute('data-option-value');
 
-        // Find matching variant
-        const matchingVariant = variants.find(variant =>
-          variant.option1 === selectedValue && variant.available
-        );
+        // Get all selected options
+        const selectedOptions = {};
+        productCard.querySelectorAll('[data-selected="true"]').forEach(selectedBtn => {
+          const position = selectedBtn.getAttribute('data-option-position');
+          const value = selectedBtn.getAttribute('data-option-value');
+          selectedOptions['option' + position] = value;
+        });
+
+        // Find matching variant based on all selected options
+        const matchingVariant = variants.find(variant => {
+          return Object.keys(selectedOptions).every(key => variant[key] === selectedOptions[key]) && variant.available;
+        });
 
         if (matchingVariant) {
           // Update button with new variant ID
@@ -1152,6 +1323,32 @@
       "info": "Display size/color options for products with variants"
     },
     {
+      "type": "range",
+      "id": "max_visible_variants",
+      "label": "Max visible size variants",
+      "min": 2,
+      "max": 8,
+      "step": 1,
+      "default": 3,
+      "info": "Size options beyond this will show as '+X More' link"
+    },
+    {
+      "type": "range",
+      "id": "color_swatch_size",
+      "label": "Color swatch size",
+      "min": 16,
+      "max": 36,
+      "step": 2,
+      "default": 24,
+      "unit": "px"
+    },
+    {
+      "type": "color",
+      "id": "color_swatch_selected_border",
+      "label": "Selected color swatch border",
+      "default": "#ffffff"
+    },
+    {
       "type": "color",
       "id": "variant_button_background",
       "label": "Unselected button background",
@@ -1542,6 +1739,9 @@
         "show_ratings": false,
         "show_variants_and_button": true,
         "show_variant_options": true,
+        "max_visible_variants": 3,
+        "color_swatch_size": 24,
+        "color_swatch_selected_border": "#ffffff",
         "show_mini_description": false,
         "auto_scroll": false,
         "auto_scroll_speed": 0.5,
