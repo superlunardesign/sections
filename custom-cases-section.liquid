@@ -122,8 +122,6 @@
   /* Carousel Wrapper */
   #CustomCasesSection-{{ section.id }} .cases-wrapper {
     position: relative;
-    display: flex;
-    justify-content: center;
   }
 
   #CustomCasesSection-{{ section.id }} .cases-carousel {
@@ -134,17 +132,16 @@
     scrollbar-width: none;
     -ms-overflow-style: none;
     padding: 10px 0;
-    justify-content: flex-start;
-    max-width: calc(({{ section.settings.card_width }}px * 2) + {{ section.settings.card_gap }}px);
   }
 
   #CustomCasesSection-{{ section.id }} .cases-carousel::-webkit-scrollbar {
     display: none;
   }
 
-  /* Case Card */
+  /* Case Card - flexible width to fill container */
   #CustomCasesSection-{{ section.id }} .case-card {
-    flex: 0 0 {{ section.settings.card_width }}px;
+    flex: 0 0 calc((100% - {{ section.settings.card_gap }}px) / 2);
+    min-width: calc((100% - {{ section.settings.card_gap }}px) / 2);
     text-decoration: none;
     display: flex;
     flex-direction: column;
@@ -272,12 +269,9 @@
 
   /* Tablet Styles */
   @media (max-width: 990px) {
-    #CustomCasesSection-{{ section.id }} .cases-carousel {
-      max-width: calc(({{ section.settings.card_width_tablet }}px * 2) + {{ section.settings.card_gap }}px);
-    }
-
     #CustomCasesSection-{{ section.id }} .case-card {
-      flex: 0 0 {{ section.settings.card_width_tablet }}px;
+      flex: 0 0 calc((100% - {{ section.settings.card_gap }}px) / 2);
+      min-width: calc((100% - {{ section.settings.card_gap }}px) / 2);
     }
 
     #CustomCasesSection-{{ section.id }} .cases-container {
@@ -296,14 +290,12 @@
     }
 
     #CustomCasesSection-{{ section.id }} .cases-carousel {
-      max-width: 100%;
       scroll-snap-type: x mandatory;
-      padding-left: calc((100% - {{ section.settings.card_width_mobile }}px) / 2);
-      padding-right: calc((100% - {{ section.settings.card_width_mobile }}px) / 2);
     }
 
     #CustomCasesSection-{{ section.id }} .case-card {
-      flex: 0 0 {{ section.settings.card_width_mobile }}px;
+      flex: 0 0 85%;
+      min-width: 85%;
       scroll-snap-align: center;
     }
 
@@ -334,17 +326,13 @@
 
   {% assign blog = blogs[section.settings.blog] %}
   const totalArticles = {% if blog != blank %}{{ blog.articles.size | at_most: section.settings.articles_limit }}{% else %}4{% endif %};
-  const cardWidthDesktop = {{ section.settings.card_width }};
-  const cardWidthTablet = {{ section.settings.card_width_tablet }};
-  const cardWidthMobile = {{ section.settings.card_width_mobile }};
   const cardGap = {{ section.settings.card_gap }};
 
   let dots = [];
 
   function getCardWidth() {
-    if (window.innerWidth <= 768) return cardWidthMobile;
-    if (window.innerWidth <= 990) return cardWidthTablet;
-    return cardWidthDesktop;
+    const firstCard = carousel.querySelector('.case-card');
+    return firstCard ? firstCard.offsetWidth : 300;
   }
 
   function calculateVisibleCards() {
