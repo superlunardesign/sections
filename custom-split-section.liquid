@@ -236,20 +236,21 @@
     }
 
     /* Default mobile: Image Top, Content Bottom */
-    #CustomSplitSection-{{ section.id }} .split-column--image {
+    /* Use .split-container to match specificity of desktop .layout-flipped rules */
+    #CustomSplitSection-{{ section.id }} .split-container .split-column--image {
       order: 1;
     }
 
-    #CustomSplitSection-{{ section.id }} .split-column--content {
+    #CustomSplitSection-{{ section.id }} .split-container .split-column--content {
       order: 2;
     }
 
     /* Mobile Flipped: Content Top, Image Bottom */
-    #CustomSplitSection-{{ section.id }} .mobile-flipped .split-column--image {
+    #CustomSplitSection-{{ section.id }} .split-container.mobile-flipped .split-column--image {
       order: 2;
     }
 
-    #CustomSplitSection-{{ section.id }} .mobile-flipped .split-column--content {
+    #CustomSplitSection-{{ section.id }} .split-container.mobile-flipped .split-column--content {
       order: 1;
     }
 
