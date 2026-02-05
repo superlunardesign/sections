@@ -33,16 +33,16 @@
           {% case block.type %}
 
             {% when 'subheading' %}
-              <p class="subheading" {{ block.shopify_attributes }}>{{ block.settings.text }}</p>
+              <p class="subheading" data-block-id="{{ block.id }}" {{ block.shopify_attributes }}>{{ block.settings.text }}</p>
 
             {% when 'heading' %}
-              <{{ block.settings.heading_tag }} class="main-heading" {{ block.shopify_attributes }}>{{ block.settings.text }}</{{ block.settings.heading_tag }}>
+              <{{ block.settings.heading_tag }} class="main-heading" data-block-id="{{ block.id }}" {{ block.shopify_attributes }}>{{ block.settings.text }}</{{ block.settings.heading_tag }}>
 
             {% when 'text' %}
-              <div class="body-text" {{ block.shopify_attributes }}>{{ block.settings.text }}</div>
+              <div class="body-text" data-block-id="{{ block.id }}" {{ block.shopify_attributes }}>{{ block.settings.text }}</div>
 
             {% when 'button' %}
-              <a href="{{ block.settings.link }}" class="split-button" {{ block.shopify_attributes }}>
+              <a href="{{ block.settings.link }}" class="split-button" data-block-id="{{ block.id }}" {{ block.shopify_attributes }}>
                 {{ block.settings.text }}
                 {% if block.settings.show_arrow %}
                   <span class="button-arrow">→</span>
