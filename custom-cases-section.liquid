@@ -122,6 +122,8 @@
   /* Carousel Wrapper */
   #CustomCasesSection-{{ section.id }} .cases-wrapper {
     position: relative;
+    display: flex;
+    justify-content: center;
   }
 
   #CustomCasesSection-{{ section.id }} .cases-carousel {
@@ -132,6 +134,8 @@
     scrollbar-width: none;
     -ms-overflow-style: none;
     padding: 10px 0;
+    justify-content: flex-start;
+    max-width: calc(({{ section.settings.card_width }}px * 2) + {{ section.settings.card_gap }}px);
   }
 
   #CustomCasesSection-{{ section.id }} .cases-carousel::-webkit-scrollbar {
@@ -268,6 +272,10 @@
 
   /* Tablet Styles */
   @media (max-width: 990px) {
+    #CustomCasesSection-{{ section.id }} .cases-carousel {
+      max-width: calc(({{ section.settings.card_width_tablet }}px * 2) + {{ section.settings.card_gap }}px);
+    }
+
     #CustomCasesSection-{{ section.id }} .case-card {
       flex: 0 0 {{ section.settings.card_width_tablet }}px;
     }
@@ -285,6 +293,10 @@
   @media (max-width: 768px) {
     #CustomCasesSection-{{ section.id }} {
       padding: {{ section.settings.padding_top_mobile }}px 0 {{ section.settings.padding_bottom_mobile }}px;
+    }
+
+    #CustomCasesSection-{{ section.id }} .cases-carousel {
+      max-width: {{ section.settings.card_width_mobile }}px;
     }
 
     #CustomCasesSection-{{ section.id }} .case-card {
@@ -332,17 +344,16 @@
   }
 
   function calculateVisibleCards() {
-    const cardWidth = getCardWidth();
-    const carouselWidth = carousel.clientWidth;
-    return Math.floor(carouselWidth / (cardWidth + cardGap)) || 1;
+    if (window.innerWidth <= 768) return 1;
+    return 2;
   }
 
   function generateDots() {
     if (!dotsContainer) return;
 
-    const cardWidth = getCardWidth();
     const visibleCards = calculateVisibleCards();
-    const dotCount = Math.ceil(totalArticles / visibleCards);
+    // Number of scroll positions = total articles - visible + 1
+    const dotCount = Math.max(1, totalArticles - visibleCards + 1);
 
     dotsContainer.innerHTML = '';
 
@@ -358,10 +369,10 @@
     dots = dotsContainer.querySelectorAll('.dot');
   }
 
+  // Scroll one card at a time
   function scrollCarouselBy(direction) {
     const cardWidth = getCardWidth();
-    const visibleCards = calculateVisibleCards();
-    const scrollAmount = (cardWidth + cardGap) * visibleCards;
+    const scrollAmount = cardWidth + cardGap;
     carousel.scrollBy({
       left: direction * scrollAmount,
       behavior: 'smooth'
@@ -370,8 +381,7 @@
 
   function goToSlide(index) {
     const cardWidth = getCardWidth();
-    const visibleCards = calculateVisibleCards();
-    const scrollPosition = index * (cardWidth + cardGap) * visibleCards;
+    const scrollPosition = index * (cardWidth + cardGap);
     carousel.scrollTo({
       left: scrollPosition,
       behavior: 'smooth'
@@ -381,9 +391,8 @@
   function updateActiveDot() {
     if (!dots.length) return;
     const cardWidth = getCardWidth();
-    const visibleCards = calculateVisibleCards();
-    const scrollPerSlide = (cardWidth + cardGap) * visibleCards;
-    const currentSlide = Math.round(carousel.scrollLeft / scrollPerSlide);
+    const scrollPerCard = cardWidth + cardGap;
+    const currentSlide = Math.round(carousel.scrollLeft / scrollPerCard);
     dots.forEach((dot, index) => {
       dot.classList.toggle('dot--active', index === currentSlide);
     });
