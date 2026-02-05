@@ -296,11 +296,15 @@
     }
 
     #CustomCasesSection-{{ section.id }} .cases-carousel {
-      max-width: {{ section.settings.card_width_mobile }}px;
+      max-width: 100%;
+      scroll-snap-type: x mandatory;
+      padding-left: calc((100% - {{ section.settings.card_width_mobile }}px) / 2);
+      padding-right: calc((100% - {{ section.settings.card_width_mobile }}px) / 2);
     }
 
     #CustomCasesSection-{{ section.id }} .case-card {
       flex: 0 0 {{ section.settings.card_width_mobile }}px;
+      scroll-snap-align: center;
     }
 
     #CustomCasesSection-{{ section.id }} .case-image {
