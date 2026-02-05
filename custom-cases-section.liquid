@@ -122,30 +122,31 @@
   /* Carousel Wrapper */
   #CustomCasesSection-{{ section.id }} .cases-wrapper {
     position: relative;
+    overflow: hidden;
   }
 
   #CustomCasesSection-{{ section.id }} .cases-carousel {
     display: flex;
     gap: {{ section.settings.card_gap }}px;
-    overflow-x: scroll;
+    overflow-x: auto;
     scroll-behavior: smooth;
     scrollbar-width: none;
     -ms-overflow-style: none;
-    padding: 10px 0;
+    scroll-snap-type: x mandatory;
   }
 
   #CustomCasesSection-{{ section.id }} .cases-carousel::-webkit-scrollbar {
     display: none;
   }
 
-  /* Case Card - flexible width to fill container */
+  /* Case Card */
   #CustomCasesSection-{{ section.id }} .case-card {
-    flex: 0 0 calc((100% - {{ section.settings.card_gap }}px) / 2);
-    min-width: calc((100% - {{ section.settings.card_gap }}px) / 2);
+    flex: 0 0 calc(50% - {{ section.settings.card_gap }}px / 2);
     text-decoration: none;
     display: flex;
     flex-direction: column;
     transition: transform 0.3s ease;
+    scroll-snap-align: start;
   }
 
   #CustomCasesSection-{{ section.id }} .case-card:hover {
@@ -269,11 +270,6 @@
 
   /* Tablet Styles */
   @media (max-width: 990px) {
-    #CustomCasesSection-{{ section.id }} .case-card {
-      flex: 0 0 calc((100% - {{ section.settings.card_gap }}px) / 2);
-      min-width: calc((100% - {{ section.settings.card_gap }}px) / 2);
-    }
-
     #CustomCasesSection-{{ section.id }} .cases-container {
       padding: 0 {{ section.settings.horizontal_padding_mobile }}px;
     }
