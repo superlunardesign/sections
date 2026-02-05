@@ -141,7 +141,7 @@
           font-weight: {{ block.settings.font_weight }};
           color: {{ block.settings.color }};
           text-transform: {{ block.settings.text_transform }};
-          letter-spacing: {{ block.settings.letter_spacing }}em;
+          letter-spacing: {{ block.settings.letter_spacing }}px;
           margin: 0 0 {{ block.settings.margin_bottom }}px 0;
         }
 
@@ -203,7 +203,7 @@
           font-weight: {{ block.settings.font_weight }};
           text-decoration: none;
           text-transform: {{ block.settings.text_transform }};
-          letter-spacing: {{ block.settings.letter_spacing }}em;
+          letter-spacing: {{ block.settings.letter_spacing }}px;
           transition: all 0.3s ease;
           cursor: pointer;
           margin-top: {{ block.settings.margin_top }}px;
@@ -527,10 +527,10 @@
           "id": "letter_spacing",
           "label": "Letter spacing",
           "min": 0,
-          "max": 0.3,
-          "step": 0.01,
-          "default": 0.05,
-          "unit": "em"
+          "max": 3,
+          "step": 1,
+          "default": 1,
+          "unit": "px"
         },
         {
           "type": "color",
@@ -754,10 +754,10 @@
           "id": "letter_spacing",
           "label": "Letter spacing",
           "min": 0,
-          "max": 0.2,
-          "step": 0.01,
-          "default": 0.05,
-          "unit": "em"
+          "max": 3,
+          "step": 1,
+          "default": 1,
+          "unit": "px"
         },
         {
           "type": "range",
