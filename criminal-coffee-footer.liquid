@@ -3,28 +3,31 @@
 <footer id="CriminalFooter-{{ section.id }}" class="criminal-footer">
   <div class="footer-container">
     <!-- Main Footer Content -->
-    <div class="footer-main">
-      <!-- Column 1: Logo + Newsletter (stacked) -->
-      <div class="footer-column footer-column--brand">
+    <div class="footer-main" style="display: grid; grid-template-columns: 1.3fr repeat({{ section.blocks.size }}, 1fr); gap: 50px;">
+      <!-- Column 1: Logo + Newsletter (stacked vertically) -->
+      <div class="footer-column footer-column--brand" style="display: flex; flex-direction: column; gap: 24px;">
         {% if section.settings.logo != blank %}
-          <a href="{{ routes.root_url }}" class="footer-logo">
-            <img
-              src="{{ section.settings.logo | image_url: width: 400 }}"
-              alt="{{ section.settings.logo.alt | default: shop.name | escape }}"
-              loading="lazy"
-              class="footer-logo__image"
-            >
-          </a>
+          <div class="footer-brand-logo" style="display: block;">
+            <a href="{{ routes.root_url }}" class="footer-logo" style="display: block;">
+              <img
+                src="{{ section.settings.logo | image_url: width: 400 }}"
+                alt="{{ section.settings.logo.alt | default: shop.name | escape }}"
+                loading="lazy"
+                class="footer-logo__image"
+                style="max-width: {{ section.settings.logo_width }}px; height: auto; display: block;"
+              >
+            </a>
+          </div>
         {% endif %}
 
         {% if section.settings.newsletter_enable %}
-          <div class="footer-newsletter">
+          <div class="footer-brand-newsletter" style="display: block;">
             {% if section.settings.newsletter_heading != blank %}
-              <h3 class="footer-newsletter__heading">{{ section.settings.newsletter_heading }}</h3>
+              <h3 class="footer-newsletter__heading" style="font-size: {{ section.settings.newsletter_heading_size }}px; font-weight: 400; font-style: italic; color: {{ section.settings.text_color }}; margin: 0 0 12px 0; letter-spacing: normal;">{{ section.settings.newsletter_heading }}</h3>
             {% endif %}
             {%- form 'customer', id: 'FooterNewsletter', class: 'footer-newsletter__form' -%}
               <input type="hidden" name="contact[tags]" value="newsletter">
-              <div class="footer-newsletter__field">
+              <div class="footer-newsletter__field" style="display: flex; border: 1px solid {{ section.settings.input_border_color }}; background: {{ section.settings.input_background }}; max-width: 280px;">
                 <input
                   id="NewsletterEmail--{{ section.id }}"
                   type="email"
@@ -37,13 +40,14 @@
                   autocomplete="email"
                   placeholder="{{ section.settings.newsletter_placeholder | default: 'Enter Email' }}"
                   required
+                  style="flex: 1; padding: 12px 16px; border: none; background: transparent; color: {{ section.settings.text_color }}; font-size: 14px; outline: none; min-width: 0;"
                   {% if form.errors %}
                     autofocus
                     aria-invalid="true"
                     aria-describedby="FooterNewsletter-error"
                   {% endif %}
                 >
-                <button type="submit" class="footer-newsletter__button" aria-label="Subscribe">
+                <button type="submit" class="footer-newsletter__button" aria-label="Subscribe" style="padding: 12px 16px; border: none; background: transparent; color: {{ section.settings.text_color }}; cursor: pointer; display: flex; align-items: center; justify-content: center;">
                   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
@@ -66,9 +70,9 @@
       {%- for block in section.blocks -%}
         {%- case block.type -%}
           {%- when 'link_list' -%}
-            <div class="footer-column" {{ block.shopify_attributes }}>
+            <div class="footer-column" {{ block.shopify_attributes }} style="display: flex; flex-direction: column;">
               {% if block.settings.heading != blank %}
-                <h3 class="footer-column__heading">{{ block.settings.heading }}</h3>
+                <h3 class="footer-column__heading" style="font-size: {{ section.settings.heading_font_size }}px; font-weight: {{ section.settings.heading_font_weight }}; color: {{ section.settings.heading_color }}; margin: 0 0 {{ section.settings.heading_margin_bottom }}px 0; letter-spacing: normal; text-transform: none;">{{ block.settings.heading }}</h3>
               {% endif %}
               {% if block.settings.menu != blank %}
                 <ul class="footer-menu">
@@ -84,9 +88,9 @@
             </div>
 
           {%- when 'contact' -%}
-            <div class="footer-column" {{ block.shopify_attributes }}>
+            <div class="footer-column" {{ block.shopify_attributes }} style="display: flex; flex-direction: column;">
               {% if block.settings.heading != blank %}
-                <h3 class="footer-column__heading">{{ block.settings.heading }}</h3>
+                <h3 class="footer-column__heading" style="font-size: {{ section.settings.heading_font_size }}px; font-weight: {{ section.settings.heading_font_weight }}; color: {{ section.settings.heading_color }}; margin: 0 0 {{ section.settings.heading_margin_bottom }}px 0; letter-spacing: normal; text-transform: none;">{{ block.settings.heading }}</h3>
               {% endif %}
               <div class="footer-contact">
                 {% if block.settings.show_social %}
@@ -155,9 +159,9 @@
             </div>
 
           {%- when 'text' -%}
-            <div class="footer-column" {{ block.shopify_attributes }}>
+            <div class="footer-column" {{ block.shopify_attributes }} style="display: flex; flex-direction: column;">
               {% if block.settings.heading != blank %}
-                <h3 class="footer-column__heading">{{ block.settings.heading }}</h3>
+                <h3 class="footer-column__heading" style="font-size: {{ section.settings.heading_font_size }}px; font-weight: {{ section.settings.heading_font_weight }}; color: {{ section.settings.heading_color }}; margin: 0 0 {{ section.settings.heading_margin_bottom }}px 0; letter-spacing: normal; text-transform: none;">{{ block.settings.heading }}</h3>
               {% endif %}
               <div class="footer-text-content">
                 {{ block.settings.subtext }}
@@ -227,6 +231,13 @@
      Section ID: {{ section.id }}
      ============================================= */
 
+  /* Reset all elements inside footer */
+  #CriminalFooter-{{ section.id }} *,
+  #CriminalFooter-{{ section.id }} *::before,
+  #CriminalFooter-{{ section.id }} *::after {
+    box-sizing: border-box;
+  }
+
   #CriminalFooter-{{ section.id }} {
     background-color: {{ section.settings.background_color }};
     padding: {{ section.settings.padding_top }}px 0 {{ section.settings.padding_bottom }}px;
@@ -239,56 +250,60 @@
     padding: 0 {{ section.settings.horizontal_padding }}px;
   }
 
-  /* Main Footer - CSS Grid for precise column control */
+  /* Main Footer - CSS Grid with fixed 4 columns */
   #CriminalFooter-{{ section.id }} .footer-main {
-    display: grid;
-    grid-template-columns: 1.2fr repeat({{ section.blocks.size | default: 3 }}, 1fr);
-    gap: {{ section.settings.column_gap }}px;
+    display: grid !important;
+    grid-template-columns: 1.3fr 1fr 1fr 1fr !important;
+    gap: {{ section.settings.column_gap }}px !important;
     padding-bottom: {{ section.settings.section_spacing }}px;
   }
 
   /* Footer Columns */
   #CriminalFooter-{{ section.id }} .footer-column {
-    display: flex;
-    flex-direction: column;
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 0;
   }
 
   #CriminalFooter-{{ section.id }} .footer-column__heading {
-    font-size: {{ section.settings.heading_font_size }}px;
-    font-weight: {{ section.settings.heading_font_weight }};
-    color: {{ section.settings.heading_color }};
-    text-transform: {{ section.settings.heading_transform }};
-    letter-spacing: {{ section.settings.heading_letter_spacing }}em;
-    margin: 0 0 {{ section.settings.heading_margin_bottom }}px 0;
-    line-height: 1.2;
+    font-size: {{ section.settings.heading_font_size }}px !important;
+    font-weight: {{ section.settings.heading_font_weight }} !important;
+    color: {{ section.settings.heading_color }} !important;
+    text-transform: {{ section.settings.heading_transform }} !important;
+    letter-spacing: normal !important;
+    margin: 0 0 {{ section.settings.heading_margin_bottom }}px 0 !important;
+    line-height: 1.2 !important;
+    word-spacing: normal !important;
   }
 
   /* Brand Column - Logo + Newsletter */
   #CriminalFooter-{{ section.id }} .footer-column--brand {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 24px !important;
   }
 
   /* Logo */
   #CriminalFooter-{{ section.id }} .footer-logo {
-    display: block;
-    text-decoration: none;
+    display: block !important;
+    text-decoration: none !important;
   }
 
   #CriminalFooter-{{ section.id }} .footer-logo__image {
-    max-width: {{ section.settings.logo_width }}px;
-    height: auto;
-    display: block;
+    max-width: {{ section.settings.logo_width }}px !important;
+    height: auto !important;
+    display: block !important;
   }
 
   /* Newsletter */
   #CriminalFooter-{{ section.id }} .footer-newsletter__heading {
-    font-size: {{ section.settings.newsletter_heading_size }}px;
-    font-weight: 400;
-    font-style: italic;
-    color: {{ section.settings.text_color }};
-    margin: 0 0 12px 0;
+    font-size: {{ section.settings.newsletter_heading_size }}px !important;
+    font-weight: 400 !important;
+    font-style: italic !important;
+    color: {{ section.settings.text_color }} !important;
+    margin: 0 0 12px 0 !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
   }
 
   #CriminalFooter-{{ section.id }} .footer-newsletter__form {
@@ -348,65 +363,74 @@
 
   /* Menu Links */
   #CriminalFooter-{{ section.id }} .footer-menu {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: {{ section.settings.link_spacing }}px;
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: {{ section.settings.link_spacing }}px !important;
+  }
+
+  #CriminalFooter-{{ section.id }} .footer-menu__item {
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   #CriminalFooter-{{ section.id }} .footer-menu__link {
-    color: {{ section.settings.link_color }};
-    text-decoration: none;
-    font-size: {{ section.settings.link_font_size }}px;
-    font-weight: {{ section.settings.link_font_weight }};
-    transition: color 0.2s ease;
-    display: inline-block;
+    color: {{ section.settings.link_color }} !important;
+    text-decoration: none !important;
+    font-size: {{ section.settings.link_font_size }}px !important;
+    font-weight: {{ section.settings.link_font_weight }} !important;
+    transition: color 0.2s ease !important;
+    display: inline-block !important;
+    letter-spacing: normal !important;
   }
 
   #CriminalFooter-{{ section.id }} .footer-menu__link:hover {
-    color: {{ section.settings.link_hover_color }};
+    color: {{ section.settings.link_hover_color }} !important;
   }
 
   /* Contact Block */
   #CriminalFooter-{{ section.id }} .footer-contact {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
   }
 
   #CriminalFooter-{{ section.id }} .footer-social {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 4px;
+    display: flex !important;
+    gap: 12px !important;
+    margin-bottom: 4px !important;
   }
 
   #CriminalFooter-{{ section.id }} .footer-social__link {
-    color: {{ section.settings.text_color }};
-    transition: opacity 0.2s ease;
+    color: {{ section.settings.text_color }} !important;
+    transition: opacity 0.2s ease !important;
+    display: inline-flex !important;
   }
 
   #CriminalFooter-{{ section.id }} .footer-social__link:hover {
-    opacity: 0.7;
+    opacity: 0.7 !important;
   }
 
   #CriminalFooter-{{ section.id }} .footer-contact__link {
-    color: {{ section.settings.link_color }};
-    text-decoration: none;
-    font-size: {{ section.settings.link_font_size }}px;
-    transition: color 0.2s ease;
+    color: {{ section.settings.link_color }} !important;
+    text-decoration: none !important;
+    font-size: {{ section.settings.link_font_size }}px !important;
+    transition: color 0.2s ease !important;
+    letter-spacing: normal !important;
   }
 
   #CriminalFooter-{{ section.id }} .footer-contact__link:hover {
-    color: {{ section.settings.link_hover_color }};
+    color: {{ section.settings.link_hover_color }} !important;
   }
 
   #CriminalFooter-{{ section.id }} .footer-contact__address {
-    color: {{ section.settings.text_color }};
-    font-size: {{ section.settings.link_font_size }}px;
-    margin: 0;
-    line-height: 1.5;
+    color: {{ section.settings.text_color }} !important;
+    font-size: {{ section.settings.link_font_size }}px !important;
+    margin: 0 !important;
+    line-height: 1.5 !important;
+    letter-spacing: normal !important;
   }
 
   /* Text Content */
