@@ -3,68 +3,65 @@
 <footer id="CriminalFooter-{{ section.id }}" class="criminal-footer">
   <div class="footer-container">
     <!-- Main Footer Content -->
-    <div class="footer-main" style="display: grid; grid-template-columns: 1.3fr repeat({{ section.blocks.size }}, 1fr); gap: 50px;">
-      <!-- Column 1: Logo + Newsletter (stacked vertically) -->
-      <div class="footer-column footer-column--brand" style="display: flex; flex-direction: column; gap: 24px;">
-        {% if section.settings.logo != blank %}
-          <div class="footer-brand-logo" style="display: block;">
-            <a href="{{ routes.root_url }}" class="footer-logo" style="display: block;">
-              <img
-                src="{{ section.settings.logo | image_url: width: 400 }}"
-                alt="{{ section.settings.logo.alt | default: shop.name | escape }}"
-                loading="lazy"
-                class="footer-logo__image"
-                style="max-width: {{ section.settings.logo_width }}px; height: auto; display: block;"
-              >
-            </a>
-          </div>
-        {% endif %}
+    <div class="footer-main">
+      <!-- Logo Column -->
+      {% if section.settings.logo != blank %}
+        <div class="footer-column footer-column--logo">
+          <a href="{{ routes.root_url }}" class="footer-logo">
+            <img
+              src="{{ section.settings.logo | image_url: width: 400 }}"
+              alt="{{ section.settings.logo.alt | default: shop.name | escape }}"
+              loading="lazy"
+              class="footer-logo__image"
+            >
+          </a>
 
-        {% if section.settings.newsletter_enable %}
-          <div class="footer-brand-newsletter" style="display: block;">
-            {% if section.settings.newsletter_heading != blank %}
-              <h3 class="footer-newsletter__heading" style="font-size: {{ section.settings.newsletter_heading_size }}px; font-weight: 400; font-style: italic; color: {{ section.settings.text_color }}; margin: 0 0 12px 0; letter-spacing: normal;">{{ section.settings.newsletter_heading }}</h3>
-            {% endif %}
-            {%- form 'customer', id: 'FooterNewsletter', class: 'footer-newsletter__form' -%}
-              <input type="hidden" name="contact[tags]" value="newsletter">
-              <div class="footer-newsletter__field" style="display: flex; border: 1px solid {{ section.settings.input_border_color }}; background: {{ section.settings.input_background }}; max-width: 280px;">
-                <input
-                  id="NewsletterEmail--{{ section.id }}"
-                  type="email"
-                  name="contact[email]"
-                  class="footer-newsletter__input"
-                  value="{{ form.email }}"
-                  aria-required="true"
-                  autocorrect="off"
-                  autocapitalize="off"
-                  autocomplete="email"
-                  placeholder="{{ section.settings.newsletter_placeholder | default: 'Enter Email' }}"
-                  required
-                  style="flex: 1; padding: 12px 16px; border: none; background: transparent; color: {{ section.settings.text_color }}; font-size: 14px; outline: none; min-width: 0;"
-                  {% if form.errors %}
-                    autofocus
-                    aria-invalid="true"
-                    aria-describedby="FooterNewsletter-error"
-                  {% endif %}
-                >
-                <button type="submit" class="footer-newsletter__button" aria-label="Subscribe" style="padding: 12px 16px; border: none; background: transparent; color: {{ section.settings.text_color }}; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </button>
-              </div>
-              {%- if form.errors -%}
-                <p class="footer-newsletter__error" id="FooterNewsletter-error">
-                  {{ form.errors.translated_fields['email'] | capitalize }} {{ form.errors.messages['email'] }}
-                </p>
-              {%- endif -%}
-              {%- if form.posted_successfully? -%}
-                <p class="footer-newsletter__success">{{ 'newsletter.success' | t }}</p>
-              {%- endif -%}
-            {%- endform -%}
-          </div>
-        {% endif %}
-      </div>
+          <!-- Newsletter under logo - desktop only -->
+          {% if section.settings.newsletter_enable %}
+            <div class="footer-newsletter footer-newsletter--desktop">
+              {% if section.settings.newsletter_heading != blank %}
+                <h3 class="footer-newsletter__heading">{{ section.settings.newsletter_heading }}</h3>
+              {% endif %}
+              {%- form 'customer', id: 'FooterNewsletterDesktop', class: 'footer-newsletter__form' -%}
+                <input type="hidden" name="contact[tags]" value="newsletter">
+                <div class="footer-newsletter__field">
+                  <input
+                    id="NewsletterEmailDesktop--{{ section.id }}"
+                    type="email"
+                    name="contact[email]"
+                    class="footer-newsletter__input"
+                    value="{{ form.email }}"
+                    aria-required="true"
+                    autocorrect="off"
+                    autocapitalize="off"
+                    autocomplete="email"
+                    placeholder="{{ section.settings.newsletter_placeholder | default: 'Enter Email' }}"
+                    required
+                    {% if form.errors %}
+                      autofocus
+                      aria-invalid="true"
+                      aria-describedby="FooterNewsletterDesktop-error"
+                    {% endif %}
+                  >
+                  <button type="submit" class="footer-newsletter__button" aria-label="Subscribe">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
+                </div>
+                {%- if form.errors -%}
+                  <p class="footer-newsletter__error" id="FooterNewsletterDesktop-error">
+                    {{ form.errors.translated_fields['email'] | capitalize }} {{ form.errors.messages['email'] }}
+                  </p>
+                {%- endif -%}
+                {%- if form.posted_successfully? -%}
+                  <p class="footer-newsletter__success">{{ 'newsletter.success' | t }}</p>
+                {%- endif -%}
+              {%- endform -%}
+            </div>
+          {% endif %}
+        </div>
+      {% endif %}
 
       <!-- Additional Columns from Blocks -->
       {%- for block in section.blocks -%}
@@ -195,6 +192,38 @@
             </div>
         {%- endcase -%}
       {%- endfor -%}
+
+      <!-- Newsletter - mobile only (appears after all links) -->
+      {% if section.settings.newsletter_enable %}
+        <div class="footer-column footer-newsletter--mobile">
+          {% if section.settings.newsletter_heading != blank %}
+            <h3 class="footer-newsletter__heading">{{ section.settings.newsletter_heading }}</h3>
+          {% endif %}
+          {%- form 'customer', id: 'FooterNewsletterMobile', class: 'footer-newsletter__form' -%}
+            <input type="hidden" name="contact[tags]" value="newsletter">
+            <div class="footer-newsletter__field">
+              <input
+                id="NewsletterEmailMobile--{{ section.id }}"
+                type="email"
+                name="contact[email]"
+                class="footer-newsletter__input"
+                value="{{ form.email }}"
+                aria-required="true"
+                autocorrect="off"
+                autocapitalize="off"
+                autocomplete="email"
+                placeholder="{{ section.settings.newsletter_placeholder | default: 'Enter Email' }}"
+                required
+              >
+              <button type="submit" class="footer-newsletter__button" aria-label="Subscribe">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+          {%- endform -%}
+        </div>
+      {% endif %}
     </div>
 
     <!-- Footer Bottom -->
@@ -250,10 +279,10 @@
     padding: 0 {{ section.settings.horizontal_padding }}px;
   }
 
-  /* Main Footer - CSS Grid with fixed 4 columns */
+  /* Main Footer - CSS Grid */
   #CriminalFooter-{{ section.id }} .footer-main {
     display: grid !important;
-    grid-template-columns: 1.3fr 1fr 1fr 1fr !important;
+    grid-template-columns: 1.3fr repeat({{ section.blocks.size }}, 1fr) !important;
     gap: {{ section.settings.column_gap }}px !important;
     padding-bottom: {{ section.settings.section_spacing }}px;
   }
@@ -276,11 +305,11 @@
     word-spacing: normal !important;
   }
 
-  /* Brand Column - Logo + Newsletter */
-  #CriminalFooter-{{ section.id }} .footer-column--brand {
+  /* Logo Column */
+  #CriminalFooter-{{ section.id }} .footer-column--logo {
     display: flex !important;
     flex-direction: column !important;
-    gap: 24px !important;
+    gap: 32px !important;
   }
 
   /* Logo */
@@ -299,11 +328,20 @@
   #CriminalFooter-{{ section.id }} .footer-newsletter__heading {
     font-size: {{ section.settings.newsletter_heading_size }}px !important;
     font-weight: 400 !important;
-    font-style: italic !important;
     color: {{ section.settings.text_color }} !important;
     margin: 0 0 12px 0 !important;
     letter-spacing: normal !important;
     text-transform: none !important;
+  }
+
+  /* Desktop newsletter - hide on mobile */
+  #CriminalFooter-{{ section.id }} .footer-newsletter--desktop {
+    display: block;
+  }
+
+  /* Mobile newsletter - hide on desktop */
+  #CriminalFooter-{{ section.id }} .footer-newsletter--mobile {
+    display: none;
   }
 
   #CriminalFooter-{{ section.id }} .footer-newsletter__form {
@@ -528,33 +566,23 @@
     }
 
     #CriminalFooter-{{ section.id }} .footer-main {
-      grid-template-columns: 1fr;
+      grid-template-columns: 1fr !important;
       gap: 32px;
-      text-align: center;
     }
 
-    #CriminalFooter-{{ section.id }} .footer-column--brand {
-      align-items: center;
+    /* Hide desktop newsletter on mobile */
+    #CriminalFooter-{{ section.id }} .footer-newsletter--desktop {
+      display: none !important;
     }
 
-    #CriminalFooter-{{ section.id }} .footer-column {
-      align-items: center;
+    /* Show mobile newsletter */
+    #CriminalFooter-{{ section.id }} .footer-newsletter--mobile {
+      display: flex !important;
+      flex-direction: column;
     }
 
     #CriminalFooter-{{ section.id }} .footer-newsletter__form {
       max-width: 100%;
-    }
-
-    #CriminalFooter-{{ section.id }} .footer-menu {
-      align-items: center;
-    }
-
-    #CriminalFooter-{{ section.id }} .footer-contact {
-      align-items: center;
-    }
-
-    #CriminalFooter-{{ section.id }} .footer-social {
-      justify-content: center;
     }
 
     #CriminalFooter-{{ section.id }} .footer-bottom__row {
