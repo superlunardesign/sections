@@ -1,0 +1,499 @@
+<!-- Custom Philanthropy Section -->
+<div id="CustomPhilanthropy-{{ section.id }}" class="custom-philanthropy">
+  <div class="philanthropy-container">
+    <div class="philanthropy-card">
+      <!-- Logo -->
+      <div class="philanthropy-logo">
+        {% if section.settings.logo != blank %}
+          <img
+            src="{{ section.settings.logo | image_url: width: 400 }}"
+            alt="{{ section.settings.logo.alt | default: 'Logo' | escape }}"
+            loading="lazy"
+            class="philanthropy-logo__image"
+          >
+        {% else %}
+          <div class="philanthropy-logo__placeholder">
+            {{ 'image' | placeholder_svg_tag: 'placeholder-svg' }}
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Divider -->
+      <div class="philanthropy-divider"></div>
+
+      <!-- Text -->
+      <div class="philanthropy-text">
+        {{ section.settings.text }}
+      </div>
+    </div>
+  </div>
+</div>
+
+{%- style -%}
+  /* =============================================
+     CUSTOM PHILANTHROPY SECTION - SCOPED STYLES
+     Section ID: {{ section.id }}
+     ============================================= */
+
+  #CustomPhilanthropy-{{ section.id }} {
+    background-color: {{ section.settings.background_color }};
+    padding: {{ section.settings.padding_top }}px 0 {{ section.settings.padding_bottom }}px;
+  }
+
+  #CustomPhilanthropy-{{ section.id }} .philanthropy-container {
+    max-width: {{ section.settings.max_width }}px;
+    margin: 0 auto;
+    padding: 0 {{ section.settings.horizontal_padding }}px;
+  }
+
+  /* Card */
+  #CustomPhilanthropy-{{ section.id }} .philanthropy-card {
+    display: flex;
+    align-items: center;
+    border: {{ section.settings.card_border_width }}px solid {{ section.settings.card_border_color }};
+    padding: {{ section.settings.card_padding }}px;
+    max-width: {{ section.settings.card_max_width }}px;
+    margin: 0 auto;
+  }
+
+  /* Logo */
+  #CustomPhilanthropy-{{ section.id }} .philanthropy-logo {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: {{ section.settings.logo_padding }}px;
+  }
+
+  #CustomPhilanthropy-{{ section.id }} .philanthropy-logo__image {
+    max-width: {{ section.settings.logo_max_width }}px;
+    max-height: {{ section.settings.logo_max_height }}px;
+    width: auto;
+    height: auto;
+    display: block;
+  }
+
+  #CustomPhilanthropy-{{ section.id }} .philanthropy-logo__placeholder {
+    width: {{ section.settings.logo_max_width }}px;
+    height: {{ section.settings.logo_max_height }}px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.3;
+  }
+
+  #CustomPhilanthropy-{{ section.id }} .philanthropy-logo__placeholder .placeholder-svg {
+    width: 80%;
+    height: 80%;
+  }
+
+  /* Divider */
+  #CustomPhilanthropy-{{ section.id }} .philanthropy-divider {
+    width: {{ section.settings.divider_width }}px;
+    align-self: stretch;
+    background-color: {{ section.settings.divider_color }};
+    flex-shrink: 0;
+    margin: 0 {{ section.settings.divider_spacing }}px;
+  }
+
+  /* Text */
+  #CustomPhilanthropy-{{ section.id }} .philanthropy-text {
+    flex: 1;
+    font-size: {{ section.settings.text_font_size }}px;
+    font-weight: {{ section.settings.text_font_weight }};
+    color: {{ section.settings.text_color }};
+    text-transform: {{ section.settings.text_transform }};
+    letter-spacing: {{ section.settings.text_letter_spacing }}px;
+    line-height: {{ section.settings.text_line_height }};
+    text-align: {{ section.settings.text_alignment }};
+    padding: {{ section.settings.text_padding }}px;
+  }
+
+  /* Tablet Styles */
+  @media (max-width: 990px) {
+    #CustomPhilanthropy-{{ section.id }} .philanthropy-container {
+      padding: 0 {{ section.settings.horizontal_padding_mobile }}px;
+    }
+
+    #CustomPhilanthropy-{{ section.id }} .philanthropy-text {
+      font-size: {{ section.settings.text_font_size_tablet }}px;
+    }
+
+    #CustomPhilanthropy-{{ section.id }} .philanthropy-logo__image {
+      max-width: {{ section.settings.logo_max_width_mobile }}px;
+    }
+  }
+
+  /* Mobile Styles */
+  @media (max-width: 768px) {
+    #CustomPhilanthropy-{{ section.id }} {
+      padding: {{ section.settings.padding_top_mobile }}px 0 {{ section.settings.padding_bottom_mobile }}px;
+    }
+
+    #CustomPhilanthropy-{{ section.id }} .philanthropy-card {
+      flex-direction: column;
+      text-align: center;
+      padding: {{ section.settings.card_padding_mobile }}px;
+    }
+
+    #CustomPhilanthropy-{{ section.id }} .philanthropy-divider {
+      width: 100%;
+      height: {{ section.settings.divider_width }}px;
+      margin: {{ section.settings.divider_spacing_mobile }}px 0;
+    }
+
+    #CustomPhilanthropy-{{ section.id }} .philanthropy-text {
+      font-size: {{ section.settings.text_font_size_mobile }}px;
+      text-align: center;
+    }
+  }
+{%- endstyle -%}
+
+{% schema %}
+{
+  "name": "Custom Philanthropy",
+  "tag": "section",
+  "class": "custom-philanthropy-section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Logo"
+    },
+    {
+      "type": "image_picker",
+      "id": "logo",
+      "label": "Logo image"
+    },
+    {
+      "type": "range",
+      "id": "logo_max_width",
+      "label": "Logo max width (desktop)",
+      "min": 80,
+      "max": 300,
+      "step": 10,
+      "default": 180,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "logo_max_width_mobile",
+      "label": "Logo max width (mobile)",
+      "min": 80,
+      "max": 250,
+      "step": 10,
+      "default": 150,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "logo_max_height",
+      "label": "Logo max height",
+      "min": 40,
+      "max": 150,
+      "step": 10,
+      "default": 80,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "logo_padding",
+      "label": "Logo padding",
+      "min": 0,
+      "max": 40,
+      "step": 5,
+      "default": 10,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Text"
+    },
+    {
+      "type": "text",
+      "id": "text",
+      "label": "Text",
+      "default": "A PORTION OF THE PROCEEDS FROM EVERY BAG SOLD WILL BE DONATED TO ORGANIZATIONS DEDICATED TO COMBATTING CRIME."
+    },
+    {
+      "type": "range",
+      "id": "text_font_size",
+      "label": "Text font size (desktop)",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "default": 14,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "text_font_size_tablet",
+      "label": "Text font size (tablet)",
+      "min": 12,
+      "max": 20,
+      "step": 1,
+      "default": 13,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "text_font_size_mobile",
+      "label": "Text font size (mobile)",
+      "min": 10,
+      "max": 18,
+      "step": 1,
+      "default": 12,
+      "unit": "px"
+    },
+    {
+      "type": "select",
+      "id": "text_font_weight",
+      "label": "Text font weight",
+      "options": [
+        { "value": "400", "label": "Normal" },
+        { "value": "500", "label": "Medium" },
+        { "value": "600", "label": "Semi-bold" },
+        { "value": "700", "label": "Bold" }
+      ],
+      "default": "500"
+    },
+    {
+      "type": "select",
+      "id": "text_transform",
+      "label": "Text transform",
+      "options": [
+        { "value": "none", "label": "None" },
+        { "value": "uppercase", "label": "Uppercase" },
+        { "value": "lowercase", "label": "Lowercase" },
+        { "value": "capitalize", "label": "Capitalize" }
+      ],
+      "default": "uppercase"
+    },
+    {
+      "type": "range",
+      "id": "text_letter_spacing",
+      "label": "Text letter spacing",
+      "min": 0,
+      "max": 5,
+      "step": 1,
+      "default": 1,
+      "unit": "px"
+    },
+    {
+      "type": "text",
+      "id": "text_line_height",
+      "label": "Text line height",
+      "default": "1.6"
+    },
+    {
+      "type": "select",
+      "id": "text_alignment",
+      "label": "Text alignment (desktop)",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "right", "label": "Right" }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "range",
+      "id": "text_padding",
+      "label": "Text padding",
+      "min": 0,
+      "max": 40,
+      "step": 5,
+      "default": 10,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Divider"
+    },
+    {
+      "type": "range",
+      "id": "divider_width",
+      "label": "Divider thickness",
+      "min": 1,
+      "max": 5,
+      "step": 1,
+      "default": 1,
+      "unit": "px"
+    },
+    {
+      "type": "color",
+      "id": "divider_color",
+      "label": "Divider color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "range",
+      "id": "divider_spacing",
+      "label": "Divider spacing (desktop)",
+      "min": 10,
+      "max": 60,
+      "step": 5,
+      "default": 30,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "divider_spacing_mobile",
+      "label": "Divider spacing (mobile)",
+      "min": 10,
+      "max": 40,
+      "step": 5,
+      "default": 20,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Card"
+    },
+    {
+      "type": "range",
+      "id": "card_max_width",
+      "label": "Card max width",
+      "min": 600,
+      "max": 1200,
+      "step": 50,
+      "default": 900,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "card_border_width",
+      "label": "Card border width",
+      "min": 1,
+      "max": 5,
+      "step": 1,
+      "default": 1,
+      "unit": "px"
+    },
+    {
+      "type": "color",
+      "id": "card_border_color",
+      "label": "Card border color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "range",
+      "id": "card_padding",
+      "label": "Card padding (desktop)",
+      "min": 10,
+      "max": 60,
+      "step": 5,
+      "default": 30,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "card_padding_mobile",
+      "label": "Card padding (mobile)",
+      "min": 10,
+      "max": 40,
+      "step": 5,
+      "default": 25,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Section Spacing"
+    },
+    {
+      "type": "range",
+      "id": "max_width",
+      "label": "Maximum section width",
+      "min": 1000,
+      "max": 1600,
+      "step": 50,
+      "default": 1200,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding top (desktop)",
+      "min": 0,
+      "max": 120,
+      "step": 10,
+      "default": 60,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding bottom (desktop)",
+      "min": 0,
+      "max": 120,
+      "step": 10,
+      "default": 60,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "label": "Padding top (mobile)",
+      "min": 0,
+      "max": 80,
+      "step": 10,
+      "default": 40,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "label": "Padding bottom (mobile)",
+      "min": 0,
+      "max": 80,
+      "step": 10,
+      "default": 40,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "horizontal_padding",
+      "label": "Horizontal padding (desktop)",
+      "min": 0,
+      "max": 80,
+      "step": 10,
+      "default": 40,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "horizontal_padding_mobile",
+      "label": "Horizontal padding (mobile)",
+      "min": 0,
+      "max": 40,
+      "step": 10,
+      "default": 20,
+      "unit": "px"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color",
+      "default": "#1a1a1a"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Custom Philanthropy",
+      "settings": {
+        "text": "A PORTION OF THE PROCEEDS FROM EVERY BAG SOLD WILL BE DONATED TO ORGANIZATIONS DEDICATED TO COMBATTING CRIME.",
+        "background_color": "#1a1a1a",
+        "text_color": "#ffffff",
+        "card_border_color": "#ffffff",
+        "divider_color": "#ffffff",
+        "text_transform": "uppercase"
+      }
+    }
+  ]
+}
+{% endschema %}
