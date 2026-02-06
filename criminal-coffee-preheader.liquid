@@ -84,6 +84,8 @@
   /* Desktop: show social icons, hide mobile subscription link on left */
   #CriminalPreheader-{{ section.id }} .preheader-left-social {
     display: flex;
+    align-items: center;
+    gap: 12px;
   }
   #CriminalPreheader-{{ section.id }} .preheader-left-subscription {
     display: none;
@@ -116,7 +118,7 @@
     <!-- Left side -->
     <div class="preheader-left">
       <!-- Social icons (desktop always, mobile only when logged out) -->
-      <div class="preheader-left-social" style="display: flex; align-items: center; gap: 12px;">
+      <div class="preheader-left-social">
         {%- if section.settings.social_twitter_link != blank -%}
           <a href="{{ section.settings.social_twitter_link }}" class="social-link" target="_blank" rel="noopener" aria-label="X (Twitter)">
             <span class="social-icon">
