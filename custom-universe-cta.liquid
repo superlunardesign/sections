@@ -1,0 +1,825 @@
+<!-- Custom Universe CTA Section -->
+<div id="CustomUniverseCTA-{{ section.id }}" class="custom-universe-cta">
+  <!-- Background Image -->
+  <div class="universe-background">
+    {% if section.settings.background_image != blank %}
+      <img
+        src="{{ section.settings.background_image | image_url: width: 1920 }}"
+        srcset="{{ section.settings.background_image | image_url: width: 800 }} 800w,
+                {{ section.settings.background_image | image_url: width: 1200 }} 1200w,
+                {{ section.settings.background_image | image_url: width: 1920 }} 1920w"
+        sizes="100vw"
+        alt="{{ section.settings.background_image.alt | escape }}"
+        loading="lazy"
+        class="universe-background__image"
+      >
+    {% endif %}
+    <div class="universe-background__overlay"></div>
+  </div>
+
+  <!-- Content Container -->
+  <div class="universe-container">
+    <div class="universe-layout">
+      <!-- Character Image -->
+      <div class="universe-characters">
+        {% if section.settings.character_image != blank %}
+          <img
+            src="{{ section.settings.character_image | image_url: width: 800 }}"
+            srcset="{{ section.settings.character_image | image_url: width: 400 }} 400w,
+                    {{ section.settings.character_image | image_url: width: 600 }} 600w,
+                    {{ section.settings.character_image | image_url: width: 800 }} 800w"
+            sizes="(max-width: 768px) 100vw, 50vw"
+            alt="{{ section.settings.character_image.alt | escape | default: 'Characters' }}"
+            loading="lazy"
+            class="universe-characters__image"
+          >
+        {% else %}
+          <div class="universe-characters__placeholder">
+            {{ 'image' | placeholder_svg_tag: 'placeholder-svg' }}
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Content -->
+      <div class="universe-content">
+        {% if section.settings.heading != blank %}
+          <{{ section.settings.heading_tag }} class="universe-heading">{{ section.settings.heading }}</{{ section.settings.heading_tag }}>
+        {% endif %}
+
+        {% if section.settings.text != blank %}
+          <div class="universe-text">{{ section.settings.text }}</div>
+        {% endif %}
+
+        {% if section.settings.button_text != blank %}
+          <a
+            href="{{ section.settings.button_link }}"
+            class="universe-button"
+            {% if section.settings.button_link == blank %}aria-disabled="true"{% endif %}
+          >
+            {{ section.settings.button_text }}
+            {% if section.settings.show_button_arrow %}
+              <span class="universe-button__arrow">→</span>
+            {% endif %}
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{%- style -%}
+  /* =============================================
+     CUSTOM UNIVERSE CTA - SCOPED STYLES
+     Section ID: {{ section.id }}
+     ============================================= */
+
+  #CustomUniverseCTA-{{ section.id }} {
+    position: relative;
+    min-height: {{ section.settings.section_height }}px;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+  }
+
+  /* Background */
+  #CustomUniverseCTA-{{ section.id }} .universe-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    background-color: {{ section.settings.background_color }};
+  }
+
+  #CustomUniverseCTA-{{ section.id }} .universe-background__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: {{ section.settings.background_position }};
+  }
+
+  #CustomUniverseCTA-{{ section.id }} .universe-background__overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: {{ section.settings.overlay_color }};
+    opacity: {{ section.settings.overlay_opacity | divided_by: 100.0 }};
+  }
+
+  /* Container */
+  #CustomUniverseCTA-{{ section.id }} .universe-container {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: {{ section.settings.max_width }}px;
+    margin: 0 auto;
+    padding: 0 {{ section.settings.horizontal_padding }}px;
+  }
+
+  /* Layout */
+  #CustomUniverseCTA-{{ section.id }} .universe-layout {
+    display: grid;
+    grid-template-columns: {{ section.settings.image_width }}% 1fr;
+    gap: {{ section.settings.column_gap }}px;
+    align-items: end;
+  }
+
+  /* Character Image */
+  #CustomUniverseCTA-{{ section.id }} .universe-characters {
+    position: relative;
+    align-self: end;
+  }
+
+  #CustomUniverseCTA-{{ section.id }} .universe-characters__image {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: {{ section.settings.character_max_height }}px;
+    object-fit: contain;
+    object-position: bottom center;
+  }
+
+  #CustomUniverseCTA-{{ section.id }} .universe-characters__placeholder {
+    width: 100%;
+    height: 300px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    opacity: 0.3;
+  }
+
+  #CustomUniverseCTA-{{ section.id }} .universe-characters__placeholder .placeholder-svg {
+    width: 80%;
+    height: 80%;
+  }
+
+  /* Content */
+  #CustomUniverseCTA-{{ section.id }} .universe-content {
+    padding: {{ section.settings.content_padding_top }}px 0 {{ section.settings.content_padding_bottom }}px;
+    align-self: center;
+  }
+
+  /* Heading */
+  #CustomUniverseCTA-{{ section.id }} .universe-heading {
+    font-size: {{ section.settings.heading_font_size }}px;
+    font-weight: {{ section.settings.heading_font_weight }};
+    font-style: {{ section.settings.heading_font_style }};
+    color: {{ section.settings.heading_color }};
+    line-height: {{ section.settings.heading_line_height }};
+    letter-spacing: {{ section.settings.heading_letter_spacing }}px;
+    margin: 0 0 {{ section.settings.heading_margin_bottom }}px 0;
+  }
+
+  /* Text */
+  #CustomUniverseCTA-{{ section.id }} .universe-text {
+    font-size: {{ section.settings.text_font_size }}px;
+    color: {{ section.settings.text_color }};
+    line-height: {{ section.settings.text_line_height }};
+    margin: 0 0 {{ section.settings.text_margin_bottom }}px 0;
+    max-width: {{ section.settings.text_max_width }}px;
+  }
+
+  #CustomUniverseCTA-{{ section.id }} .universe-text p {
+    margin: 0;
+  }
+
+  /* Button */
+  #CustomUniverseCTA-{{ section.id }} .universe-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: {{ section.settings.button_padding_vertical }}px {{ section.settings.button_padding_horizontal }}px;
+    background-color: {{ section.settings.button_background }};
+    color: {{ section.settings.button_text_color }};
+    border: {{ section.settings.button_border_width }}px solid {{ section.settings.button_border_color }};
+    border-radius: {{ section.settings.button_border_radius }}px;
+    font-size: {{ section.settings.button_font_size }}px;
+    font-weight: {{ section.settings.button_font_weight }};
+    text-decoration: none;
+    text-transform: {{ section.settings.button_text_transform }};
+    letter-spacing: {{ section.settings.button_letter_spacing }}px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  #CustomUniverseCTA-{{ section.id }} .universe-button:hover {
+    background-color: {{ section.settings.button_hover_background }};
+    color: {{ section.settings.button_hover_text_color }};
+    border-color: {{ section.settings.button_hover_border_color }};
+  }
+
+  #CustomUniverseCTA-{{ section.id }} .universe-button[aria-disabled="true"] {
+    pointer-events: none;
+    opacity: 0.6;
+  }
+
+  #CustomUniverseCTA-{{ section.id }} .universe-button__arrow {
+    transition: transform 0.3s ease;
+  }
+
+  #CustomUniverseCTA-{{ section.id }} .universe-button:hover .universe-button__arrow {
+    transform: translateX(4px);
+  }
+
+  /* Tablet Styles */
+  @media (max-width: 990px) {
+    #CustomUniverseCTA-{{ section.id }} {
+      min-height: auto;
+      align-items: stretch;
+    }
+
+    #CustomUniverseCTA-{{ section.id }} .universe-layout {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1fr;
+      gap: {{ section.settings.mobile_gap }}px;
+    }
+
+    #CustomUniverseCTA-{{ section.id }} .universe-content {
+      order: 1;
+      padding: {{ section.settings.content_padding_top_mobile }}px {{ section.settings.horizontal_padding_mobile }}px 0;
+      text-align: {{ section.settings.mobile_text_align }};
+    }
+
+    #CustomUniverseCTA-{{ section.id }} .universe-characters {
+      order: 2;
+    }
+
+    #CustomUniverseCTA-{{ section.id }} .universe-container {
+      padding: 0;
+    }
+
+    #CustomUniverseCTA-{{ section.id }} .universe-heading {
+      font-size: {{ section.settings.heading_font_size_tablet }}px;
+    }
+
+    #CustomUniverseCTA-{{ section.id }} .universe-text {
+      max-width: 100%;
+      {% if section.settings.mobile_text_align == 'center' %}
+      margin-left: auto;
+      margin-right: auto;
+      {% endif %}
+    }
+
+    {% if section.settings.mobile_text_align == 'center' %}
+    #CustomUniverseCTA-{{ section.id }} .universe-button {
+      margin-left: auto;
+      margin-right: auto;
+    }
+    {% endif %}
+  }
+
+  /* Mobile Styles */
+  @media (max-width: 768px) {
+    #CustomUniverseCTA-{{ section.id }} .universe-heading {
+      font-size: {{ section.settings.heading_font_size_mobile }}px;
+    }
+
+    #CustomUniverseCTA-{{ section.id }} .universe-text {
+      font-size: {{ section.settings.text_font_size_mobile }}px;
+    }
+
+    #CustomUniverseCTA-{{ section.id }} .universe-characters__image {
+      max-height: {{ section.settings.character_max_height_mobile }}px;
+    }
+  }
+{%- endstyle -%}
+
+{% schema %}
+{
+  "name": "Custom Universe CTA",
+  "tag": "section",
+  "class": "custom-universe-cta-section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Background"
+    },
+    {
+      "type": "image_picker",
+      "id": "background_image",
+      "label": "Background image"
+    },
+    {
+      "type": "select",
+      "id": "background_position",
+      "label": "Background position",
+      "options": [
+        { "value": "center center", "label": "Center" },
+        { "value": "center top", "label": "Top" },
+        { "value": "center bottom", "label": "Bottom" },
+        { "value": "left center", "label": "Left" },
+        { "value": "right center", "label": "Right" }
+      ],
+      "default": "center center"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color (fallback)",
+      "default": "#1a1a1a"
+    },
+    {
+      "type": "color",
+      "id": "overlay_color",
+      "label": "Overlay color",
+      "default": "#000000"
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "label": "Overlay opacity",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "default": 0,
+      "unit": "%"
+    },
+    {
+      "type": "header",
+      "content": "Character Image"
+    },
+    {
+      "type": "image_picker",
+      "id": "character_image",
+      "label": "Character image",
+      "info": "This image will be flush with the bottom of the section"
+    },
+    {
+      "type": "range",
+      "id": "character_max_height",
+      "label": "Character max height (desktop)",
+      "min": 200,
+      "max": 600,
+      "step": 20,
+      "default": 400,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "character_max_height_mobile",
+      "label": "Character max height (mobile)",
+      "min": 150,
+      "max": 500,
+      "step": 20,
+      "default": 300,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Content"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Criminal Coffee Universe"
+    },
+    {
+      "type": "select",
+      "id": "heading_tag",
+      "label": "Heading tag (SEO)",
+      "options": [
+        { "value": "h1", "label": "H1" },
+        { "value": "h2", "label": "H2" },
+        { "value": "h3", "label": "H3" },
+        { "value": "h4", "label": "H4" },
+        { "value": "p", "label": "Paragraph" }
+      ],
+      "default": "h2"
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "Text",
+      "default": "<p>Read up on the latest developments of the characters that inspired your favorite Criminal Coffee Roasts</p>"
+    },
+    {
+      "type": "range",
+      "id": "text_max_width",
+      "label": "Text max width",
+      "min": 200,
+      "max": 500,
+      "step": 20,
+      "default": 300,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Heading Style"
+    },
+    {
+      "type": "range",
+      "id": "heading_font_size",
+      "label": "Heading font size (desktop)",
+      "min": 24,
+      "max": 80,
+      "step": 2,
+      "default": 48,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "heading_font_size_tablet",
+      "label": "Heading font size (tablet)",
+      "min": 24,
+      "max": 72,
+      "step": 2,
+      "default": 42,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "heading_font_size_mobile",
+      "label": "Heading font size (mobile)",
+      "min": 20,
+      "max": 56,
+      "step": 2,
+      "default": 36,
+      "unit": "px"
+    },
+    {
+      "type": "select",
+      "id": "heading_font_weight",
+      "label": "Heading font weight",
+      "options": [
+        { "value": "300", "label": "Light" },
+        { "value": "400", "label": "Normal" },
+        { "value": "500", "label": "Medium" },
+        { "value": "600", "label": "Semi-bold" },
+        { "value": "700", "label": "Bold" }
+      ],
+      "default": "400"
+    },
+    {
+      "type": "select",
+      "id": "heading_font_style",
+      "label": "Heading font style",
+      "options": [
+        { "value": "normal", "label": "Normal" },
+        { "value": "italic", "label": "Italic" }
+      ],
+      "default": "italic"
+    },
+    {
+      "type": "text",
+      "id": "heading_line_height",
+      "label": "Heading line height",
+      "default": "1.1"
+    },
+    {
+      "type": "range",
+      "id": "heading_letter_spacing",
+      "label": "Heading letter spacing",
+      "min": -2,
+      "max": 5,
+      "step": 1,
+      "default": 0,
+      "unit": "px"
+    },
+    {
+      "type": "color",
+      "id": "heading_color",
+      "label": "Heading color",
+      "default": "#6B2D2D"
+    },
+    {
+      "type": "range",
+      "id": "heading_margin_bottom",
+      "label": "Heading margin bottom",
+      "min": 0,
+      "max": 40,
+      "step": 2,
+      "default": 16,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Text Style"
+    },
+    {
+      "type": "range",
+      "id": "text_font_size",
+      "label": "Text font size (desktop)",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "default": 16,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "text_font_size_mobile",
+      "label": "Text font size (mobile)",
+      "min": 12,
+      "max": 20,
+      "step": 1,
+      "default": 14,
+      "unit": "px"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "text",
+      "id": "text_line_height",
+      "label": "Text line height",
+      "default": "1.5"
+    },
+    {
+      "type": "range",
+      "id": "text_margin_bottom",
+      "label": "Text margin bottom",
+      "min": 0,
+      "max": 50,
+      "step": 2,
+      "default": 24,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Button"
+    },
+    {
+      "type": "text",
+      "id": "button_text",
+      "label": "Button text",
+      "default": "ENTER THE UNIVERSE"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "Button link"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_button_arrow",
+      "label": "Show arrow",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "button_font_size",
+      "label": "Button font size",
+      "min": 10,
+      "max": 18,
+      "step": 1,
+      "default": 14,
+      "unit": "px"
+    },
+    {
+      "type": "select",
+      "id": "button_font_weight",
+      "label": "Button font weight",
+      "options": [
+        { "value": "400", "label": "Normal" },
+        { "value": "500", "label": "Medium" },
+        { "value": "600", "label": "Semi-bold" },
+        { "value": "700", "label": "Bold" }
+      ],
+      "default": "500"
+    },
+    {
+      "type": "select",
+      "id": "button_text_transform",
+      "label": "Button text transform",
+      "options": [
+        { "value": "none", "label": "None" },
+        { "value": "uppercase", "label": "Uppercase" },
+        { "value": "lowercase", "label": "Lowercase" },
+        { "value": "capitalize", "label": "Capitalize" }
+      ],
+      "default": "uppercase"
+    },
+    {
+      "type": "range",
+      "id": "button_letter_spacing",
+      "label": "Button letter spacing",
+      "min": 0,
+      "max": 4,
+      "step": 1,
+      "default": 1,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "button_padding_vertical",
+      "label": "Button padding (vertical)",
+      "min": 8,
+      "max": 24,
+      "step": 2,
+      "default": 16,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "button_padding_horizontal",
+      "label": "Button padding (horizontal)",
+      "min": 16,
+      "max": 60,
+      "step": 2,
+      "default": 40,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "button_border_radius",
+      "label": "Button border radius",
+      "min": 0,
+      "max": 30,
+      "step": 1,
+      "default": 0,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "button_border_width",
+      "label": "Button border width",
+      "min": 0,
+      "max": 4,
+      "step": 1,
+      "default": 1,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Button Colors"
+    },
+    {
+      "type": "color",
+      "id": "button_background",
+      "label": "Button background",
+      "default": "#6B2D2D"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Button text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "button_border_color",
+      "label": "Button border color",
+      "default": "#8B4D4D"
+    },
+    {
+      "type": "color",
+      "id": "button_hover_background",
+      "label": "Button hover background",
+      "default": "#8B3D3D"
+    },
+    {
+      "type": "color",
+      "id": "button_hover_text_color",
+      "label": "Button hover text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "button_hover_border_color",
+      "label": "Button hover border color",
+      "default": "#9B5D5D"
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "section_height",
+      "label": "Section min height (desktop)",
+      "min": 250,
+      "max": 600,
+      "step": 25,
+      "default": 350,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "max_width",
+      "label": "Maximum content width",
+      "min": 1000,
+      "max": 1600,
+      "step": 50,
+      "default": 1200,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "image_width",
+      "label": "Character image width (%)",
+      "min": 30,
+      "max": 60,
+      "step": 5,
+      "default": 50,
+      "unit": "%"
+    },
+    {
+      "type": "range",
+      "id": "column_gap",
+      "label": "Gap between columns (desktop)",
+      "min": 0,
+      "max": 80,
+      "step": 5,
+      "default": 40,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "mobile_gap",
+      "label": "Gap between content and image (mobile)",
+      "min": 0,
+      "max": 60,
+      "step": 5,
+      "default": 20,
+      "unit": "px"
+    },
+    {
+      "type": "select",
+      "id": "mobile_text_align",
+      "label": "Mobile text alignment",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "right", "label": "Right" }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "horizontal_padding",
+      "label": "Horizontal padding (desktop)",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "default": 40,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "horizontal_padding_mobile",
+      "label": "Horizontal padding (mobile)",
+      "min": 0,
+      "max": 60,
+      "step": 5,
+      "default": 20,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "content_padding_top",
+      "label": "Content padding top (desktop)",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "default": 40,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "content_padding_bottom",
+      "label": "Content padding bottom (desktop)",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "default": 40,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "content_padding_top_mobile",
+      "label": "Content padding top (mobile)",
+      "min": 0,
+      "max": 80,
+      "step": 5,
+      "default": 30,
+      "unit": "px"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Custom Universe CTA",
+      "settings": {
+        "heading": "Criminal Coffee Universe",
+        "text": "<p>Read up on the latest developments of the characters that inspired your favorite Criminal Coffee Roasts</p>",
+        "button_text": "ENTER THE UNIVERSE",
+        "heading_color": "#6B2D2D",
+        "heading_font_style": "italic",
+        "text_color": "#ffffff",
+        "button_background": "#6B2D2D",
+        "button_border_color": "#8B4D4D"
+      }
+    }
+  ]
+}
+{% endschema %}
