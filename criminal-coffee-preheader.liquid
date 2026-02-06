@@ -4,6 +4,7 @@
     color: {{ section.settings.text_color }};
     padding: {{ section.settings.padding_vertical }}px 0;
     font-size: {{ section.settings.font_size }}px;
+    border-bottom: 1px solid #ffffff;
   }
 
   #CriminalPreheader-{{ section.id }} .preheader-container {
@@ -137,8 +138,8 @@
       </div>
 
       <!-- Subscription link (mobile only when logged in) -->
-      {%- if customer and section.settings.subscription_url != blank -%}
-        <a href="{{ section.settings.subscription_url }}" class="preheader-link preheader-left-subscription">
+      {%- if customer -%}
+        <a href="https://criminalcoffeeco.com/tools/recurring/login" class="preheader-link preheader-left-subscription">
           <span class="subscription-icon">{% render 'subsciption-icon' %}</span>
           <span>Manage Subscriptions</span>
         </a>
@@ -153,12 +154,10 @@
           <span class="preheader-icon">{% render 'icon-account' %}</span>
           <span>My Account</span>
         </a>
-        {%- if section.settings.subscription_url != blank -%}
-          <a href="{{ section.settings.subscription_url }}" class="preheader-link preheader-subscription-desktop">
-            <span class="subscription-icon">{% render 'subsciption-icon' %}</span>
-            <span>Manage Subscriptions</span>
-          </a>
-        {%- endif -%}
+        <a href="https://criminalcoffeeco.com/tools/recurring/login" class="preheader-link preheader-subscription-desktop">
+          <span class="subscription-icon">{% render 'subsciption-icon' %}</span>
+          <span>Manage Subscriptions</span>
+        </a>
       {%- else -%}
         <!-- Logged out -->
         <a href="{{ routes.account_login_url }}" class="preheader-link">
@@ -218,16 +217,6 @@
       "unit": "px",
       "label": "Vertical padding",
       "default": 8
-    },
-    {
-      "type": "header",
-      "content": "Links"
-    },
-    {
-      "type": "url",
-      "id": "subscription_url",
-      "label": "Manage Subscriptions URL",
-      "info": "URL for the subscription management page"
     },
     {
       "type": "header",
