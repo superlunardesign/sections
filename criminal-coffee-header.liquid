@@ -601,13 +601,9 @@
       </details-modal>
 
      {%- if shop.customer_accounts_enabled -%}
-  <a href="{%- if customer -%}{{ routes.account_url }}{%- else -%}{{ routes.account_login_url }}{%- endif -%}" class="header__icon header__icon--account link focus-inset{% if section.settings.menu != blank %} small-hide{% endif %}" style="display: flex; align-items: center; gap: 8px; white-space: nowrap;">
-    {% render 'icon-account' %}
-    {%- if customer -%}
-      My Account
-    {%- else -%}
-      Log In
-    {%- endif -%}
+  <a href="{%- if customer -%}{{ routes.account_url }}{%- else -%}{{ routes.account_login_url }}{%- endif -%}" class="header__icon header__icon--account link focus-inset{% if section.settings.menu != blank %} small-hide{% endif %}" style="display: flex; align-items: center; gap: 8px;">
+    <span style="flex-shrink: 0; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;">{% render 'icon-account' %}</span>
+    <span style="white-space: nowrap;">{%- if customer -%}My Account{%- else -%}Log In{%- endif -%}</span>
   </a>
 {%- endif -%}
 
