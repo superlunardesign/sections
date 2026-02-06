@@ -1,0 +1,378 @@
+{{ 'customer.css' | asset_url | stylesheet_tag }}
+
+<style>
+  .cc-account {
+    background-color: #1a1a1a;
+    color: #ffffff;
+    padding: 60px 20px;
+    min-height: 80vh;
+  }
+
+  .cc-account-container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .cc-account h1 {
+    text-align: center;
+    font-size: 42px;
+    margin-bottom: 30px;
+    font-weight: 400;
+  }
+
+  /* Action Buttons */
+  .cc-account-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 50px;
+    flex-wrap: wrap;
+  }
+
+  .cc-account-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 30px;
+    text-decoration: none;
+    font-size: 14px;
+    min-width: 180px;
+    transition: all 0.2s ease;
+  }
+
+  .cc-account-btn--filled {
+    background-color: #722F37;
+    color: #ffffff;
+    border: 1px solid #722F37;
+  }
+
+  .cc-account-btn--filled:hover {
+    background-color: #5a252c;
+    border-color: #5a252c;
+  }
+
+  .cc-account-btn--outline {
+    background-color: transparent;
+    color: #ffffff;
+    border: 1px solid #ffffff;
+  }
+
+  .cc-account-btn--outline:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .cc-account-btn svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+
+  .cc-account-btn .subscription-icon {
+    width: 20px;
+    height: 16px;
+  }
+
+  /* Main Content Grid */
+  .cc-account-content {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 50px;
+  }
+
+  /* Section Titles */
+  .cc-account h2 {
+    font-size: 24px;
+    font-weight: 400;
+    margin-bottom: 20px;
+  }
+
+  /* Order History Table */
+  .cc-order-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  .cc-order-table thead {
+    border-bottom: 1px solid #333;
+  }
+
+  .cc-order-table th {
+    text-align: left;
+    padding: 15px 12px;
+    font-weight: 400;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    color: #999;
+  }
+
+  .cc-order-table tbody tr:nth-child(odd) {
+    background-color: #722F37;
+  }
+
+  .cc-order-table tbody tr:nth-child(even) {
+    background-color: #2a2a2a;
+  }
+
+  .cc-order-table td {
+    padding: 15px 12px;
+    vertical-align: top;
+  }
+
+  .cc-order-number {
+    font-weight: 500;
+  }
+
+  .cc-order-link {
+    display: block;
+    color: #ffffff;
+    text-decoration: underline;
+    font-size: 13px;
+    margin-top: 4px;
+  }
+
+  .cc-order-link:hover {
+    opacity: 0.7;
+  }
+
+  .cc-no-orders {
+    color: #999;
+  }
+
+  /* Account Details */
+  .cc-account-details p {
+    margin: 0 0 20px 0;
+    line-height: 1.6;
+  }
+
+  .cc-account-details a {
+    color: #ffffff;
+    text-decoration: underline;
+  }
+
+  .cc-account-details a:hover {
+    opacity: 0.7;
+  }
+
+  /* Pagination */
+  .cc-pagination {
+    margin-top: 30px;
+  }
+
+  .cc-pagination ul {
+    display: flex;
+    gap: 10px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .cc-pagination a,
+  .cc-pagination span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 8px;
+    color: #ffffff;
+    text-decoration: none;
+  }
+
+  .cc-pagination a:hover {
+    opacity: 0.7;
+  }
+
+  .cc-pagination [aria-current="page"] {
+    text-decoration: underline;
+  }
+
+  .cc-pagination svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  /* Mobile Styles */
+  @media (max-width: 768px) {
+    .cc-account {
+      padding: 40px 15px;
+    }
+
+    .cc-account h1 {
+      font-size: 32px;
+    }
+
+    .cc-account-actions {
+      flex-direction: column;
+    }
+
+    .cc-account-btn {
+      width: 100%;
+      min-width: unset;
+    }
+
+    .cc-account-content {
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+
+    .cc-order-table thead {
+      display: none;
+    }
+
+    .cc-order-table,
+    .cc-order-table tbody,
+    .cc-order-table tr,
+    .cc-order-table td {
+      display: block;
+    }
+
+    .cc-order-table tr {
+      padding: 15px;
+      margin-bottom: 10px;
+    }
+
+    .cc-order-table td {
+      padding: 5px 0;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .cc-order-table td::before {
+      content: attr(data-label);
+      font-weight: 500;
+      color: #999;
+      text-transform: uppercase;
+      font-size: 11px;
+    }
+
+    .cc-order-table td:first-child {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .cc-order-table td:first-child::before {
+      margin-bottom: 5px;
+    }
+  }
+</style>
+
+<div class="cc-account">
+  <div class="cc-account-container">
+    <h1>Account</h1>
+
+    <!-- Action Buttons -->
+    <div class="cc-account-actions">
+      <a href="https://criminalcoffeeco.com/tools/recurring/login" class="cc-account-btn cc-account-btn--filled">
+        <span class="subscription-icon">{% render 'subscription-icon' %}</span>
+        Manage Subscriptions
+      </a>
+      <a href="{{ routes.account_addresses_url }}" class="cc-account-btn cc-account-btn--filled">
+        View/Edit Addresses
+      </a>
+      <a href="{{ routes.account_logout_url }}" class="cc-account-btn cc-account-btn--outline">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 19" fill="currentColor">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M6 4.5a3 3 0 116 0 3 3 0 01-6 0zm3-4a4 4 0 100 8 4 4 0 000-8zm5.58 12.15c1.12.82 1.83 2.24 1.91 4.85H1.51c.08-2.6.79-4.03 1.9-4.85C4.66 11.75 6.5 11.5 9 11.5s4.35.26 5.58 1.15zM9 10.5c-2.5 0-4.65.24-6.17 1.35C1.27 12.98.5 14.93.5 18v.5h17V18c0-3.07-.77-5.02-2.33-6.15-1.52-1.1-3.67-1.35-6.17-1.35z"/>
+        </svg>
+        Log Out
+      </a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="cc-account-content">
+      <!-- Order History -->
+      <div class="cc-orders">
+        <h2>Order History</h2>
+
+        {% paginate customer.orders by 20 %}
+          {%- if customer.orders.size > 0 -%}
+            <table class="cc-order-table" role="table">
+              <thead role="rowgroup">
+                <tr role="row">
+                  <th scope="col">Order</th>
+                  <th scope="col">Date</th>
+                  <th scope="col">Payment Status</th>
+                  <th scope="col">Fulfillment Status</th>
+                  <th scope="col">Total</th>
+                </tr>
+              </thead>
+              <tbody role="rowgroup">
+                {%- for order in customer.orders -%}
+                  <tr role="row">
+                    <td data-label="Order">
+                      <span class="cc-order-number">{{ order.name }}</span>
+                      <a href="{{ order.customer_url }}" class="cc-order-link">View Order</a>
+                    </td>
+                    <td data-label="Date">
+                      {{ order.created_at | date: "%B %d, %Y" }}
+                    </td>
+                    <td data-label="Payment Status">
+                      {{ order.financial_status_label }}
+                    </td>
+                    <td data-label="Fulfillment Status">
+                      {{ order.fulfillment_status_label }}
+                    </td>
+                    <td data-label="Total">
+                      {{ order.total_price | money_with_currency }}
+                    </td>
+                  </tr>
+                {%- endfor -%}
+              </tbody>
+            </table>
+          {%- else -%}
+            <p class="cc-no-orders">You haven't placed any orders yet</p>
+          {%- endif -%}
+
+          {%- if paginate.pages > 1 -%}
+            <nav class="cc-pagination" role="navigation" aria-label="Pagination">
+              <ul role="list">
+                {%- if paginate.previous -%}
+                  <li>
+                    <a href="{{ paginate.previous.url }}" aria-label="Previous page">
+                      <svg viewBox="0 0 10 6" fill="currentColor">
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M9.354.646a.5.5 0 00-.708 0L5 4.293 1.354.646a.5.5 0 00-.708.708l4 4a.5.5 0 00.708 0l4-4a.5.5 0 000-.708z"/>
+                      </svg>
+                    </a>
+                  </li>
+                {%- endif -%}
+
+                {%- for part in paginate.parts -%}
+                  <li>
+                    {%- if part.is_link -%}
+                      <a href="{{ part.url }}">{{ part.title }}</a>
+                    {%- else -%}
+                      {%- if part.title == paginate.current_page -%}
+                        <span aria-current="page">{{ part.title }}</span>
+                      {%- else -%}
+                        <span>{{ part.title }}</span>
+                      {%- endif -%}
+                    {%- endif -%}
+                  </li>
+                {%- endfor -%}
+
+                {%- if paginate.next -%}
+                  <li>
+                    <a href="{{ paginate.next.url }}" aria-label="Next page">
+                      <svg viewBox="0 0 10 6" fill="currentColor">
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M9.354.646a.5.5 0 00-.708 0L5 4.293 1.354.646a.5.5 0 00-.708.708l4 4a.5.5 0 00.708 0l4-4a.5.5 0 000-.708z"/>
+                      </svg>
+                    </a>
+                  </li>
+                {%- endif -%}
+              </ul>
+            </nav>
+          {%- endif -%}
+        {% endpaginate %}
+      </div>
+
+      <!-- Account Details -->
+      <div class="cc-account-details">
+        <h2>Account Details</h2>
+        {{ customer.default_address | format_address }}
+        <a href="{{ routes.account_addresses_url }}">Edit Addresses</a>
+      </div>
+    </div>
+  </div>
+</div>
