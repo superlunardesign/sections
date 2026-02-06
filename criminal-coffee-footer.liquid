@@ -194,7 +194,7 @@
                   alt="{{ block.settings.image.alt | escape }}"
                   loading="lazy"
                   class="footer-column__image"
-                  style="max-width: {{ block.settings.image_width }}px;"
+                  style="max-width: {{ block.settings.image_width2 }}px;"
                 >
               {% endif %}
             </div>
@@ -1138,11 +1138,11 @@
         },
         {
           "type": "range",
-          "id": "image_width",
+          "id": "image_width2",
           "label": "Image width",
-          "min": 0,
+          "min": 50,
           "max": 500,
-          "step": 1,
+          "step": 10,
           "default": 100,
           "unit": "px"
         }
