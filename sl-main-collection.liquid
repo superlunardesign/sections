@@ -822,14 +822,15 @@
   if (!section) return;
 
   // Mark unavailable variants on page load
-  section.querySelectorAll('.sl-product-card').forEach(productCard => {
-    const variantDataScript = productCard.querySelector('.sl-variant-data');
+  // Use [data-product-id] to match both regular (.sl-product-card) and compact (.sl-card-wrapper) layouts
+  section.querySelectorAll('[data-product-id]').forEach(productContainer => {
+    const variantDataScript = productContainer.querySelector('.sl-variant-data');
     if (!variantDataScript) return;
 
     try {
       const variants = JSON.parse(variantDataScript.textContent);
 
-      productCard.querySelectorAll('.sl-size-btn, .sl-color-swatch').forEach(btn => {
+      productContainer.querySelectorAll('.sl-size-btn, .sl-color-swatch').forEach(btn => {
         const optionPosition = parseInt(btn.getAttribute('data-option-position'));
         const optionValue = btn.getAttribute('data-option-value');
 
@@ -853,9 +854,10 @@
       if (this.getAttribute('data-unavailable') === 'true') return;
 
       const optionGroup = this.closest('.sl-option-group');
-      const productCard = this.closest('.sl-product-card');
-      const addToCartBtn = productCard.querySelector('.sl-add-to-cart-btn');
-      const subscribeBtn = productCard.querySelector('.sl-subscribe-btn');
+      // Use [data-product-id] to find container - works for both regular and compact layouts
+      const productContainer = this.closest('[data-product-id]');
+      const addToCartBtn = productContainer.querySelector('.sl-add-to-cart-btn');
+      const subscribeBtn = productContainer.querySelector('.sl-subscribe-btn');
 
       // Remove selected from other buttons in this group
       optionGroup.querySelectorAll('.sl-size-btn, .sl-color-swatch').forEach(btn => {
@@ -866,7 +868,7 @@
       this.setAttribute('data-selected', 'true');
 
       // Get variant data
-      const variantDataScript = productCard.querySelector('.sl-variant-data');
+      const variantDataScript = productContainer.querySelector('.sl-variant-data');
       if (!variantDataScript) return;
 
       try {
@@ -874,7 +876,7 @@
 
         // Get all selected options
         const selectedOptions = {};
-        productCard.querySelectorAll('.sl-size-btn[data-selected="true"], .sl-color-swatch[data-selected="true"]').forEach(selectedBtn => {
+        productContainer.querySelectorAll('.sl-size-btn[data-selected="true"], .sl-color-swatch[data-selected="true"]').forEach(selectedBtn => {
           const position = selectedBtn.getAttribute('data-option-position');
           const value = selectedBtn.getAttribute('data-option-value');
           if (position && value) {
@@ -912,13 +914,13 @@
           }
 
           // Update price
-          const priceElement = productCard.querySelector('[data-product-price]');
+          const priceElement = productContainer.querySelector('[data-product-price]');
           if (priceElement) {
             priceElement.textContent = Shopify.formatMoney ? Shopify.formatMoney(matchingVariant.price) : '$' + (matchingVariant.price / 100).toFixed(2);
           }
 
           // Update compare price
-          const comparePriceElement = productCard.querySelector('.sl-price-compare');
+          const comparePriceElement = productContainer.querySelector('.sl-price-compare');
           if (comparePriceElement && matchingVariant.compare_at_price) {
             comparePriceElement.textContent = Shopify.formatMoney ? Shopify.formatMoney(matchingVariant.compare_at_price) : '$' + (matchingVariant.compare_at_price / 100).toFixed(2);
             comparePriceElement.style.display = 'inline';
@@ -928,7 +930,7 @@
 
           // Update product image when color is selected
           if (matchingVariant.featured_image && this.classList.contains('sl-color-swatch')) {
-            const productImage = productCard.querySelector('.sl-product-image img');
+            const productImage = productContainer.querySelector('.sl-product-image img');
             if (productImage) {
               // Get the image URL and replace size parameter for better quality
               let newImageUrl = matchingVariant.featured_image.src;
