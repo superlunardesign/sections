@@ -84,11 +84,6 @@
     justify-content: flex-start;
   }
 
-  /* Title min-height for 2 lines - ensures uniform card heights */
-  #SLCollection-{{ section.id }} .sl-card-wrapper .sl-product-title {
-    min-height: 45px;
-  }
-
   /* Button container - stays at bottom */
   #SLCollection-{{ section.id }} .sl-card-wrapper .sl-outside-button {
     padding: 10px 0 8px 0;
@@ -180,6 +175,7 @@
     margin: 0 0 5px 0;
     color: {{ section.settings.title_color }};
     line-height: 1.3;
+    min-height: 45px;
   }
 
   #SLCollection-{{ section.id }} .sl-product-title a {
