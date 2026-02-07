@@ -71,22 +71,25 @@
     flex: 1;
   }
 
+  /* Card grows to fill space - makes all cards in a row equal height */
   #SLCollection-{{ section.id }} .sl-card-wrapper .sl-product-card {
-    height: auto;
-    flex-shrink: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
   }
 
+  /* Product info doesn't grow - stays at natural size */
   #SLCollection-{{ section.id }} .sl-card-wrapper .sl-product-info {
     flex-grow: 0;
   }
 
-  /* Compact layout - elements outside card (pushed to bottom) */
+  /* Compact layout - elements outside card (immediately after card) */
   #SLCollection-{{ section.id }} .sl-outside-card {
     padding: 10px 0 0 0;
     display: flex;
     flex-direction: column;
     gap: 8px;
-    margin-top: auto;
+    flex-shrink: 0;
   }
 
   #SLCollection-{{ section.id }} .sl-outside-card .sl-add-to-cart-btn {
@@ -96,9 +99,15 @@
     border-radius: {{ section.settings.button_border_radius }}px;
   }
 
+  /* Uniform variant area height */
   #SLCollection-{{ section.id }} .sl-outside-card .sl-variant-options {
     min-height: {{ section.settings.variant_area_min_height }}px;
     margin-bottom: 0;
+  }
+
+  /* Spacer for products without variants in compact layout */
+  #SLCollection-{{ section.id }} .sl-outside-card .sl-variant-spacer {
+    min-height: {{ section.settings.variant_area_min_height }}px;
   }
 
   /* Status Badges */
@@ -609,6 +618,9 @@
                             </div>
                           {%- endfor -%}
                         </div>
+                      {%- elsif section.settings.show_variants -%}
+                        {%- comment -%} Spacer for products without variants to maintain uniform height {%- endcomment -%}
+                        <div class="sl-variant-spacer"></div>
                       {%- endif -%}
                     </div>
                   </div>
