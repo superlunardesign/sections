@@ -58,28 +58,33 @@
                 {% endif %}
 
                 <!-- Star Rating (if enabled and metafield exists) -->
-                {% if section.settings.show_ratings %}
-                  {% assign rating_namespace = section.settings.rating_metafield_namespace %}
-                  {% assign rating_key = section.settings.rating_metafield_key %}
-                  {% assign count_key = section.settings.review_count_metafield_key %}
-
-                  {% if product.metafields[rating_namespace][rating_key] %}
-                    <div class="rating">
-                      {% assign rating = product.metafields[rating_namespace][rating_key] | times: 1 %}
-                      {% assign review_count = product.metafields[rating_namespace][count_key] | times: 1 %}
-
-                      <div class="stars">
-                        {% for i in (1..5) %}
-                          {% if i <= rating %}
-                            <span class="star star--filled">★</span>
-                          {% else %}
-                            <span class="star">★</span>
-                          {% endif %}
-                        {% endfor %}
-                      </div>
-                      <span class="review-count">{{ review_count }}</span>
+                {% if section.settings.show_ratings and product.metafields.reviews.rating.value != blank %}
+                  {% liquid
+                    assign rating_decimal = 0
+                    assign decimal = product.metafields.reviews.rating.value.rating | modulo: 1
+                    if decimal >= 0.3 and decimal <= 0.7
+                      assign rating_decimal = 0.5
+                    elsif decimal > 0.7
+                      assign rating_decimal = 1
+                    endif
+                  %}
+                  <div class="rating">
+                    <div class="stars">
+                      {% assign full_stars = product.metafields.reviews.rating.value.rating | floor %}
+                      {% for i in (1..5) %}
+                        {% if i <= full_stars %}
+                          <span class="star star--filled">★</span>
+                        {% elsif i == full_stars | plus: 1 and rating_decimal == 0.5 %}
+                          <span class="star star--half">★</span>
+                        {% else %}
+                          <span class="star">★</span>
+                        {% endif %}
+                      {% endfor %}
                     </div>
-                  {% endif %}
+                    {% if product.metafields.reviews.rating_count %}
+                      <span class="review-count">({{ product.metafields.reviews.rating_count }})</span>
+                    {% endif %}
+                  </div>
                 {% endif %}
               </div>
             </div>
@@ -394,6 +399,11 @@
 
   #CustomProductCarousel-{{ section.id }} .star--filled {
     color: {{ section.settings.star_color }};
+  }
+
+  #CustomProductCarousel-{{ section.id }} .star--half {
+    color: {{ section.settings.star_color }};
+    opacity: 0.6;
   }
 
   #CustomProductCarousel-{{ section.id }} .review-count {
