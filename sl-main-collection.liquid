@@ -586,7 +586,13 @@
                                             class="sl-color-swatch"
                                             data-option-position="{{ option.position }}"
                                             data-option-value="{{ value | escape }}"
-                                            style="background-color: {{ value | handleize }};"
+                                            {% if value.swatch.color %}
+                                              style="background-color: {{ value.swatch.color }};"
+                                            {% elsif value.swatch.image %}
+                                              style="background-image: url({{ value.swatch.image | image_url: width: 50 }});"
+                                            {% else %}
+                                              style="background-color: {{ value | handleize }};"
+                                            {% endif %}
                                             title="{{ value }}"
                                             {% if forloop.first %}data-selected="true"{% endif %}>
                                     </button>
@@ -672,7 +678,13 @@
                                           class="sl-color-swatch"
                                           data-option-position="{{ option.position }}"
                                           data-option-value="{{ value | escape }}"
-                                          style="background-color: {{ value | handleize }};"
+                                          {% if value.swatch.color %}
+                                            style="background-color: {{ value.swatch.color }};"
+                                          {% elsif value.swatch.image %}
+                                            style="background-image: url({{ value.swatch.image | image_url: width: 50 }});"
+                                          {% else %}
+                                            style="background-color: {{ value | handleize }};"
+                                          {% endif %}
                                           title="{{ value }}"
                                           {% if forloop.first %}data-selected="true"{% endif %}>
                                   </button>
