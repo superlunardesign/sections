@@ -36,24 +36,16 @@
     max-width: 100%;
     padding: 0;
     margin: 0;
-    display: flex;
-    flex-direction: column;
   }
 
   @media screen and (min-width: 750px) {
     #SLCollection-{{ section.id }} .sl-product-grid {
       grid-template-columns: repeat({{ section.settings.columns_desktop }}, 1fr);
       gap: {{ section.settings.grid_gap }}px;
-      align-items: stretch;
-    }
-
-    #SLCollection-{{ section.id }} .sl-product-grid .grid__item {
-      width: 100%;
-      max-width: 100%;
     }
   }
 
-  /* Product Card */
+  /* Product Card (regular layout) */
   #SLCollection-{{ section.id }} .sl-product-card {
     background: {{ section.settings.card_background }};
     border-radius: {{ section.settings.card_border_radius }}px;
@@ -64,32 +56,26 @@
     height: 100%;
   }
 
-  /* Compact Layout - Card wrapper for items outside the card background */
+  /* Compact Layout - Uses CSS Grid for equal height cards */
   #SLCollection-{{ section.id }} .sl-card-wrapper {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
+    display: grid;
+    grid-template-rows: 1fr auto;
+    height: 100%;
   }
 
-  /* Card grows to fill space - makes all cards in a row equal height */
+  /* Card fills the 1fr row - equal height across the grid row */
   #SLCollection-{{ section.id }} .sl-card-wrapper .sl-product-card {
-    flex: 1;
+    height: 100%;
     display: flex;
     flex-direction: column;
   }
 
-  /* Product info doesn't grow - stays at natural size */
-  #SLCollection-{{ section.id }} .sl-card-wrapper .sl-product-info {
-    flex-grow: 0;
-  }
-
-  /* Compact layout - elements outside card (immediately after card) */
+  /* Elements outside the card (button + variants) */
   #SLCollection-{{ section.id }} .sl-outside-card {
     padding: 10px 0 0 0;
     display: flex;
     flex-direction: column;
     gap: 8px;
-    flex-shrink: 0;
   }
 
   #SLCollection-{{ section.id }} .sl-outside-card .sl-add-to-cart-btn {
@@ -578,39 +564,11 @@
                                 {%- assign remaining = total_values | minus: max_visible -%}
                                 {%- for value in option.values -%}
                                   {%- if is_color -%}
-                                    {%- assign color_value = value | downcase | strip -%}
-                                    {%- assign swatch_color = '#888888' -%}
-                                    {%- assign found_metaobject_color = false -%}
-
-                                    {%- comment -%} Try to get color from metaobjects first {%- endcomment -%}
-                                    {%- for color_entry in shop.metaobjects.color.values -%}
-                                      {%- assign metaobject_name = color_entry.name | downcase | strip -%}
-                                      {%- if metaobject_name == color_value -%}
-                                        {%- assign swatch_color = color_entry.color_code -%}
-                                        {%- assign found_metaobject_color = true -%}
-                                        {%- break -%}
-                                      {%- endif -%}
-                                    {%- endfor -%}
-
-                                    {%- comment -%} Fallback to hardcoded colors if metaobject not found {%- endcomment -%}
-                                    {%- unless found_metaobject_color -%}
-                                      {%- case color_value -%}
-                                        {%- when 'black' -%}{% assign swatch_color = '#000000' %}
-                                        {%- when 'white' -%}{% assign swatch_color = '#ffffff' %}
-                                        {%- when 'cardinal' -%}{% assign swatch_color = '#c41e3a' %}
-                                        {%- when 'oatmeal' -%}{% assign swatch_color = '#d8d7c5' %}
-                                        {%- when 'heather' or 'heather grey' or 'heather gray' -%}{% assign swatch_color = '#9a9a9a' %}
-                                        {%- when 'heather maroon' or 'heathered cardinal' -%}{% assign swatch_color = '#58343c' %}
-                                        {%- when 'navy' or 'navy blue' -%}{% assign swatch_color = '#001f3f' %}
-                                        {%- when 'gray' or 'grey' -%}{% assign swatch_color = '#808080' %}
-                                        {%- when 'charcoal' -%}{% assign swatch_color = '#36454f' %}
-                                      {%- endcase -%}
-                                    {%- endunless -%}
                                     <button type="button"
                                             class="sl-color-swatch"
                                             data-option-position="{{ option.position }}"
                                             data-option-value="{{ value | escape }}"
-                                            style="background-color: {{ swatch_color }};"
+                                            style="background-color: {{ value | handleize }};"
                                             title="{{ value }}"
                                             {% if forloop.first %}data-selected="true"{% endif %}>
                                     </button>
@@ -695,82 +653,11 @@
 
                               {%- for value in option.values -%}
                                 {%- if is_color -%}
-                                  {%- assign color_value = value | downcase | strip -%}
-                                  {%- assign swatch_color = '#888888' -%}
-                                  {%- assign found_metaobject_color = false -%}
-
-                                  {%- comment -%} Try to get color from metaobjects first {%- endcomment -%}
-                                  {%- for color_entry in shop.metaobjects.color.values -%}
-                                    {%- assign metaobject_name = color_entry.name | downcase | strip -%}
-                                    {%- if metaobject_name == color_value -%}
-                                      {%- assign swatch_color = color_entry.color_code -%}
-                                      {%- assign found_metaobject_color = true -%}
-                                      {%- break -%}
-                                    {%- endif -%}
-                                  {%- endfor -%}
-
-                                  {%- comment -%} Fallback to hardcoded colors if metaobject not found {%- endcomment -%}
-                                  {%- unless found_metaobject_color -%}
-                                    {%- case color_value -%}
-                                      {%- when 'black' -%}{% assign swatch_color = '#000000' %}
-                                      {%- when 'white' -%}{% assign swatch_color = '#ffffff' %}
-                                      {%- when 'red' -%}{% assign swatch_color = '#cc0000' %}
-                                      {%- when 'blue' -%}{% assign swatch_color = '#0066cc' %}
-                                      {%- when 'navy' or 'navy blue' -%}{% assign swatch_color = '#001f3f' %}
-                                      {%- when 'green' -%}{% assign swatch_color = '#228b22' %}
-                                      {%- when 'yellow' -%}{% assign swatch_color = '#ffd700' %}
-                                      {%- when 'orange' -%}{% assign swatch_color = '#ff6600' %}
-                                      {%- when 'purple' -%}{% assign swatch_color = '#663399' %}
-                                      {%- when 'pink' -%}{% assign swatch_color = '#ff69b4' %}
-                                      {%- when 'brown' -%}{% assign swatch_color = '#8b4513' %}
-                                      {%- when 'gray' or 'grey' -%}{% assign swatch_color = '#808080' %}
-                                      {%- when 'beige' -%}{% assign swatch_color = '#f5f5dc' %}
-                                      {%- when 'cream' -%}{% assign swatch_color = '#fffdd0' %}
-                                      {%- when 'tan' -%}{% assign swatch_color = '#d2b48c' %}
-                                      {%- when 'burgundy' -%}{% assign swatch_color = '#800020' %}
-                                      {%- when 'maroon' -%}{% assign swatch_color = '#800000' %}
-                                      {%- when 'coral' -%}{% assign swatch_color = '#ff7f50' %}
-                                      {%- when 'teal' -%}{% assign swatch_color = '#008080' %}
-                                      {%- when 'olive' -%}{% assign swatch_color = '#8a8673' %}
-                                      {%- when 'gold' -%}{% assign swatch_color = '#ffd700' %}
-                                      {%- when 'silver' -%}{% assign swatch_color = '#c0c0c0' %}
-                                      {%- when 'charcoal' -%}{% assign swatch_color = '#36454f' %}
-                                      {%- when 'ivory' -%}{% assign swatch_color = '#fffff0' %}
-                                      {%- when 'khaki' -%}{% assign swatch_color = '#c3b091' %}
-                                      {%- when 'lavender' -%}{% assign swatch_color = '#e6e6fa' %}
-                                      {%- when 'mint' -%}{% assign swatch_color = '#98ff98' %}
-                                      {%- when 'rose' -%}{% assign swatch_color = '#ff007f' %}
-                                      {%- when 'sage' -%}{% assign swatch_color = '#9dc183' %}
-                                      {%- when 'natural' -%}{% assign swatch_color = '#f5f5dc' %}
-                                      {%- when 'cardinal' -%}{% assign swatch_color = '#c41e3a' %}
-                                      {%- when 'oatmeal' -%}{% assign swatch_color = '#d8d7c5' %}
-                                      {%- when 'heather' or 'heather grey' or 'heather gray' -%}{% assign swatch_color = '#9a9a9a' %}
-                                      {%- when 'heather maroon' or 'heathered cardinal' -%}{% assign swatch_color = '#58343c' %}
-                                      {%- when 'forest' or 'forest green' -%}{% assign swatch_color = '#228b22' %}
-                                      {%- when 'sand' -%}{% assign swatch_color = '#c2b280' %}
-                                      {%- when 'rust' -%}{% assign swatch_color = '#b7410e' %}
-                                      {%- when 'wine' -%}{% assign swatch_color = '#722f37' %}
-                                      {%- when 'coffee' -%}{% assign swatch_color = '#6f4e37' %}
-                                      {%- when 'espresso' -%}{% assign swatch_color = '#3c2415' %}
-                                      {%- when 'mocha' -%}{% assign swatch_color = '#967969' %}
-                                      {%- when 'caramel' -%}{% assign swatch_color = '#ffddaf' %}
-                                      {%- when 'mustard' -%}{% assign swatch_color = '#ffdb58' %}
-                                      {%- when 'slate' -%}{% assign swatch_color = '#708090' %}
-                                      {%- when 'stone' -%}{% assign swatch_color = '#928e85' %}
-                                      {%- when 'ash' -%}{% assign swatch_color = '#b2beb5' %}
-                                      {%- when 'denim' -%}{% assign swatch_color = '#1560bd' %}
-                                      {%- when 'indigo' -%}{% assign swatch_color = '#4b0082' %}
-                                      {%- when 'plum' -%}{% assign swatch_color = '#8e4585' %}
-                                      {%- when 'berry' -%}{% assign swatch_color = '#8e4585' %}
-                                      {%- when 'cranberry' -%}{% assign swatch_color = '#9c0037' %}
-                                      {%- when 'crimson' -%}{% assign swatch_color = '#dc143c' %}
-                                    {%- endcase -%}
-                                  {%- endunless -%}
                                   <button type="button"
                                           class="sl-color-swatch"
                                           data-option-position="{{ option.position }}"
                                           data-option-value="{{ value | escape }}"
-                                          style="background-color: {{ swatch_color }};"
+                                          style="background-color: {{ value | handleize }};"
                                           title="{{ value }}"
                                           {% if forloop.first %}data-selected="true"{% endif %}>
                                   </button>
