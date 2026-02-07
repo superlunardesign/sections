@@ -585,7 +585,23 @@
                           {%- endif -%}
                         {%- endif -%}
 
-                        {%- if section.settings.show_subscribe and product.available -%}
+                        {%- liquid
+                          assign show_subscribe_btn = false
+                          if section.settings.show_subscribe and product.available
+                            assign show_subscribe_btn = true
+                            if section.settings.subscribe_exclude_collections != blank
+                              assign excluded_handles = section.settings.subscribe_exclude_collections | split: ','
+                              for handle in excluded_handles
+                                assign clean_handle = handle | strip | downcase
+                                if collection.handle == clean_handle
+                                  assign show_subscribe_btn = false
+                                  break
+                                endif
+                              endfor
+                            endif
+                          endif
+                        -%}
+                        {%- if show_subscribe_btn -%}
                           <a href="{{ product.url }}?subscribe=true"
                              class="sl-subscribe-btn"
                              data-variant-id="{{ product.selected_or_first_available_variant.id }}">
@@ -1162,6 +1178,12 @@
       "id": "subscribe_text",
       "label": "Subscribe button text",
       "default": "Subscribe & Save"
+    },
+    {
+      "type": "text",
+      "id": "subscribe_exclude_collections",
+      "label": "Hide on collections (handles)",
+      "info": "Comma-separated collection handles, e.g. merch, accessories"
     },
     {
       "type": "color",
