@@ -36,6 +36,7 @@
     max-width: 100%;
     padding: 0;
     margin: 0;
+    height: 100%;
   }
 
   @media screen and (min-width: 750px) {
@@ -58,6 +59,7 @@
     display: flex;
     flex-direction: column;
     position: relative;
+    height: 100%;
   }
 
   /* Status Badges */
@@ -157,6 +159,13 @@
 
   /* Variant Options */
   #SLCollection-{{ section.id }} .sl-variant-options {
+    margin-bottom: 15px;
+    min-height: {{ section.settings.variant_area_min_height }}px;
+  }
+
+  /* Spacer for products without variants to maintain consistent card height */
+  #SLCollection-{{ section.id }} .sl-variant-spacer {
+    min-height: {{ section.settings.variant_area_min_height }}px;
     margin-bottom: 15px;
   }
 
@@ -554,6 +563,9 @@
                           </div>
                         {%- endfor -%}
                       </div>
+                    {%- elsif section.settings.show_variants -%}
+                      {%- comment -%} Spacer for products without variants to maintain equal height {%- endcomment -%}
+                      <div class="sl-variant-spacer"></div>
                     {%- endif -%}
 
                     {%- comment -%} Action Buttons {%- endcomment -%}
@@ -706,6 +718,20 @@
             comparePriceElement.style.display = 'inline';
           } else if (comparePriceElement) {
             comparePriceElement.style.display = 'none';
+          }
+
+          // Update product image when color is selected
+          if (matchingVariant.featured_image && this.classList.contains('sl-color-swatch')) {
+            const productImage = productCard.querySelector('.sl-product-image img');
+            if (productImage) {
+              // Get the image URL and replace size parameter for better quality
+              let newImageUrl = matchingVariant.featured_image.src;
+              // Use 600x600 for consistency with initial load
+              newImageUrl = newImageUrl.replace(/(_\d+x\d+)?(\.[^.]+)$/, '_600x600$2');
+              productImage.src = newImageUrl;
+              productImage.srcset = newImageUrl + ' 600w';
+              productImage.alt = matchingVariant.featured_image.alt || matchingVariant.name;
+            }
           }
         }
       } catch (error) {
@@ -981,6 +1007,17 @@
       "step": 1,
       "default": 3,
       "label": "Max visible size options"
+    },
+    {
+      "type": "range",
+      "id": "variant_area_min_height",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "default": 50,
+      "unit": "px",
+      "label": "Variant area min height",
+      "info": "Helps maintain equal card heights"
     },
     {
       "type": "range",
