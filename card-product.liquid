@@ -9,9 +9,13 @@
     - show_rating: {Boolean} Show the product rating. Default: false
     - extend_height: {Boolean} Card height extends to available container space. Default: true (optional)
     - lazy_load: {Boolean} Image should be lazy loaded. Default: true (optional)
+    - show_variant_options: {Boolean} Show variant buttons/swatches. Default: false (optional)
+    - show_add_to_cart: {Boolean} Show Add to Cart button. Default: false (optional)
+    - show_subscribe: {Boolean} Show Subscribe & Save button. Default: false (optional)
+    - max_visible_variants: {Number} Max variant options to show before "+X More". Default: 3 (optional)
 
     Usage:
-    {% render 'card-product', show_vendor: section.settings.show_vendor %}
+    {% render 'card-product', card_product: product, show_variant_options: true, show_add_to_cart: true, show_subscribe: true %}
 {% endcomment %}
 
 {{ 'component-rating.css' | asset_url | stylesheet_tag }}
@@ -27,8 +31,199 @@
     if ratio == 0 or ratio == nil
       assign ratio = 1
     endif
+
+    unless max_visible_variants
+      assign max_visible_variants = 3
+    endunless
   -%}
-  <div class="card-wrapper underline-links-hover">
+
+  <style>
+    .cc-product-card {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .cc-product-card .card__content {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .cc-product-card .card-information {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Variant Options */
+    .cc-variant-options {
+      margin: 12px 0;
+    }
+
+    .cc-option-group {
+      margin-bottom: 8px;
+    }
+
+    .cc-option-values {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    /* Size Buttons */
+    .cc-size-btn {
+      padding: 4px 12px;
+      border: 1px solid rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.1);
+      color: inherit;
+      border-radius: 16px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .cc-size-btn:hover {
+      border-color: rgba(255,255,255,0.5);
+    }
+
+    .cc-size-btn[data-selected="true"] {
+      background: rgba(255,255,255,0.2);
+      border-color: rgba(255,255,255,0.6);
+    }
+
+    .cc-size-btn[data-unavailable="true"] {
+      opacity: 0.4;
+      cursor: not-allowed;
+      position: relative;
+    }
+
+    .cc-size-btn[data-unavailable="true"]::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: currentColor;
+      transform: rotate(-15deg);
+    }
+
+    /* Color Swatches */
+    .cc-color-swatch {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      padding: 0;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1);
+    }
+
+    .cc-color-swatch:hover {
+      transform: scale(1.1);
+    }
+
+    .cc-color-swatch[data-selected="true"] {
+      border-color: #ffffff;
+      box-shadow: 0 0 0 2px #ffffff;
+    }
+
+    .cc-color-swatch[data-unavailable="true"] {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* More Options Link */
+    .cc-more-options {
+      font-size: 12px;
+      color: inherit;
+      text-decoration: none;
+      opacity: 0.7;
+      padding: 4px 8px;
+    }
+
+    .cc-more-options:hover {
+      text-decoration: underline;
+      opacity: 1;
+    }
+
+    /* Action Buttons */
+    .cc-product-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: auto;
+      padding-top: 12px;
+    }
+
+    .cc-add-to-cart-btn {
+      width: 100%;
+      padding: 10px 16px;
+      background: #ffffff;
+      color: #000000;
+      border: none;
+      border-radius: 0;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: opacity 0.2s ease;
+    }
+
+    .cc-add-to-cart-btn:hover {
+      opacity: 0.9;
+    }
+
+    .cc-add-to-cart-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .cc-subscribe-btn {
+      width: 100%;
+      padding: 10px 16px;
+      background: #722F37;
+      color: #ffffff;
+      border: none;
+      border-radius: 0;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: opacity 0.2s ease;
+      text-decoration: none;
+      text-align: center;
+      display: block;
+    }
+
+    .cc-subscribe-btn:hover {
+      opacity: 0.9;
+    }
+
+    /* Price styling */
+    .cc-price-wrapper {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin: 8px 0;
+    }
+
+    .cc-price-current {
+      font-weight: 500;
+    }
+
+    .cc-price-compare {
+      text-decoration: line-through;
+      opacity: 0.7;
+    }
+  </style>
+
+  <div class="card-wrapper underline-links-hover cc-product-card">
     <div class="card
       card--{{ settings.card_style }}
       {% if card_product.featured_media %} card--media{% else %} card--text{% endif %}
@@ -36,6 +231,7 @@
       {% if extend_height %} card--extend-height{% endif %}
       {% if card_product.featured_media == nil and settings.card_style == 'card' %} ratio{% endif %}"
       style="--ratio-percent: {{ 1 | divided_by: ratio | times: 100 }}%;"
+      data-product-id="{{ card_product.id }}"
     >
       <div class="card__inner {% if settings.card_style == 'standard' %}color-{{ settings.card_color_scheme }}{% endif %}{% if card_product.featured_media or settings.card_style == 'standard' %} ratio{% endif %}" style="--ratio-percent: {{ 1 | divided_by: ratio | times: 100 }}%;">
         {%- if card_product.featured_media -%}
@@ -87,17 +283,17 @@
               </a>
             </h3>
           </div>
-</div>
+        </div>
 
-          <div class="card__badge {{ settings.badge_position }}">
-{%- if card_product.available == false -%}
-              <span class="badge badge--bottom-left color-{{ settings.sold_out_badge_color_scheme }}">{{ 'products.product.sold_out' | t }}</span>
-            {%- elsif card_product.compare_at_price > card_product.price and card_product.available -%}
-              <span class="badge badge--bottom-left color-{{ settings.sale_badge_color_scheme }}">{{ 'products.product.on_sale' | t }}</span>
-               {%- endif -%}
-          
+        <div class="card__badge {{ settings.badge_position }}">
+          {%- if card_product.available == false -%}
+            <span class="badge badge--bottom-left color-{{ settings.sold_out_badge_color_scheme }}">{{ 'products.product.sold_out' | t }}</span>
+          {%- elsif card_product.compare_at_price > card_product.price and card_product.available -%}
+            <span class="badge badge--bottom-left color-{{ settings.sale_badge_color_scheme }}">{{ 'products.product.on_sale' | t }}</span>
+          {%- endif -%}
         </div>
       </div>
+
       <div class="card__content">
         <div class="card__information">
           <p class="card__heading{% if card_product.featured_media or settings.card_style == 'standard' %} p{% endif %}">
@@ -110,8 +306,6 @@
               <span class="visually-hidden">{{ 'accessibility.vendor' | t }}</span>
               <div class="caption-with-letter-spacing light">{{ card_product.vendor }}</div>
             {%- endif -%}
-
-            <span class="caption-large light">{{ block.settings.description | escape }}</span>
 
             {%- if show_rating and card_product.metafields.reviews.rating.value != blank -%}
               {% liquid
@@ -135,7 +329,125 @@
               </p>
             {%- endif -%}
 
-            {% render Single-build License: {{ card_product.price_max | money }} %}
+            {%- comment -%} Price Display {%- endcomment -%}
+            <div class="cc-price-wrapper">
+              {%- if card_product.compare_at_price > card_product.price -%}
+                <span class="cc-price-compare">{{ card_product.compare_at_price | money }}</span>
+              {%- endif -%}
+              <span class="cc-price-current" data-product-price>{{ card_product.price | money }}</span>
+            </div>
+
+            {%- comment -%} Variant Options {%- endcomment -%}
+            {%- if show_variant_options and card_product.has_only_default_variant == false -%}
+              <div class="cc-variant-options">
+                <script type="application/json" class="cc-variant-data">
+                  {{ card_product.variants | json }}
+                </script>
+
+                {%- for option in card_product.options_with_values -%}
+                  {%- assign option_name_lower = option.name | downcase -%}
+                  {%- assign is_color = false -%}
+                  {%- if option_name_lower contains 'color' or option_name_lower contains 'colour' -%}
+                    {%- assign is_color = true -%}
+                  {%- endif -%}
+
+                  <div class="cc-option-group" data-option-type="{% if is_color %}color{% else %}size{% endif %}">
+                    <div class="cc-option-values">
+                      {%- assign total_values = option.values.size -%}
+                      {%- assign remaining = total_values | minus: max_visible_variants -%}
+
+                      {%- for value in option.values -%}
+                        {%- if is_color -%}
+                          {%- assign color_value = value | downcase | strip -%}
+                          {%- assign swatch_color = '#888888' -%}
+                          {%- case color_value -%}
+                            {%- when 'black' -%}{% assign swatch_color = '#000000' %}
+                            {%- when 'white' -%}{% assign swatch_color = '#ffffff' %}
+                            {%- when 'red' -%}{% assign swatch_color = '#cc0000' %}
+                            {%- when 'blue' -%}{% assign swatch_color = '#0066cc' %}
+                            {%- when 'navy' or 'navy blue' -%}{% assign swatch_color = '#001f3f' %}
+                            {%- when 'green' -%}{% assign swatch_color = '#228b22' %}
+                            {%- when 'yellow' -%}{% assign swatch_color = '#ffd700' %}
+                            {%- when 'orange' -%}{% assign swatch_color = '#ff6600' %}
+                            {%- when 'purple' -%}{% assign swatch_color = '#663399' %}
+                            {%- when 'pink' -%}{% assign swatch_color = '#ff69b4' %}
+                            {%- when 'brown' -%}{% assign swatch_color = '#8b4513' %}
+                            {%- when 'gray' or 'grey' -%}{% assign swatch_color = '#808080' %}
+                            {%- when 'beige' -%}{% assign swatch_color = '#f5f5dc' %}
+                            {%- when 'cream' -%}{% assign swatch_color = '#fffdd0' %}
+                            {%- when 'tan' -%}{% assign swatch_color = '#d2b48c' %}
+                            {%- when 'burgundy' -%}{% assign swatch_color = '#800020' %}
+                            {%- when 'maroon' -%}{% assign swatch_color = '#800000' %}
+                            {%- when 'coral' -%}{% assign swatch_color = '#ff7f50' %}
+                            {%- when 'teal' -%}{% assign swatch_color = '#008080' %}
+                            {%- when 'olive' -%}{% assign swatch_color = '#808000' %}
+                            {%- when 'gold' -%}{% assign swatch_color = '#ffd700' %}
+                            {%- when 'silver' -%}{% assign swatch_color = '#c0c0c0' %}
+                            {%- when 'charcoal' -%}{% assign swatch_color = '#36454f' %}
+                            {%- when 'ivory' -%}{% assign swatch_color = '#fffff0' %}
+                            {%- when 'khaki' -%}{% assign swatch_color = '#c3b091' %}
+                            {%- when 'lavender' -%}{% assign swatch_color = '#e6e6fa' %}
+                            {%- when 'mint' -%}{% assign swatch_color = '#98ff98' %}
+                            {%- when 'rose' -%}{% assign swatch_color = '#ff007f' %}
+                            {%- when 'sage' -%}{% assign swatch_color = '#9dc183' %}
+                            {%- when 'natural' -%}{% assign swatch_color = '#f5f5dc' %}
+                          {%- endcase -%}
+                          <button type="button"
+                                  class="cc-color-swatch"
+                                  data-option-position="{{ option.position }}"
+                                  data-option-value="{{ value | escape }}"
+                                  style="background-color: {{ swatch_color }};"
+                                  title="{{ value }}"
+                                  {% if forloop.first %}data-selected="true"{% endif %}>
+                          </button>
+                        {%- else -%}
+                          {%- if forloop.index <= max_visible_variants -%}
+                            <button type="button"
+                                    class="cc-size-btn"
+                                    data-option-position="{{ option.position }}"
+                                    data-option-value="{{ value | escape }}"
+                                    {% if forloop.first %}data-selected="true"{% endif %}>
+                              {{ value }}
+                            </button>
+                          {%- endif -%}
+                        {%- endif -%}
+                      {%- endfor -%}
+
+                      {%- if remaining > 0 and is_color == false -%}
+                        <a href="{{ card_product.url }}" class="cc-more-options">+{{ remaining }} More</a>
+                      {%- endif -%}
+                    </div>
+                  </div>
+                {%- endfor -%}
+              </div>
+            {%- endif -%}
+
+            {%- comment -%} Action Buttons {%- endcomment -%}
+            {%- if show_add_to_cart or show_subscribe -%}
+              <div class="cc-product-actions">
+                {%- if show_add_to_cart -%}
+                  {%- if card_product.available -%}
+                    <button type="button"
+                            class="cc-add-to-cart-btn"
+                            data-variant-id="{{ card_product.selected_or_first_available_variant.id }}">
+                      Add to Cart
+                    </button>
+                  {%- else -%}
+                    <button type="button" class="cc-add-to-cart-btn" disabled>
+                      Sold Out
+                    </button>
+                  {%- endif -%}
+                {%- endif -%}
+
+                {%- if show_subscribe and card_product.available -%}
+                  <a href="{{ card_product.url }}?subscribe=true"
+                     class="cc-subscribe-btn"
+                     data-variant-id="{{ card_product.selected_or_first_available_variant.id }}">
+                    Subscribe & Save
+                  </a>
+                {%- endif -%}
+              </div>
+            {%- endif -%}
           </div>
         </div>
 
@@ -149,6 +461,185 @@
       </div>
     </div>
   </div>
+
+  {%- if show_variant_options or show_add_to_cart -%}
+    <script>
+      (function() {
+        const card = document.querySelector('[data-product-id="{{ card_product.id }}"]');
+        if (!card) return;
+
+        // Mark unavailable variants
+        const variantDataScript = card.querySelector('.cc-variant-data');
+        if (variantDataScript) {
+          try {
+            const variants = JSON.parse(variantDataScript.textContent);
+
+            card.querySelectorAll('.cc-size-btn, .cc-color-swatch').forEach(btn => {
+              const optionPosition = parseInt(btn.getAttribute('data-option-position'));
+              const optionValue = btn.getAttribute('data-option-value');
+
+              const hasAvailableVariant = variants.some(variant => {
+                const optionKey = 'option' + optionPosition;
+                return variant[optionKey] === optionValue && variant.available;
+              });
+
+              if (!hasAvailableVariant) {
+                btn.setAttribute('data-unavailable', 'true');
+              }
+            });
+          } catch (error) {
+            console.error('Error checking variant availability:', error);
+          }
+        }
+
+        // Variant Selection
+        card.querySelectorAll('.cc-size-btn, .cc-color-swatch').forEach(button => {
+          button.addEventListener('click', function() {
+            if (this.getAttribute('data-unavailable') === 'true') return;
+
+            const optionGroup = this.closest('.cc-option-group');
+            const addToCartBtn = card.querySelector('.cc-add-to-cart-btn');
+            const subscribeBtn = card.querySelector('.cc-subscribe-btn');
+
+            // Remove selected from other buttons in this group
+            optionGroup.querySelectorAll('.cc-size-btn, .cc-color-swatch').forEach(btn => {
+              btn.removeAttribute('data-selected');
+            });
+
+            // Mark this button as selected
+            this.setAttribute('data-selected', 'true');
+
+            // Get variant data
+            const variantDataScript = card.querySelector('.cc-variant-data');
+            if (!variantDataScript) return;
+
+            try {
+              const variants = JSON.parse(variantDataScript.textContent);
+
+              // Get all selected options
+              const selectedOptions = {};
+              card.querySelectorAll('.cc-size-btn[data-selected="true"], .cc-color-swatch[data-selected="true"]').forEach(selectedBtn => {
+                const position = selectedBtn.getAttribute('data-option-position');
+                const value = selectedBtn.getAttribute('data-option-value');
+                if (position && value) {
+                  selectedOptions['option' + position] = value;
+                }
+              });
+
+              // Find matching variant
+              let matchingVariant = variants.find(variant => {
+                return Object.keys(selectedOptions).every(key => variant[key] === selectedOptions[key]) && variant.available;
+              });
+
+              // Fallback
+              if (!matchingVariant) {
+                const clickedPosition = this.getAttribute('data-option-position');
+                const clickedValue = this.getAttribute('data-option-value');
+                const optionKey = 'option' + clickedPosition;
+
+                matchingVariant = variants.find(variant =>
+                  variant[optionKey] === clickedValue && variant.available
+                );
+              }
+
+              if (matchingVariant) {
+                // Update add to cart button
+                if (addToCartBtn) {
+                  addToCartBtn.setAttribute('data-variant-id', matchingVariant.id);
+                }
+
+                // Update subscribe button
+                if (subscribeBtn) {
+                  const baseUrl = subscribeBtn.href.split('?')[0];
+                  subscribeBtn.href = baseUrl + '?variant=' + matchingVariant.id + '&subscribe=true';
+                  subscribeBtn.setAttribute('data-variant-id', matchingVariant.id);
+                }
+
+                // Update price
+                const priceElement = card.querySelector('[data-product-price]');
+                if (priceElement) {
+                  priceElement.textContent = Shopify.formatMoney ? Shopify.formatMoney(matchingVariant.price) : '$' + (matchingVariant.price / 100).toFixed(2);
+                }
+              }
+            } catch (error) {
+              console.error('Error selecting variant:', error);
+            }
+          });
+        });
+
+        // Add to Cart
+        const addToCartBtn = card.querySelector('.cc-add-to-cart-btn');
+        if (addToCartBtn) {
+          addToCartBtn.addEventListener('click', function() {
+            const variantId = this.getAttribute('data-variant-id');
+
+            if (!variantId) {
+              alert('Please select a variant');
+              return;
+            }
+
+            const originalContent = this.innerHTML;
+            this.innerHTML = 'Adding...';
+            this.disabled = true;
+
+            const cartDrawer = document.querySelector('cart-notification') || document.querySelector('cart-drawer');
+            const formData = new FormData();
+            formData.append('id', variantId);
+            formData.append('quantity', '1');
+
+            if (cartDrawer) {
+              try {
+                const sectionsToRender = cartDrawer.getSectionsToRender().map((section) => section.id);
+                formData.append('sections', sectionsToRender);
+                formData.append('sections_url', window.location.pathname);
+                cartDrawer.setActiveElement(document.activeElement);
+              } catch (e) {
+                console.log('Cart sections error:', e);
+              }
+            }
+
+            const btn = this;
+            fetch('/cart/add.js', {
+              method: 'POST',
+              headers: { 'X-Requested-With': 'XMLHttpRequest' },
+              body: formData
+            })
+            .then(response => response.json())
+            .then(response => {
+              if (response.status) {
+                throw new Error(response.description || 'Error adding to cart');
+              }
+
+              btn.innerHTML = 'Added!';
+
+              if (!cartDrawer) {
+                window.location = '/cart';
+                return;
+              }
+
+              if (cartDrawer.classList.contains('is-empty')) {
+                cartDrawer.classList.remove('is-empty');
+              }
+
+              cartDrawer.renderContents(response);
+
+              setTimeout(() => {
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+              }, 1500);
+            })
+            .catch(error => {
+              console.error('Error adding to cart:', error);
+              btn.innerHTML = originalContent;
+              btn.disabled = false;
+              alert('Error: ' + error.message);
+            });
+          });
+        }
+      })();
+    </script>
+  {%- endif -%}
+
 {%- else -%}
   <div class="card-wrapper underline-links-hover">
     <div class="card
@@ -182,9 +673,7 @@
               <span class="visually-hidden">{{ 'accessibility.vendor' | t }}</span>
               <div class="caption-with-letter-spacing light">{{ 'products.product.vendor' | t }}</div>
             {%- endif -%}
-            {% render 'low-price' %}
-
-
+            {% render 'price', product: card_product, price_class: '' %}
           </div>
         </div>
       </div>
