@@ -561,22 +561,11 @@
                         {%- endif -%}
 
                         {%- if section.settings.show_subscribe and product.available -%}
-                          {%- comment -%} Check if product has selling_plan_groups (subscriptions) {%- endcomment -%}
-                          {%- if product.selling_plan_groups.size > 0 -%}
-                            {%- assign first_selling_plan = product.selling_plan_groups.first.selling_plans.first -%}
-                            <a href="/cart/{{ product.selected_or_first_available_variant.id }}:1?selling_plan={{ first_selling_plan.id }}"
-                               class="sl-subscribe-btn"
-                               data-variant-id="{{ product.selected_or_first_available_variant.id }}"
-                               data-selling-plan="{{ first_selling_plan.id }}">
-                              {{ section.settings.subscribe_text }}
-                            </a>
-                          {%- else -%}
-                            {%- comment -%} Fallback to Recharge direct link if no native selling plans {%- endcomment -%}
-                            <a href="https://criminalcoffeeco.com/tools/recurring/login"
-                               class="sl-subscribe-btn">
-                              {{ section.settings.subscribe_text }}
-                            </a>
-                          {%- endif -%}
+                          <a href="{{ product.url }}?subscribe=true"
+                             class="sl-subscribe-btn"
+                             data-variant-id="{{ product.selected_or_first_available_variant.id }}">
+                            {{ section.settings.subscribe_text }}
+                          </a>
                         {%- endif -%}
                       </div>
                     {%- endif -%}
@@ -684,12 +673,10 @@
             addToCartBtn.setAttribute('data-variant-id', matchingVariant.id);
           }
 
-          // Update subscribe button
+          // Update subscribe button with variant parameter
           if (subscribeBtn) {
-            const sellingPlan = subscribeBtn.getAttribute('data-selling-plan');
-            if (sellingPlan) {
-              subscribeBtn.href = '/cart/' + matchingVariant.id + ':1?selling_plan=' + sellingPlan;
-            }
+            const baseUrl = subscribeBtn.href.split('?')[0];
+            subscribeBtn.href = baseUrl + '?variant=' + matchingVariant.id + '&subscribe=true';
             subscribeBtn.setAttribute('data-variant-id', matchingVariant.id);
           }
 
