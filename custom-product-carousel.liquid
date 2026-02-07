@@ -10,43 +10,45 @@
           {% assign collection = collections.all %}
         {% endif %}
         {% for product in collection.products limit: section.settings.products_limit %}
-          <div class="product-card" data-product-id="{{ product.id }}">
-            <!-- Status Indicators -->
-            {% if product.available == false %}
-              <div class="status-badge status-badge--out-of-stock">{{ section.settings.out_of_stock_badge_text }}</div>
-            {% elsif product.compare_at_price > product.price %}
-              <div class="status-badge status-badge--sale">{{ section.settings.sale_badge_text }}</div>
-            {% elsif product.tags contains section.settings.new_product_tag %}
-              <div class="status-badge status-badge--new">{{ section.settings.new_badge_text }}</div>
-            {% elsif product.tags contains section.settings.editors_pick_tag %}
-              <div class="status-badge status-badge--editors-pick">{{ section.settings.editors_pick_badge_text }}</div>
-            {% endif %}
-
-            <!-- Product Image -->
-            <div class="product-image">
-              {% if product.featured_image %}
-                <a href="{{ product.url }}">
-                  <img src="{{ product.featured_image | img_url: '400x400' }}"
-                       alt="{{ product.featured_image.alt | escape }}"
-                       loading="lazy">
-                </a>
-              {% else %}
-                <div class="no-image">No image available</div>
+          <div class="product-card-wrapper" data-product-id="{{ product.id }}">
+            {%- comment -%} Row 1: Card (image + title + price only) {%- endcomment -%}
+            <div class="product-card">
+              <!-- Status Indicators -->
+              {% if product.available == false %}
+                <div class="status-badge status-badge--out-of-stock">{{ section.settings.out_of_stock_badge_text }}</div>
+              {% elsif product.compare_at_price > product.price %}
+                <div class="status-badge status-badge--sale">{{ section.settings.sale_badge_text }}</div>
+              {% elsif product.tags contains section.settings.new_product_tag %}
+                <div class="status-badge status-badge--new">{{ section.settings.new_badge_text }}</div>
+              {% elsif product.tags contains section.settings.editors_pick_tag %}
+                <div class="status-badge status-badge--editors-pick">{{ section.settings.editors_pick_badge_text }}</div>
               {% endif %}
-            </div>
 
-            <!-- Product Info -->
-            <div class="product-info">
-              <div class="product-content">
+              <!-- Product Image -->
+              <div class="product-image">
+                {% if product.featured_image %}
+                  <a href="{{ product.url }}">
+                    <img src="{{ product.featured_image | img_url: '600x600' }}"
+                         alt="{{ product.featured_image.alt | escape }}"
+                         loading="lazy"
+                         width="600"
+                         height="600">
+                  </a>
+                {% else %}
+                  <div class="no-image">No image available</div>
+                {% endif %}
+              </div>
+
+              <!-- Product Info (title + price only) -->
+              <div class="product-info">
                 <a href="{{ product.url }}"><p class="product-title">{{ product.title }}</p></a>
 
-                <!-- Price Display -->
                 {% if section.settings.show_price %}
                   <div class="product-price">
                     {% if product.compare_at_price > product.price %}
                       <span class="price-compare">{{ product.compare_at_price | money }}</span>
                     {% endif %}
-                    <span class="price-current">{{ product.price | money }}</span>
+                    <span class="price-current" data-product-price>{{ product.price | money }}</span>
                   </div>
                 {% endif %}
 
@@ -54,37 +56,54 @@
                 {% if section.settings.show_mini_description and product.metafields.custom.mini_description %}
                   <p class="product-mini-description">{{ product.metafields.custom.mini_description }}</p>
                 {% endif %}
-              </div>
 
-              <!-- Star Rating (if enabled and metafield exists) -->
-              {% if section.settings.show_ratings %}
-                {% assign rating_namespace = section.settings.rating_metafield_namespace %}
-                {% assign rating_key = section.settings.rating_metafield_key %}
-                {% assign count_key = section.settings.review_count_metafield_key %}
+                <!-- Star Rating (if enabled and metafield exists) -->
+                {% if section.settings.show_ratings %}
+                  {% assign rating_namespace = section.settings.rating_metafield_namespace %}
+                  {% assign rating_key = section.settings.rating_metafield_key %}
+                  {% assign count_key = section.settings.review_count_metafield_key %}
 
-                {% if product.metafields[rating_namespace][rating_key] %}
-                  <div class="rating">
-                    {% assign rating = product.metafields[rating_namespace][rating_key] | times: 1 %}
-                    {% assign review_count = product.metafields[rating_namespace][count_key] | times: 1 %}
+                  {% if product.metafields[rating_namespace][rating_key] %}
+                    <div class="rating">
+                      {% assign rating = product.metafields[rating_namespace][rating_key] | times: 1 %}
+                      {% assign review_count = product.metafields[rating_namespace][count_key] | times: 1 %}
 
-                    <div class="stars">
-                      {% for i in (1..5) %}
-                        {% if i <= rating %}
-                          <span class="star star--filled">★</span>
-                        {% else %}
-                          <span class="star">★</span>
-                        {% endif %}
-                      {% endfor %}
+                      <div class="stars">
+                        {% for i in (1..5) %}
+                          {% if i <= rating %}
+                            <span class="star star--filled">★</span>
+                          {% else %}
+                            <span class="star">★</span>
+                          {% endif %}
+                        {% endfor %}
+                      </div>
+                      <span class="review-count">{{ review_count }}</span>
                     </div>
-                    <span class="review-count">{{ review_count }}</span>
-                  </div>
+                  {% endif %}
                 {% endif %}
-              {% endif %}
+              </div>
+            </div>
 
-              <!-- Variant Options (if enabled) -->
-              {% if section.settings.show_variant_options and section.settings.show_variants_and_button and product.variants.size > 1 %}
+            {%- comment -%} Row 2: Button (outside the card) {%- endcomment -%}
+            {% if section.settings.show_variants_and_button %}
+              <div class="outside-button">
+                {% if product.available %}
+                  <button class="add-to-cart-btn"
+                          data-variant-id="{{ product.selected_or_first_available_variant.id }}">
+                    <span>{{ section.settings.add_to_cart_text }}</span>
+                  </button>
+                {% else %}
+                  <button class="add-to-cart-btn" disabled>
+                    <span>{{ section.settings.out_of_stock_button_text }}</span>
+                  </button>
+                {% endif %}
+              </div>
+            {% endif %}
+
+            {%- comment -%} Row 3: Variants (outside the card) {%- endcomment -%}
+            <div class="outside-variants">
+              {% if section.settings.show_variant_options and section.settings.show_variants_and_button and product.has_only_default_variant == false %}
                 <div class="product-options">
-                  <!-- Store all variant data in a hidden script -->
                   <script type="application/json" class="variant-data">
                     {{ product.variants | json }}
                   </script>
@@ -128,24 +147,6 @@
                       </div>
                     </div>
                   {% endfor %}
-                </div>
-              {% endif %}
-
-              <!-- Add to Cart Button -->
-              {% if section.settings.show_variants_and_button %}
-                <div class="product-actions">
-                  <div class="button-container">
-                    {% if product.available %}
-                      <button class="add-to-cart-btn"
-                              data-variant-id="{{ product.variants.first.id }}">
-                        <span>{{ section.settings.add_to_cart_text }}</span>
-                      </button>
-                    {% else %}
-                      <button class="add-to-cart-btn" disabled>
-                        <span>{{ section.settings.out_of_stock_button_text }}</span>
-                      </button>
-                    {% endif %}
-                  </div>
                 </div>
               {% endif %}
             </div>
@@ -221,18 +222,46 @@
     display: none;
   }
 
-  #CustomProductCarousel-{{ section.id }} .product-card {
+  /* Card Wrapper - the flex item in the carousel */
+  #CustomProductCarousel-{{ section.id }} .product-card-wrapper {
     flex: 0 0 {{ section.settings.card_width }}px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Row 1: The card itself (image + title + price) */
+  #CustomProductCarousel-{{ section.id }} .product-card {
     background: {{ section.settings.card_background_color }};
     border-radius: {{ section.settings.card_border_radius }}px;
     position: relative;
     transition: transform 0.3s ease;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
   }
 
   #CustomProductCarousel-{{ section.id }} .product-card:hover {
     transform: translateY(-5px);
+  }
+
+  /* Row 2: Button container (outside card) */
+  #CustomProductCarousel-{{ section.id }} .outside-button {
+    padding: 10px 0 8px 0;
+  }
+
+  #CustomProductCarousel-{{ section.id }} .outside-button .add-to-cart-btn {
+    width: 100%;
+  }
+
+  /* Row 3: Variants container (outside card) */
+  #CustomProductCarousel-{{ section.id }} .outside-variants {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  #CustomProductCarousel-{{ section.id }} .outside-variants .product-options {
+    margin-bottom: 0;
   }
 
   /* Status Badges */
@@ -304,11 +333,6 @@
     padding: 15px;
     display: flex;
     flex-direction: column;
-    flex-grow: 1;
-  }
-
-  #CustomProductCarousel-{{ section.id }} .product-content {
-    height: 100%;
   }
 
   #CustomProductCarousel-{{ section.id }} .product-title {
@@ -488,21 +512,6 @@
   }
 
   /* Add to Cart Button */
-  #CustomProductCarousel-{{ section.id }} .product-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: auto;
-  }
-
-  #CustomProductCarousel-{{ section.id }} .button-container {
-    display: flex;
-    border-radius: {{ section.settings.button_border_radius }}px;
-    overflow: hidden;
-    min-height: 48px;
-    width: 100%;
-  }
-
   #CustomProductCarousel-{{ section.id }} .add-to-cart-btn {
     width: 100%;
     padding: {{ section.settings.button_padding_vertical }}px {{ section.settings.button_padding_horizontal }}px;
@@ -590,7 +599,7 @@
 
   /* Mobile Styles */
   @media (max-width: 768px) {
-    #CustomProductCarousel-{{ section.id }} .product-card {
+    #CustomProductCarousel-{{ section.id }} .product-card-wrapper {
       flex: 0 0 {{ section.settings.card_width_mobile }}px;
     }
 #CustomProductCarousel-{{ section.id }} .product-content {
@@ -647,7 +656,7 @@
   const cardGap = {{ section.settings.card_gap }};
 
   // Mark unavailable variants on page load
-  section.querySelectorAll('.product-card').forEach(productCard => {
+  section.querySelectorAll('.product-card-wrapper').forEach(productCard => {
     const variantDataScript = productCard.querySelector('.variant-data');
     if (!variantDataScript) return;
 
@@ -681,9 +690,8 @@
       if (this.getAttribute('data-unavailable') === 'true') return;
 
       const optionGroup = this.closest('.option-group');
-      const productCard = this.closest('.product-card');
+      const productCard = this.closest('.product-card-wrapper');
       const addToCartBtn = productCard.querySelector('.add-to-cart-btn');
-      if (!addToCartBtn) return;
 
       // Remove selected from other buttons in this group
       optionGroup.querySelectorAll('.size-btn, .color-swatch').forEach(btn => {
@@ -731,7 +739,7 @@
           addToCartBtn.setAttribute('data-variant-id', matchingVariant.id);
 
           // Update price display
-          const priceElement = productCard.querySelector('.price-current');
+          const priceElement = productCard.querySelector('[data-product-price]');
           if (priceElement) {
             priceElement.textContent = Shopify.formatMoney ? Shopify.formatMoney(matchingVariant.price) : '$' + (matchingVariant.price / 100).toFixed(2);
           }
