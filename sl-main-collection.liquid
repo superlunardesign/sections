@@ -594,10 +594,11 @@
                                             class="sl-color-swatch"
                                             data-option-position="{{ option.position }}"
                                             data-option-value="{{ value | escape }}"
-                                            style="background-color: {% if swatch_color %}{{ swatch_color }}{% else %}{{ value | handleize }}{% endif %};"
+                                            style="background-color: {{ value | handleize }};"
                                             title="{{ value }}"
                                             {% if forloop.first %}data-selected="true"{% endif %}>
                                     </button>
+                                    <span style="font-size:10px;color:#fff;">{{ swatch_color | default: 'no match' }}</span>
                                   {%- else -%}
                                     {%- if forloop.index <= max_visible -%}
                                       <button type="button"
