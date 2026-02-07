@@ -56,44 +56,43 @@
     height: 100%;
   }
 
-  /* Compact Layout - Uses CSS Grid for equal height cards */
+  /* Compact Layout - Uses CSS Grid with 3 rows for alignment */
   #SLCollection-{{ section.id }} .sl-card-wrapper {
     display: grid;
-    grid-template-rows: 1fr auto;
+    grid-template-rows: 1fr auto auto;
     height: 100%;
   }
 
-  /* Card fills the 1fr row - equal height across the grid row */
+  /* Row 1: Card fills available space - equal height across the grid row */
   #SLCollection-{{ section.id }} .sl-card-wrapper .sl-product-card {
     height: 100%;
     display: flex;
     flex-direction: column;
   }
 
-  /* Elements outside the card (button + variants) */
-  #SLCollection-{{ section.id }} .sl-outside-card {
-    padding: 10px 0 0 0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+  /* Row 2: Button container */
+  #SLCollection-{{ section.id }} .sl-card-wrapper .sl-outside-button {
+    padding: 10px 0 8px 0;
   }
 
-  #SLCollection-{{ section.id }} .sl-outside-card .sl-add-to-cart-btn {
+  #SLCollection-{{ section.id }} .sl-card-wrapper .sl-outside-button .sl-add-to-cart-btn {
+    width: 100%;
     background: {{ section.settings.atc_button_background }};
     color: {{ section.settings.atc_button_text }};
     border: {{ section.settings.atc_button_border_width }}px solid {{ section.settings.atc_button_border_color }};
     border-radius: {{ section.settings.button_border_radius }}px;
   }
 
-  /* Uniform variant area height */
-  #SLCollection-{{ section.id }} .sl-outside-card .sl-variant-options {
+  /* Row 3: Variants container - uniform min-height */
+  #SLCollection-{{ section.id }} .sl-card-wrapper .sl-outside-variants {
     min-height: {{ section.settings.variant_area_min_height }}px;
-    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
   }
 
-  /* Spacer for products without variants in compact layout */
-  #SLCollection-{{ section.id }} .sl-outside-card .sl-variant-spacer {
-    min-height: {{ section.settings.variant_area_min_height }}px;
+  #SLCollection-{{ section.id }} .sl-card-wrapper .sl-outside-variants .sl-variant-options {
+    margin-bottom: 0;
   }
 
   /* Status Badges */
@@ -530,8 +529,8 @@
                       </div>
                     </div>
 
-                    {%- comment -%} Elements outside the card background {%- endcomment -%}
-                    <div class="sl-outside-card">
+                    {%- comment -%} Row 2: Button {%- endcomment -%}
+                    <div class="sl-outside-button">
                       {%- if section.settings.show_add_to_cart -%}
                         {%- if product.available -%}
                           <button type="button"
@@ -545,7 +544,10 @@
                           </button>
                         {%- endif -%}
                       {%- endif -%}
+                    </div>
 
+                    {%- comment -%} Row 3: Variants (always present for uniform spacing) {%- endcomment -%}
+                    <div class="sl-outside-variants">
                       {%- if section.settings.show_variants and product.has_only_default_variant == false -%}
                         <div class="sl-variant-options">
                           <script type="application/json" class="sl-variant-data">
@@ -591,9 +593,6 @@
                             </div>
                           {%- endfor -%}
                         </div>
-                      {%- elsif section.settings.show_variants -%}
-                        {%- comment -%} Spacer for products without variants to maintain uniform height {%- endcomment -%}
-                        <div class="sl-variant-spacer"></div>
                       {%- endif -%}
                     </div>
                   </div>
