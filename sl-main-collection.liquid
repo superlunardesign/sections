@@ -56,18 +56,16 @@
     height: 100%;
   }
 
-  /* Compact Layout - Cards match tallest in row */
+  /* Compact Layout - Card has fixed structure, not flex-based */
   #SLCollection-{{ section.id }} .sl-card-wrapper {
     display: flex;
     flex-direction: column;
-    height: 100%;
   }
 
-  /* Card grows to fill available space - matches tallest card in row */
+  /* Card with fixed internal heights for consistency */
   #SLCollection-{{ section.id }} .sl-card-wrapper .sl-product-card {
     display: flex;
     flex-direction: column;
-    flex: 1;
   }
 
   /* Force consistent image height via aspect ratio */
@@ -76,18 +74,19 @@
     flex-shrink: 0;
   }
 
-  /* Info area grows to absorb extra space when other cards are taller */
+  /* Fixed height for title/price area to accommodate 2-line titles */
   #SLCollection-{{ section.id }} .sl-card-wrapper .sl-product-info {
-    flex: 1;
+    min-height: 85px;
+    flex-grow: 0;
+    flex-shrink: 0;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
   }
 
-  /* Button container - stays at bottom */
+  /* Row 2: Button container */
   #SLCollection-{{ section.id }} .sl-card-wrapper .sl-outside-button {
     padding: 10px 0 8px 0;
-    flex-shrink: 0;
   }
 
   #SLCollection-{{ section.id }} .sl-card-wrapper .sl-outside-button .sl-add-to-cart-btn {
@@ -98,13 +97,12 @@
     border-radius: {{ section.settings.button_border_radius }}px;
   }
 
-  /* Variants container - uniform min-height, stays at bottom */
+  /* Row 3: Variants container - uniform min-height */
   #SLCollection-{{ section.id }} .sl-card-wrapper .sl-outside-variants {
     min-height: {{ section.settings.variant_area_min_height }}px;
     display: flex;
     flex-direction: column;
     gap: 6px;
-    flex-shrink: 0;
   }
 
   #SLCollection-{{ section.id }} .sl-card-wrapper .sl-outside-variants .sl-variant-options {
@@ -175,7 +173,7 @@
     margin: 0 0 5px 0;
     color: {{ section.settings.title_color }};
     line-height: 1.3;
-    min-height: 45px;
+    min-height:45px;
   }
 
   #SLCollection-{{ section.id }} .sl-product-title a {
@@ -587,13 +585,7 @@
                                             class="sl-color-swatch"
                                             data-option-position="{{ option.position }}"
                                             data-option-value="{{ value | escape }}"
-                                            {% if value.swatch.color %}
-                                              style="background-color: {{ value.swatch.color }};"
-                                            {% elsif value.swatch.image %}
-                                              style="background-image: url({{ value.swatch.image | image_url: width: 50 }});"
-                                            {% else %}
-                                              style="background-color: {{ value | handleize }};"
-                                            {% endif %}
+                                            style="background-color: {{ value | handleize }};"
                                             title="{{ value }}"
                                             {% if forloop.first %}data-selected="true"{% endif %}>
                                     </button>
@@ -679,13 +671,7 @@
                                           class="sl-color-swatch"
                                           data-option-position="{{ option.position }}"
                                           data-option-value="{{ value | escape }}"
-                                          {% if value.swatch.color %}
-                                            style="background-color: {{ value.swatch.color }};"
-                                          {% elsif value.swatch.image %}
-                                            style="background-image: url({{ value.swatch.image | image_url: width: 50 }});"
-                                          {% else %}
-                                            style="background-color: {{ value | handleize }};"
-                                          {% endif %}
+                                          style="background-color: {{ value | handleize }};"
                                           title="{{ value }}"
                                           {% if forloop.first %}data-selected="true"{% endif %}>
                                   </button>
