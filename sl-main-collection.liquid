@@ -583,9 +583,9 @@
                                   {%- if is_color -%}
                                     {%- assign swatch_color = null -%}
                                     {%- assign color_name_lower = value | downcase -%}
-                                    {%- for color_entry in shop.metaobjects['shopify--color-pattern'].values -%}
-                                      {%- if color_entry.label | downcase == color_name_lower -%}
-                                        {%- assign swatch_color = color_entry.color -%}
+                                    {%- for color_entry in shop.metaobjects.color.values -%}
+                                      {%- if color_entry.label.value | downcase == color_name_lower -%}
+                                        {%- assign swatch_color = color_entry.color.value -%}
                                         {%- break -%}
                                       {%- endif -%}
                                     {%- endfor -%}
@@ -677,9 +677,9 @@
                                 {%- if is_color -%}
                                   {%- assign swatch_color = null -%}
                                   {%- assign color_name_lower = value | downcase -%}
-                                  {%- for color_entry in shop.metaobjects['shopify--color-pattern'].values -%}
-                                    {%- if color_entry.label | downcase == color_name_lower -%}
-                                      {%- assign swatch_color = color_entry.color -%}
+                                  {%- for color_entry in shop.metaobjects.color.values -%}
+                                    {%- if color_entry.label.value | downcase == color_name_lower -%}
+                                      {%- assign swatch_color = color_entry.color.value -%}
                                       {%- break -%}
                                     {%- endif -%}
                                   {%- endfor -%}
