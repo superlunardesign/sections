@@ -62,6 +62,42 @@
     height: 100%;
   }
 
+  /* Compact Layout - Card wrapper for items outside the card background */
+  #SLCollection-{{ section.id }} .sl-card-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  #SLCollection-{{ section.id }} .sl-card-wrapper .sl-product-card {
+    height: auto;
+    flex-shrink: 0;
+  }
+
+  #SLCollection-{{ section.id }} .sl-card-wrapper .sl-product-info {
+    flex-grow: 0;
+  }
+
+  /* Compact layout - elements outside card */
+  #SLCollection-{{ section.id }} .sl-outside-card {
+    padding: 10px 0 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  #SLCollection-{{ section.id }} .sl-outside-card .sl-add-to-cart-btn {
+    background: {{ section.settings.atc_button_background }};
+    color: {{ section.settings.atc_button_text }};
+    border: {{ section.settings.atc_button_border_width }}px solid {{ section.settings.atc_button_border_color }};
+    border-radius: {{ section.settings.button_border_radius }}px;
+  }
+
+  #SLCollection-{{ section.id }} .sl-outside-card .sl-variant-options {
+    min-height: 0;
+    margin-bottom: 0;
+  }
+
   /* Status Badges */
   #SLCollection-{{ section.id }} .sl-badge {
     position: absolute;
@@ -441,43 +477,170 @@
                 {%- endif -%}
               {%- endfor -%}
 
+              {%- liquid
+                comment
+                  Check if this collection uses compact layout
+                endcomment
+                assign is_compact_layout = false
+                if section.settings.compact_layout_collections != blank
+                  assign compact_handles = section.settings.compact_layout_collections | split: ','
+                  for handle in compact_handles
+                    assign clean_handle = handle | strip | downcase
+                    if collection.handle == clean_handle
+                      assign is_compact_layout = true
+                      break
+                    endif
+                  endfor
+                endif
+              -%}
+
               <li class="grid__item">
-                <div class="sl-product-card" data-product-id="{{ product.id }}">
-                  {%- comment -%} Status Badge {%- endcomment -%}
-                  {%- if product.available == false -%}
-                    <span class="sl-badge sl-badge--soldout">{{ section.settings.soldout_text }}</span>
-                  {%- elsif product.compare_at_price > product.price -%}
-                    <span class="sl-badge sl-badge--sale">{{ section.settings.sale_text }}</span>
-                  {%- endif -%}
-
-                  {%- comment -%} Product Image {%- endcomment -%}
-                  <div class="sl-product-image">
-                    <a href="{{ product.url }}">
-                      {%- if product.featured_image -%}
-                        <img src="{{ product.featured_image | img_url: '600x600' }}"
-                             alt="{{ product.featured_image.alt | escape }}"
-                             loading="{% if product_index <= 4 %}eager{% else %}lazy{% endif %}"
-                             width="600"
-                             height="600">
-                      {%- else -%}
-                        {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}
+                {%- if is_compact_layout -%}
+                  {%- comment -%} COMPACT LAYOUT - Card contains only image/title/price {%- endcomment -%}
+                  <div class="sl-card-wrapper" data-product-id="{{ product.id }}">
+                    <div class="sl-product-card">
+                      {%- if product.available == false -%}
+                        <span class="sl-badge sl-badge--soldout">{{ section.settings.soldout_text }}</span>
+                      {%- elsif product.compare_at_price > product.price -%}
+                        <span class="sl-badge sl-badge--sale">{{ section.settings.sale_text }}</span>
                       {%- endif -%}
-                    </a>
-                  </div>
 
-                  {%- comment -%} Product Info {%- endcomment -%}
-                  <div class="sl-product-info">
-                    <h3 class="sl-product-title">
-                      <a href="{{ product.url }}">{{ product.title }}</a>
-                    </h3>
+                      <div class="sl-product-image">
+                        <a href="{{ product.url }}">
+                          {%- if product.featured_image -%}
+                            <img src="{{ product.featured_image | img_url: '600x600' }}"
+                                 alt="{{ product.featured_image.alt | escape }}"
+                                 loading="{% if product_index <= 4 %}eager{% else %}lazy{% endif %}"
+                                 width="600"
+                                 height="600">
+                          {%- else -%}
+                            {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}
+                          {%- endif -%}
+                        </a>
+                      </div>
 
-                    {%- comment -%} Price {%- endcomment -%}
-                    <div class="sl-product-price">
-                      {%- if product.compare_at_price > product.price -%}
-                        <span class="sl-price-compare">{{ product.compare_at_price | money }}</span>
-                      {%- endif -%}
-                      <span class="sl-price-current" data-product-price>{{ product.price | money }}</span>
+                      <div class="sl-product-info">
+                        <h3 class="sl-product-title">
+                          <a href="{{ product.url }}">{{ product.title }}</a>
+                        </h3>
+                        <div class="sl-product-price">
+                          {%- if product.compare_at_price > product.price -%}
+                            <span class="sl-price-compare">{{ product.compare_at_price | money }}</span>
+                          {%- endif -%}
+                          <span class="sl-price-current" data-product-price>{{ product.price | money }}</span>
+                        </div>
+                      </div>
                     </div>
+
+                    {%- comment -%} Elements outside the card background {%- endcomment -%}
+                    <div class="sl-outside-card">
+                      {%- if section.settings.show_add_to_cart -%}
+                        {%- if product.available -%}
+                          <button type="button"
+                                  class="sl-add-to-cart-btn"
+                                  data-variant-id="{{ product.selected_or_first_available_variant.id }}">
+                            {{ section.settings.add_to_cart_text }}
+                          </button>
+                        {%- else -%}
+                          <button type="button" class="sl-add-to-cart-btn" disabled>
+                            {{ section.settings.soldout_button_text }}
+                          </button>
+                        {%- endif -%}
+                      {%- endif -%}
+
+                      {%- if section.settings.show_variants and product.has_only_default_variant == false -%}
+                        <div class="sl-variant-options">
+                          <script type="application/json" class="sl-variant-data">
+                            {{ product.variants | json }}
+                          </script>
+                          {%- for option in product.options_with_values -%}
+                            {%- assign option_name_lower = option.name | downcase -%}
+                            {%- assign is_color = false -%}
+                            {%- if option_name_lower contains 'color' or option_name_lower contains 'colour' -%}
+                              {%- assign is_color = true -%}
+                            {%- endif -%}
+                            <div class="sl-option-group" data-option-type="{% if is_color %}color{% else %}size{% endif %}">
+                              <div class="sl-option-values">
+                                {%- assign max_visible = section.settings.max_visible_variants -%}
+                                {%- assign total_values = option.values.size -%}
+                                {%- assign remaining = total_values | minus: max_visible -%}
+                                {%- for value in option.values -%}
+                                  {%- if is_color -%}
+                                    {%- assign color_value = value | downcase | strip -%}
+                                    {%- assign swatch_color = '#888888' -%}
+                                    {%- case color_value -%}
+                                      {%- when 'black' -%}{% assign swatch_color = '#000000' %}
+                                      {%- when 'white' -%}{% assign swatch_color = '#ffffff' %}
+                                      {%- when 'cardinal' -%}{% assign swatch_color = '#c41e3a' %}
+                                      {%- when 'oatmeal' -%}{% assign swatch_color = '#d8d7c5' %}
+                                      {%- when 'heather' or 'heather grey' or 'heather gray' -%}{% assign swatch_color = '#9a9a9a' %}
+                                      {%- when 'navy' or 'navy blue' -%}{% assign swatch_color = '#001f3f' %}
+                                      {%- when 'gray' or 'grey' -%}{% assign swatch_color = '#808080' %}
+                                      {%- when 'charcoal' -%}{% assign swatch_color = '#36454f' %}
+                                    {%- endcase -%}
+                                    <button type="button"
+                                            class="sl-color-swatch"
+                                            data-option-position="{{ option.position }}"
+                                            data-option-value="{{ value | escape }}"
+                                            style="background-color: {{ swatch_color }};"
+                                            title="{{ value }}"
+                                            {% if forloop.first %}data-selected="true"{% endif %}>
+                                    </button>
+                                  {%- else -%}
+                                    {%- if forloop.index <= max_visible -%}
+                                      <button type="button"
+                                              class="sl-size-btn"
+                                              data-option-position="{{ option.position }}"
+                                              data-option-value="{{ value | escape }}"
+                                              {% if forloop.first %}data-selected="true"{% endif %}>
+                                        {{ value }}
+                                      </button>
+                                    {%- endif -%}
+                                  {%- endif -%}
+                                {%- endfor -%}
+                                {%- if remaining > 0 and is_color == false -%}
+                                  <a href="{{ product.url }}" class="sl-more-options">+{{ remaining }} More</a>
+                                {%- endif -%}
+                              </div>
+                            </div>
+                          {%- endfor -%}
+                        </div>
+                      {%- endif -%}
+                    </div>
+                  </div>
+                {%- else -%}
+                  {%- comment -%} REGULAR LAYOUT - Full card with all elements inside {%- endcomment -%}
+                  <div class="sl-product-card" data-product-id="{{ product.id }}">
+                    {%- if product.available == false -%}
+                      <span class="sl-badge sl-badge--soldout">{{ section.settings.soldout_text }}</span>
+                    {%- elsif product.compare_at_price > product.price -%}
+                      <span class="sl-badge sl-badge--sale">{{ section.settings.sale_text }}</span>
+                    {%- endif -%}
+
+                    <div class="sl-product-image">
+                      <a href="{{ product.url }}">
+                        {%- if product.featured_image -%}
+                          <img src="{{ product.featured_image | img_url: '600x600' }}"
+                               alt="{{ product.featured_image.alt | escape }}"
+                               loading="{% if product_index <= 4 %}eager{% else %}lazy{% endif %}"
+                               width="600"
+                               height="600">
+                        {%- else -%}
+                          {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}
+                        {%- endif -%}
+                      </a>
+                    </div>
+
+                    <div class="sl-product-info">
+                      <h3 class="sl-product-title">
+                        <a href="{{ product.url }}">{{ product.title }}</a>
+                      </h3>
+                      <div class="sl-product-price">
+                        {%- if product.compare_at_price > product.price -%}
+                          <span class="sl-price-compare">{{ product.compare_at_price | money }}</span>
+                        {%- endif -%}
+                        <span class="sl-price-current" data-product-price>{{ product.price | money }}</span>
+                      </div>
 
                     {%- comment -%} Variant Options {%- endcomment -%}
                     {%- if section.settings.show_variants and product.has_only_default_variant == false -%}
@@ -523,7 +686,7 @@
                                     {%- when 'maroon' -%}{% assign swatch_color = '#800000' %}
                                     {%- when 'coral' -%}{% assign swatch_color = '#ff7f50' %}
                                     {%- when 'teal' -%}{% assign swatch_color = '#008080' %}
-                                    {%- when 'olive' -%}{% assign swatch_color = '#808000' %}
+                                    {%- when 'olive' -%}{% assign swatch_color = '#8a8673' %}
                                     {%- when 'gold' -%}{% assign swatch_color = '#ffd700' %}
                                     {%- when 'silver' -%}{% assign swatch_color = '#c0c0c0' %}
                                     {%- when 'charcoal' -%}{% assign swatch_color = '#36454f' %}
@@ -535,7 +698,7 @@
                                     {%- when 'sage' -%}{% assign swatch_color = '#9dc183' %}
                                     {%- when 'natural' -%}{% assign swatch_color = '#f5f5dc' %}
                                     {%- when 'cardinal' -%}{% assign swatch_color = '#c41e3a' %}
-                                    {%- when 'oatmeal' -%}{% assign swatch_color = '#d4c4a8' %}
+                                    {%- when 'oatmeal' -%}{% assign swatch_color = '#d8d7c5' %}
                                     {%- when 'heather' or 'heather grey' or 'heather gray' -%}{% assign swatch_color = '#9a9a9a' %}
                                     {%- when 'forest' or 'forest green' -%}{% assign swatch_color = '#228b22' %}
                                     {%- when 'sand' -%}{% assign swatch_color = '#c2b280' %}
@@ -633,6 +796,7 @@
                     {%- endif -%}
                   </div>
                 </div>
+                {%- endif -%}
               </li>
             {%- endfor -%}
           </ul>
@@ -865,6 +1029,12 @@
       "step": 4,
       "default": 16,
       "label": "Products per page"
+    },
+    {
+      "type": "text",
+      "id": "compact_layout_collections",
+      "label": "Compact layout collections",
+      "info": "Comma-separated handles. Cards show only image/title/price, button below card."
     },
     {
       "type": "range",
