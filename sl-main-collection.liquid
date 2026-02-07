@@ -36,13 +36,15 @@
     max-width: 100%;
     padding: 0;
     margin: 0;
-    height: 100%;
+    display: flex;
+    flex-direction: column;
   }
 
   @media screen and (min-width: 750px) {
     #SLCollection-{{ section.id }} .sl-product-grid {
       grid-template-columns: repeat({{ section.settings.columns_desktop }}, 1fr);
       gap: {{ section.settings.grid_gap }}px;
+      align-items: stretch;
     }
 
     #SLCollection-{{ section.id }} .sl-product-grid .grid__item {
@@ -66,7 +68,7 @@
   #SLCollection-{{ section.id }} .sl-card-wrapper {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    flex: 1;
   }
 
   #SLCollection-{{ section.id }} .sl-card-wrapper .sl-product-card {
@@ -78,12 +80,13 @@
     flex-grow: 0;
   }
 
-  /* Compact layout - elements outside card */
+  /* Compact layout - elements outside card (pushed to bottom) */
   #SLCollection-{{ section.id }} .sl-outside-card {
     padding: 10px 0 0 0;
     display: flex;
     flex-direction: column;
     gap: 8px;
+    margin-top: auto;
   }
 
   #SLCollection-{{ section.id }} .sl-outside-card .sl-add-to-cart-btn {
@@ -94,7 +97,7 @@
   }
 
   #SLCollection-{{ section.id }} .sl-outside-card .sl-variant-options {
-    min-height: 0;
+    min-height: {{ section.settings.variant_area_min_height }}px;
     margin-bottom: 0;
   }
 
