@@ -30,10 +30,23 @@
     margin: 0;
   }
 
+  /* Reset Dawn's grid__item styles that interfere with our grid */
+  #SLCollection-{{ section.id }} .sl-product-grid .grid__item {
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+    margin: 0;
+  }
+
   @media screen and (min-width: 750px) {
     #SLCollection-{{ section.id }} .sl-product-grid {
       grid-template-columns: repeat({{ section.settings.columns_desktop }}, 1fr);
       gap: {{ section.settings.grid_gap }}px;
+    }
+
+    #SLCollection-{{ section.id }} .sl-product-grid .grid__item {
+      width: 100%;
+      max-width: 100%;
     }
   }
 
@@ -803,7 +816,7 @@
       "type": "range",
       "id": "columns_mobile",
       "min": 1,
-      "max": 2,
+      "max": 3,
       "step": 1,
       "default": 2,
       "label": "Columns (mobile)"
