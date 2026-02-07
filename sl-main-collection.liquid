@@ -56,18 +56,32 @@
     height: 100%;
   }
 
-  /* Compact Layout - Uses CSS Grid with 3 rows for alignment */
+  /* Compact Layout - Card has fixed structure, not flex-based */
   #SLCollection-{{ section.id }} .sl-card-wrapper {
-    display: grid;
-    grid-template-rows: 1fr auto auto;
-    height: 100%;
-  }
-
-  /* Row 1: Card fills available space - equal height across the grid row */
-  #SLCollection-{{ section.id }} .sl-card-wrapper .sl-product-card {
-    height: 100%;
     display: flex;
     flex-direction: column;
+  }
+
+  /* Card with fixed internal heights for consistency */
+  #SLCollection-{{ section.id }} .sl-card-wrapper .sl-product-card {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Force consistent image height via aspect ratio */
+  #SLCollection-{{ section.id }} .sl-card-wrapper .sl-product-image {
+    aspect-ratio: 1 / 1;
+    flex-shrink: 0;
+  }
+
+  /* Fixed height for title/price area to accommodate 2-line titles */
+  #SLCollection-{{ section.id }} .sl-card-wrapper .sl-product-info {
+    min-height: 85px;
+    flex-grow: 0;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
   }
 
   /* Row 2: Button container */
