@@ -798,6 +798,18 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
   color: #666;
 }
 
+.sl-mega-menu__promo-subtext {
+  font-family: var(--font-body-family);
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+.sl-mega-menu__promo-subtext p {
+  margin: 0 0 4px;
+}
+
 /* Hide SL desktop nav below mobile breakpoint */
 @media screen and (max-width: {{section.settings.mobile_screen_width | minus: 1}}px) {
   .sl-main-nav {
@@ -1271,14 +1283,31 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
 
                     {%- comment -%} Check if a block is mapped to this item (for manual promo override) {%- endcomment -%}
                     {%- assign mega_block = nil -%}
-                    {%- assign has_promo = false -%}
+                    {%- assign has_block_promo = false -%}
                     {%- for block in section.blocks -%}
                       {%- if block.settings.mega_1 == link.title -%}
                         {%- assign mega_block = block -%}
-                        {%- if block.settings.image_2 != blank -%}{%- assign has_promo = true -%}{%- endif -%}
+                        {%- if block.settings.image_2 != blank -%}{%- assign has_block_promo = true -%}{%- endif -%}
                         {%- break -%}
                       {%- endif -%}
                     {%- endfor -%}
+
+                    {%- comment -%} Check parent collection for promo metafields {%- endcomment -%}
+                    {%- assign has_collection_promo = false -%}
+                    {%- assign parent_col = nil -%}
+                    {%- if link.type == 'collection_link' -%}
+                      {%- assign parent_col_handle = link.url | split: '/collections/' | last | split: '?' | first -%}
+                      {%- assign parent_col = collections[parent_col_handle] -%}
+                      {%- if parent_col != blank and parent_col.metafields.custom.menu_promo_image != blank -%}
+                        {%- assign has_collection_promo = true -%}
+                      {%- endif -%}
+                    {%- endif -%}
+
+                    {%- comment -%} Promo: collection metafields take priority, block is fallback {%- endcomment -%}
+                    {%- assign has_promo = false -%}
+                    {%- if has_collection_promo or has_block_promo -%}
+                      {%- assign has_promo = true -%}
+                    {%- endif -%}
 
                     {%- comment -%} Determine if mega menu or simple dropdown {%- endcomment -%}
                     {%- assign use_mega = false -%}
@@ -1425,22 +1454,49 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
 
                               {%- if has_promo -%}
                                 <div class="sl-mega-menu__promo">
-                                  <a href="{{ mega_block.settings.link_2 | default: '#' }}">
-                                    <img
-                                      src="{{ mega_block.settings.image_2 | image_url: width: 480 }}"
-                                      alt="{{ mega_block.settings.title_2 | default: '' | escape }}"
-                                      width="240"
-                                      loading="lazy"
-                                    >
-                                    {%- if mega_block.settings.title_2 != blank -%}
-                                      <div class="sl-mega-menu__promo-text">
-                                        <p>{{ mega_block.settings.title_2 }}</p>
-                                        {%- if mega_block.settings.button_2 != blank -%}
-                                          <span>{{ mega_block.settings.button_2 }}</span>
-                                        {%- endif -%}
-                                      </div>
+                                  {%- if has_collection_promo -%}
+                                    {%- comment -%} Promo from parent collection metafields {%- endcomment -%}
+                                    {%- assign promo_link_url = link.url -%}
+                                    {%- if parent_col.metafields.custom.menu_promo_link != blank -%}
+                                      {%- assign promo_link_url = parent_col.metafields.custom.menu_promo_link.value.url -%}
                                     {%- endif -%}
-                                  </a>
+                                    <a href="{{ promo_link_url }}">
+                                      <img
+                                        src="{{ parent_col.metafields.custom.menu_promo_image.value | image_url: width: 480 }}"
+                                        alt="{{ parent_col.metafields.custom.menu_promo_heading.value | default: '' | escape }}"
+                                        width="240"
+                                        loading="lazy"
+                                      >
+                                      {%- if parent_col.metafields.custom.menu_promo_heading != blank or parent_col.metafields.custom.menu_promo_subtext != blank -%}
+                                        <div class="sl-mega-menu__promo-text">
+                                          {%- if parent_col.metafields.custom.menu_promo_heading != blank -%}
+                                            <p>{{ parent_col.metafields.custom.menu_promo_heading.value }}</p>
+                                          {%- endif -%}
+                                          {%- if parent_col.metafields.custom.menu_promo_subtext != blank -%}
+                                            <div class="sl-mega-menu__promo-subtext">{{ parent_col.metafields.custom.menu_promo_subtext | metafield_tag }}</div>
+                                          {%- endif -%}
+                                        </div>
+                                      {%- endif -%}
+                                    </a>
+                                  {%- elsif has_block_promo -%}
+                                    {%- comment -%} Fallback: promo from block {%- endcomment -%}
+                                    <a href="{{ mega_block.settings.link_2 | default: '#' }}">
+                                      <img
+                                        src="{{ mega_block.settings.image_2 | image_url: width: 480 }}"
+                                        alt="{{ mega_block.settings.title_2 | default: '' | escape }}"
+                                        width="240"
+                                        loading="lazy"
+                                      >
+                                      {%- if mega_block.settings.title_2 != blank -%}
+                                        <div class="sl-mega-menu__promo-text">
+                                          <p>{{ mega_block.settings.title_2 }}</p>
+                                          {%- if mega_block.settings.button_2 != blank -%}
+                                            <span>{{ mega_block.settings.button_2 }}</span>
+                                          {%- endif -%}
+                                        </div>
+                                      {%- endif -%}
+                                    </a>
+                                  {%- endif -%}
                                 </div>
                               {%- endif -%}
 
