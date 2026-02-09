@@ -143,6 +143,25 @@
     color: #ffffff;
   }
 
+  #SLCollection-{{ section.id }} .sl-badge--acne-safe {
+    background: {{ section.settings.acne_safe_badge_color }};
+    color: #ffffff;
+  }
+
+  #SLCollection-{{ section.id }} .sl-badges {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 2;
+  }
+
+  #SLCollection-{{ section.id }} .sl-badges .sl-badge {
+    position: static;
+  }
+
   /* Product Image */
   #SLCollection-{{ section.id }} .sl-product-image {
     position: relative;
@@ -534,11 +553,16 @@ min-height:40px;
                   {%- comment -%} COMPACT LAYOUT - Card contains only image/title/price {%- endcomment -%}
                   <div class="sl-card-wrapper" data-product-id="{{ product.id }}">
                     <div class="sl-product-card">
-                      {%- if product.available == false -%}
-                        <span class="sl-badge sl-badge--soldout">{{ section.settings.soldout_text }}</span>
-                      {%- elsif product.compare_at_price > product.price -%}
-                        <span class="sl-badge sl-badge--sale">{{ section.settings.sale_text }}</span>
-                      {%- endif -%}
+                      <div class="sl-badges">
+                        {%- if product.available == false -%}
+                          <span class="sl-badge sl-badge--soldout">{{ section.settings.soldout_text }}</span>
+                        {%- elsif product.compare_at_price > product.price -%}
+                          <span class="sl-badge sl-badge--sale">{{ section.settings.sale_text }}</span>
+                        {%- endif -%}
+                        {%- if product.tags contains 'ACNE SAFE' -%}
+                          <span class="sl-badge sl-badge--acne-safe">{{ section.settings.acne_safe_text }}</span>
+                        {%- endif -%}
+                      </div>
 
                       <div class="sl-product-image">
                         
@@ -643,11 +667,16 @@ min-height:40px;
                 {%- else -%}
                   {%- comment -%} REGULAR LAYOUT - Full card with all elements inside {%- endcomment -%}
                   <div class="sl-product-card" data-product-id="{{ product.id }}">
-                    {%- if product.available == false -%}
-                      <span class="sl-badge sl-badge--soldout">{{ section.settings.soldout_text }}</span>
-                    {%- elsif product.compare_at_price > product.price -%}
-                      <span class="sl-badge sl-badge--sale">{{ section.settings.sale_text }}</span>
-                    {%- endif -%}
+                    <div class="sl-badges">
+                      {%- if product.available == false -%}
+                        <span class="sl-badge sl-badge--soldout">{{ section.settings.soldout_text }}</span>
+                      {%- elsif product.compare_at_price > product.price -%}
+                        <span class="sl-badge sl-badge--sale">{{ section.settings.sale_text }}</span>
+                      {%- endif -%}
+                      {%- if product.tags contains 'ACNE SAFE' -%}
+                        <span class="sl-badge sl-badge--acne-safe">{{ section.settings.acne_safe_text }}</span>
+                      {%- endif -%}
+                    </div>
 
                     <div class="sl-product-image">
                       <a href="{{ product.url }}">
@@ -1173,6 +1202,18 @@ min-height:40px;
       "id": "soldout_badge_color",
       "label": "Sold out badge color",
       "default": "#666666"
+    },
+    {
+      "type": "text",
+      "id": "acne_safe_text",
+      "label": "Acne Safe badge text",
+      "default": "Acne Safe"
+    },
+    {
+      "type": "color",
+      "id": "acne_safe_badge_color",
+      "label": "Acne Safe badge color",
+      "default": "#8C9B6D"
     },
     {
       "type": "header",
