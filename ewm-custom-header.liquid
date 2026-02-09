@@ -1230,9 +1230,10 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
                               <div class="sl-mega-menu__links">
                                 {%- assign total_links = link.links.size -%}
                                 {%- assign half = total_links | plus: 1 | divided_by: 2 -%}
+                                {%- assign split_at = half | plus: 1 -%}
                                 <ul class="sl-mega-menu__col">
                                   {%- for child in link.links -%}
-                                    {%- if forloop.index == half | plus: 1 -%}
+                                    {%- if forloop.index == split_at -%}
                                       </ul><ul class="sl-mega-menu__col">
                                     {%- endif -%}
                                     <li><a href="{{ child.url }}">{{ child.title }}</a></li>
