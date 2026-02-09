@@ -326,14 +326,21 @@
   right: 0 !important;
   bottom: 0 !important;
   left: auto !important;
-  width: 100% !important;
+  width: 85vw !important;
   max-width: 400px !important;
   overflow-y: auto !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box !important;
   transform: translateX(100%);
   transition: transform 0.3s ease;
   display: block !important;
   visibility: visible !important;
   opacity: 1 !important;
+}
+
+#menu-drawer * {
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
 /* When drawer is open (details[open]) */
@@ -382,7 +389,32 @@
   border-bottom: 1px solid #eee;
 }
 
-.sl-drawer-nav__summary,
+/* Ensure details/summary accordion works — override any theme interference */
+.sl-drawer-nav__details {
+  display: block !important;
+  width: 100%;
+}
+
+.sl-drawer-nav__summary {
+  display: flex !important;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  text-transform: uppercase;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  color: #333;
+  text-decoration: none;
+  font-family: var(--font-body-family);
+  cursor: pointer;
+  background: none;
+  border: none;
+  width: 100%;
+  list-style: none;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
 .sl-drawer-nav__link {
   display: flex;
   justify-content: space-between;
@@ -398,10 +430,12 @@
   background: none;
   border: none;
   width: 100%;
-  -webkit-appearance: none;
 }
 
-.sl-drawer-nav__summary::-webkit-details-marker,
+.sl-drawer-nav__summary::-webkit-details-marker {
+  display: none;
+}
+
 .sl-drawer-nav__summary::marker {
   display: none;
   content: '';
@@ -410,10 +444,20 @@
 .sl-drawer-nav__chevron {
   transition: transform 0.3s ease;
   flex-shrink: 0;
+  pointer-events: none;
 }
 
 .sl-drawer-nav__details[open] > .sl-drawer-nav__summary .sl-drawer-nav__chevron {
   transform: rotate(180deg);
+}
+
+/* Submenu: hidden by default, shown when details is open */
+.sl-drawer-nav__details:not([open]) .sl-drawer-submenu {
+  display: none !important;
+}
+
+.sl-drawer-nav__details[open] .sl-drawer-submenu {
+  display: block !important;
 }
 
 .sl-drawer-submenu {
@@ -800,9 +844,30 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
   }
 }
 
-/* SL: Hide header icons — search/cart are in preheader */
+/* SL: Visually hide header icons — but keep in DOM for cart-drawer.js / search-modal */
 .header__icons {
-  display: none !important;
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+  pointer-events: none !important;
+}
+/* Allow JS-triggered children (cart drawer, search modal) to escape and render */
+.header__icons details-modal,
+.header__icons .search-modal,
+.header__icons cart-drawer,
+.header__icons cart-notification {
+  position: fixed;
+  clip: auto;
+  overflow: visible;
+  width: auto;
+  height: auto;
+  pointer-events: auto;
 }
 
 /* SL: Center mega menu links when no featured image */
