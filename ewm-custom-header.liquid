@@ -308,6 +308,37 @@
 /* Drawer container */
 #menu-drawer {
   background: #fff;
+  z-index: 101;
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-width: 400px;
+  overflow-y: auto;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+}
+
+/* When drawer is open (details[open]) */
+#Details-menu-drawer-container[open] #menu-drawer {
+  transform: translateX(0);
+}
+
+/* Drawer overlay */
+#Details-menu-drawer-container[open]::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 100;
+}
+
+.menu-drawer-container {
+  position: static;
 }
 
 /* Drawer header area with logo and close */
@@ -439,6 +470,276 @@
   background-color: #333;
   color: #fff;
 }
+
+/* ================================================
+   SL DESKTOP NAVIGATION & MEGA MENU
+   ================================================ */
+
+/* Cursor pointer for all clickable elements */
+a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
+.sl-mega-menu__col a, .sl-mega-menu__promo a, .sl-mega-menu__featured a,
+.sl-preheader a, .sl-drawer-cta, .header__icon, .header__heading-link {
+  cursor: pointer;
+}
+
+/* Nav container */
+.sl-main-nav {
+  grid-area: navigation;
+  width: 100%;
+  position: relative;
+}
+
+.sl-nav__list {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sl-nav__item {
+  position: relative;
+}
+
+.sl-nav__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  position: relative;
+  transition: opacity 0.2s;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+/* Hover underline on nav items */
+.sl-nav__link::after {
+  content: '';
+  position: absolute;
+  bottom: 8px;
+  left: 20px;
+  right: 20px;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.3s ease;
+}
+
+.sl-nav__item:hover > .sl-nav__link::after,
+.sl-nav__item.active > .sl-nav__link::after {
+  transform: scaleX(1);
+}
+
+/* Caret icon */
+.sl-nav__caret {
+  width: 10px;
+  height: 10px;
+  transition: transform 0.3s;
+}
+
+.sl-nav__item:hover > .sl-nav__link .sl-nav__caret {
+  transform: rotate(180deg);
+}
+
+/* ---- Simple dropdown ---- */
+.sl-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 220px;
+  background: #fff;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  border: 1px solid #e5e5e5;
+  padding: 8px 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(6px);
+  transition: opacity 0.25s, visibility 0.25s, transform 0.25s;
+  z-index: 10;
+}
+
+.sl-nav__item:hover > .sl-dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.sl-dropdown__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sl-dropdown__list li a {
+  display: block;
+  padding: 8px 24px;
+  font-family: var(--font-body-family);
+  font-size: 14px;
+  color: #333;
+  text-decoration: none;
+  transition: background-color 0.15s;
+  cursor: pointer;
+}
+
+.sl-dropdown__list li a:hover {
+  background-color: #f7f7f5;
+}
+
+/* ---- Mega menu panel ---- */
+.sl-mega-menu {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
+  top: 100%;
+  width: 100vw;
+  max-width: 100vw;
+  background: #fff;
+  border-top: 2px solid #c5c8a0;
+  border-bottom: 2px solid #c5c8a0;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+  padding: 40px 0;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s, visibility 0.25s, transform 0.25s;
+  z-index: 10;
+}
+
+.sl-nav__item:hover > .sl-mega-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+.sl-mega-menu__inner {
+  display: grid;
+  grid-template-columns: 180px 1fr 240px;
+  gap: 40px;
+  align-items: start;
+}
+
+/* Mega menu: only featured + links (no promo) */
+.sl-mega-menu__inner--no-promo {
+  grid-template-columns: 180px 1fr;
+}
+
+/* Mega menu: only links + promo (no featured) */
+.sl-mega-menu__inner--no-featured {
+  grid-template-columns: 1fr 240px;
+}
+
+/* Mega menu: links only */
+.sl-mega-menu__inner--links-only {
+  grid-template-columns: 1fr;
+}
+
+/* Featured image (left) */
+.sl-mega-menu__featured {
+  display: flex;
+  align-items: flex-start;
+}
+
+.sl-mega-menu__featured a {
+  display: block;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.sl-mega-menu__featured img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
+
+/* Link columns (middle) */
+.sl-mega-menu__links {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0 40px;
+  border-left: 1px solid #e5e5e5;
+  padding-left: 40px;
+}
+
+.sl-mega-menu__inner--no-featured .sl-mega-menu__links,
+.sl-mega-menu__inner--links-only .sl-mega-menu__links {
+  border-left: none;
+  padding-left: 0;
+}
+
+.sl-mega-menu__col {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sl-mega-menu__col li a {
+  display: block;
+  padding: 7px 0;
+  font-family: var(--font-body-family);
+  font-size: 14px;
+  color: #333;
+  text-decoration: none;
+  transition: opacity 0.2s;
+  cursor: pointer;
+}
+
+.sl-mega-menu__col li a:hover {
+  opacity: 0.6;
+}
+
+/* Promo block (right) */
+.sl-mega-menu__promo {
+  border-left: 1px solid #e5e5e5;
+  padding-left: 40px;
+}
+
+.sl-mega-menu__promo a {
+  display: block;
+  text-decoration: none;
+  color: #333;
+  cursor: pointer;
+}
+
+.sl-mega-menu__promo img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+  margin-bottom: 12px;
+}
+
+.sl-mega-menu__promo-text {
+  text-align: center;
+}
+
+.sl-mega-menu__promo-text p {
+  font-family: var(--font-body-family);
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0 0 6px;
+  line-height: 1.4;
+}
+
+.sl-mega-menu__promo-text span {
+  font-family: var(--font-body-family);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #666;
+}
+
+/* Hide SL desktop nav below mobile breakpoint */
+@media screen and (max-width: 749px) {
+  .sl-main-nav {
+    display: none;
+  }
+}
 </style>
 
 {%- style -%}
@@ -453,7 +754,27 @@
   }
   .menu-drawer__navigation-container a.menu-drawer__menu-item.list-menu__item.link.link--text.focus-inset {
     width: fit-content;    padding-right: 0;
-}
+  }
+
+  /* SL dynamic header colors */
+  .header-wrapper {
+    background-color: {{ section.settings.sl_header_bg_color }};
+  }
+  .sl-nav__link,
+  .header__heading-link,
+  .header__icon {
+    color: {{ section.settings.sl_header_text_color }};
+  }
+  .sl-nav__link {
+    font-size: {{ section.settings.sl_nav_font_size_mobile }}px;
+    font-weight: {{ section.settings.sl_nav_font_weight }};
+    font-family: var(--font-body-family);
+  }
+  @media screen and (min-width: 750px) {
+    .sl-nav__link {
+      font-size: {{ section.settings.sl_nav_font_size }}px;
+    }
+  }
 {%- endstyle -%}
 
 {% capture primaryMenu %}
@@ -852,12 +1173,111 @@
     {%- endif -%}
 
      {%- if section.settings.menu != blank -%}
-              <div class="header__inline-menu">
-                
-                <nav id="AccessibleNav" role="navigation" class="dt-sc-flex-space-between {{section.settings.menu_type_desktop}} align-{{ section.settings.menu_alignment }}" data-menu="dt-main-menu">
-                    {{ primaryMenu }}
-                  </nav>
-               </div>
+              {%- comment -%} SL Custom Navigation with Mega Menu {%- endcomment -%}
+              <nav class="sl-main-nav" role="navigation" aria-label="Main navigation">
+                <ul class="sl-nav__list">
+                  {%- for link in linklists[section.settings.menu].links -%}
+                    {%- assign has_children = false -%}
+                    {%- if link.links.size > 0 -%}
+                      {%- assign has_children = true -%}
+                    {%- endif -%}
+
+                    {%- comment -%} Check if a mega menu block is mapped to this item {%- endcomment -%}
+                    {%- assign has_mega_block = false -%}
+                    {%- assign mega_block = nil -%}
+                    {%- for block in section.blocks -%}
+                      {%- if block.settings.mega_1 == link.title -%}
+                        {%- assign has_mega_block = true -%}
+                        {%- assign mega_block = block -%}
+                        {%- break -%}
+                      {%- endif -%}
+                    {%- endfor -%}
+
+                    <li class="sl-nav__item{% if has_children %} sl-nav__item--has-dropdown{% endif %}{% if has_mega_block %} sl-nav__item--mega{% endif %}">
+                      <a href="{{ link.url }}" class="sl-nav__link">
+                        {{ link.title }}
+                        {%- if has_children -%}
+                          <svg class="sl-nav__caret" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M8 10L12 14L16 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                          </svg>
+                        {%- endif -%}
+                      </a>
+
+                      {%- if has_children -%}
+                        {%- if has_mega_block -%}
+                          {%- comment -%} MEGA MENU PANEL {%- endcomment -%}
+                          {%- assign has_featured = false -%}
+                          {%- assign has_promo = false -%}
+                          {%- if mega_block.settings.image_1 != blank -%}{%- assign has_featured = true -%}{%- endif -%}
+                          {%- if mega_block.settings.image_2 != blank -%}{%- assign has_promo = true -%}{%- endif -%}
+
+                          <div class="sl-mega-menu" {{ mega_block.shopify_attributes }}>
+                            <div class="sl-mega-menu__inner page-width{% unless has_featured %} sl-mega-menu__inner--no-featured{% endunless %}{% unless has_promo %} sl-mega-menu__inner--no-promo{% endunless %}{% unless has_featured or has_promo %} sl-mega-menu__inner--links-only{% endunless %}">
+
+                              {%- if has_featured -%}
+                                <div class="sl-mega-menu__featured">
+                                  <a href="{{ mega_block.settings.link_1 | default: link.url }}">
+                                    <img
+                                      src="{{ mega_block.settings.image_1 | image_url: width: 360 }}"
+                                      alt="{{ mega_block.settings.title_1 | default: link.title | escape }}"
+                                      width="180"
+                                      loading="lazy"
+                                    >
+                                  </a>
+                                </div>
+                              {%- endif -%}
+
+                              <div class="sl-mega-menu__links">
+                                {%- assign total_links = link.links.size -%}
+                                {%- assign half = total_links | plus: 1 | divided_by: 2 -%}
+                                <ul class="sl-mega-menu__col">
+                                  {%- for child in link.links -%}
+                                    {%- if forloop.index == half | plus: 1 -%}
+                                      </ul><ul class="sl-mega-menu__col">
+                                    {%- endif -%}
+                                    <li><a href="{{ child.url }}">{{ child.title }}</a></li>
+                                  {%- endfor -%}
+                                </ul>
+                              </div>
+
+                              {%- if has_promo -%}
+                                <div class="sl-mega-menu__promo">
+                                  <a href="{{ mega_block.settings.link_2 | default: '#' }}">
+                                    <img
+                                      src="{{ mega_block.settings.image_2 | image_url: width: 480 }}"
+                                      alt="{{ mega_block.settings.title_2 | default: '' | escape }}"
+                                      width="240"
+                                      loading="lazy"
+                                    >
+                                    {%- if mega_block.settings.title_2 != blank -%}
+                                      <div class="sl-mega-menu__promo-text">
+                                        <p>{{ mega_block.settings.title_2 }}</p>
+                                        {%- if mega_block.settings.button_2 != blank -%}
+                                          <span>{{ mega_block.settings.button_2 }}</span>
+                                        {%- endif -%}
+                                      </div>
+                                    {%- endif -%}
+                                  </a>
+                                </div>
+                              {%- endif -%}
+
+                            </div>
+                          </div>
+                        {%- else -%}
+                          {%- comment -%} SIMPLE DROPDOWN {%- endcomment -%}
+                          <div class="sl-dropdown">
+                            <ul class="sl-dropdown__list">
+                              {%- for child in link.links -%}
+                                <li><a href="{{ child.url }}">{{ child.title }}</a></li>
+                              {%- endfor -%}
+                            </ul>
+                          </div>
+                        {%- endif -%}
+                      {%- endif -%}
+                    </li>
+                  {%- endfor -%}
+                </ul>
+              </nav>
       {%- endif -%}
       {%- if section.settings.logo_position == 'middle' -%}
         {%- if section.settings.show_secondary_menu -%}
@@ -1411,11 +1831,59 @@
       "id":"page_full_width_spacing",
        "default": false,
       "label": "t:sections.all.page_full_width_spacing.label"
-    },  
-  
+    },
+    {
+      "type": "header",
+      "content": "Header colors & fonts"
+    },
+    {
+      "type": "color",
+      "id": "sl_header_bg_color",
+      "label": "Header background color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "sl_header_text_color",
+      "label": "Header text / icon color",
+      "default": "#333333"
+    },
+    {
+      "type": "range",
+      "id": "sl_nav_font_size",
+      "min": 11,
+      "max": 18,
+      "step": 1,
+      "default": 14,
+      "unit": "px",
+      "label": "Nav font size (desktop)"
+    },
+    {
+      "type": "range",
+      "id": "sl_nav_font_size_mobile",
+      "min": 11,
+      "max": 16,
+      "step": 1,
+      "default": 13,
+      "unit": "px",
+      "label": "Nav font size (mobile)"
+    },
+    {
+      "type": "select",
+      "id": "sl_nav_font_weight",
+      "label": "Nav font weight",
+      "options": [
+        { "value": "300", "label": "Light" },
+        { "value": "400", "label": "Normal" },
+        { "value": "500", "label": "Medium" },
+        { "value": "600", "label": "Semi-bold" },
+        { "value": "700", "label": "Bold" }
+      ],
+      "default": "400"
+    },
   {
   "type": "header",
-  "content": "Logo" 
+  "content": "Logo"
   },  
   {
       "type": "select",
