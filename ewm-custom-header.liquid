@@ -1296,9 +1296,8 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
                     {%- assign has_collection_promo = false -%}
                     {%- assign parent_col = nil -%}
                     {%- if link.type == 'collection_link' -%}
-                      {%- assign parent_col_handle = link.url | split: '/collections/' | last | split: '?' | first -%}
-                      {%- assign parent_col = collections[parent_col_handle] -%}
-                      {%- if parent_col != blank and parent_col.metafields.custom.menu_promo_image != blank -%}
+                      {%- assign parent_col = link.object -%}
+                      {%- if parent_col != blank and parent_col.metafields.custom.menu_promo_image.value != blank -%}
                         {%- assign has_collection_promo = true -%}
                       {%- endif -%}
                     {%- endif -%}
@@ -1457,22 +1456,23 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
                                   {%- if has_collection_promo -%}
                                     {%- comment -%} Promo from parent collection metafields {%- endcomment -%}
                                     {%- assign promo_link_url = link.url -%}
-                                    {%- if parent_col.metafields.custom.menu_promo_link != blank -%}
+                                    {%- if parent_col.metafields.custom.menu_promo_link.value != blank -%}
                                       {%- assign promo_link_url = parent_col.metafields.custom.menu_promo_link.value.url -%}
                                     {%- endif -%}
                                     <a href="{{ promo_link_url }}">
+                                      {%- assign promo_img = parent_col.metafields.custom.menu_promo_image.value -%}
                                       <img
-                                        src="{{ parent_col.metafields.custom.menu_promo_image.value | image_url: width: 480 }}"
-                                        alt="{{ parent_col.metafields.custom.menu_promo_heading.value | default: '' | escape }}"
+                                        src="{{ promo_img | image_url: width: 480 }}"
+                                        alt="{{ parent_col.metafields.custom.menu_promo_heading.value | default: parent_col.title | escape }}"
                                         width="240"
                                         loading="lazy"
                                       >
-                                      {%- if parent_col.metafields.custom.menu_promo_heading != blank or parent_col.metafields.custom.menu_promo_subtext != blank -%}
+                                      {%- if parent_col.metafields.custom.menu_promo_heading.value != blank or parent_col.metafields.custom.menu_promo_subtext.value != blank -%}
                                         <div class="sl-mega-menu__promo-text">
-                                          {%- if parent_col.metafields.custom.menu_promo_heading != blank -%}
+                                          {%- if parent_col.metafields.custom.menu_promo_heading.value != blank -%}
                                             <p>{{ parent_col.metafields.custom.menu_promo_heading.value }}</p>
                                           {%- endif -%}
-                                          {%- if parent_col.metafields.custom.menu_promo_subtext != blank -%}
+                                          {%- if parent_col.metafields.custom.menu_promo_subtext.value != blank -%}
                                             <div class="sl-mega-menu__promo-subtext">{{ parent_col.metafields.custom.menu_promo_subtext | metafield_tag }}</div>
                                           {%- endif -%}
                                         </div>
