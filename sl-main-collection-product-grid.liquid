@@ -1,3 +1,13 @@
+  /* 
+TO DEACTIVATE GLOBO SMART PRODUCT FILTER DISPLAY
+1. REMOVE THE FOLLOWING FROM THEME.LIQUID:
+  {%- capture productTemplate -%}{% render 'globo.filter.product', themeTranslation: shop.metafields.globoFilter.themeTranslation.value[request.locale.iso_code] %}{%- endcapture -%}{%- unless productTemplate contains 'Liquid error' -%}<script id="gspfProduct" type="template/html">{{- productTemplate | replace: "script>", "scripttag>" -}}</script>{%- endunless -%}
+2. PASTE THIS ENTIRE CODE FILE IN: main-collection-product-grid.liquid
+3. ENSURE BOTH EXCLUSION FIELDS FOR SUBSCRIBE & SAVE and COLLAPSED VARIANTS INCLUDE "merch" 
+4. STYLE BUTTONS & BACKGROUNDS
+*/
+
+
 {{ 'template-collection.css' | asset_url | stylesheet_tag }}
 {{ 'component-loading-overlay.css' | asset_url | stylesheet_tag }}
 {{ 'component-card.css' | asset_url | stylesheet_tag }}
@@ -452,7 +462,7 @@ min-height:40px;
         <div class="collection collection--empty page-width" id="product-grid" data-id="{{ section.id }}">
           <div class="loading-overlay gradient"></div>
           <div class="title-wrapper center">
-            <h2 class="title title--primary">
+            <h2 class="title title--primary"> 
               {{ 'sections.collection_template.empty' | t }}<br>
               {{ 'sections.collection_template.use_fewer_filters_html' | t: link: collection.url, class: "underlined-link link" }}
             </h2>
@@ -475,7 +485,9 @@ min-height:40px;
                       {%- if block.settings.image != blank -%}
                         <img src="{{ block.settings.image | img_url: '400x400' }}"
                              alt="{{ block.settings.title | escape }}"
-                             loading="lazy">
+                             loading="lazy"
+                            height=""
+                          width="">
                       {%- endif -%}
                       {%- if block.settings.title != blank -%}
                         <h3 class="sl-promo-title">{{ block.settings.title }}</h3>
@@ -522,6 +534,7 @@ min-height:40px;
                       {%- endif -%}
 
                       <div class="sl-product-image">
+                        
                         <a href="{{ product.url }}">
                           {%- if product.featured_image -%}
                             <img src="{{ product.featured_image | img_url: '600x600' }}"
@@ -681,9 +694,7 @@ min-height:40px;
                                           class="sl-color-swatch"
                                           data-option-position="{{ option.position }}"
                                           data-option-value="{{ value | escape }}"
-                                          style="background-color:{%- assign matching_color = product.metafields.shopify.color-pattern.value | where: "label", value | first -%}
-{{ matching_color.color }}
-;""
+                                          style="background-color: {{ value | handleize }};"
                                           title="{{ value }}"
                                           {% if forloop.first %}data-selected="true"{% endif %}>
                                   </button>
@@ -996,7 +1007,8 @@ min-height:40px;
       "type": "text",
       "id": "compact_layout_collections",
       "label": "Compact layout collections",
-      "info": "Comma-separated handles. Cards show only image/title/price, button below card."
+      "info": "Comma-separated handles. Cards show only image/title/price, button below card.",
+       "default": "merch"
     },
     {
       "type": "range",
@@ -1336,7 +1348,8 @@ min-height:40px;
       "type": "text",
       "id": "subscribe_exclude_collections",
       "label": "Hide on collections (handles)",
-      "info": "Comma-separated collection handles, e.g. merch, accessories"
+      "info": "Comma-separated collection handles, e.g. merch, accessories",
+      "default": "merch"
     },
     {
       "type": "color",
