@@ -1,5 +1,51 @@
 {%- style -%}
-  /* Banner Container */
+  /* ===== Breadcrumbs ===== */
+  #SLBanner-{{ section.id }}-breadcrumbs {
+    background-color: {{ section.settings.breadcrumb_bg_color }};
+    padding: {{ section.settings.breadcrumb_padding }}px 0;
+  }
+
+  #SLBanner-{{ section.id }}-breadcrumbs .sl-breadcrumb-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0;
+    font-family: var(--font-body-family);
+    font-size: {{ section.settings.breadcrumb_font_size }}px;
+  }
+
+  #SLBanner-{{ section.id }}-breadcrumbs .sl-breadcrumb-list li {
+    display: flex;
+    align-items: center;
+  }
+
+  #SLBanner-{{ section.id }}-breadcrumbs .sl-breadcrumb-list li:not(:last-child)::after {
+    content: '{{ section.settings.breadcrumb_separator }}';
+    margin: 0 8px;
+    color: {{ section.settings.breadcrumb_text_color }};
+    opacity: 0.5;
+  }
+
+  #SLBanner-{{ section.id }}-breadcrumbs .sl-breadcrumb-list a {
+    color: {{ section.settings.breadcrumb_text_color }};
+    text-decoration: none;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+  }
+
+  #SLBanner-{{ section.id }}-breadcrumbs .sl-breadcrumb-list a:hover {
+    opacity: 1;
+  }
+
+  #SLBanner-{{ section.id }}-breadcrumbs .sl-breadcrumb-list .sl-breadcrumb-current {
+    color: {{ section.settings.breadcrumb_text_color }};
+    opacity: 1;
+  }
+
+  /* ===== Banner Container ===== */
   #SLBanner-{{ section.id }} {
     position: relative;
     overflow: hidden;
@@ -35,14 +81,23 @@
     justify-content: {{ section.settings.content_position }};
     min-height: {{ section.settings.banner_height_mobile }}px;
     padding: {{ section.settings.padding_top_mobile }}px {{ section.settings.padding_horizontal_mobile }}px {{ section.settings.padding_bottom_mobile }}px;
-    max-width: {{ section.settings.text_max_width }}px;
   }
 
   @media screen and (min-width: 750px) {
-    #SLBanner-{{ section.id }} .sl-banner-content .page-width{
+    #SLBanner-{{ section.id }} .sl-banner-content {
       min-height: {{ section.settings.banner_height }}px;
-      padding: {{ section.settings.padding_top }}px {{ section.settings.padding_horizontal }}px {{ section.settings.padding_bottom }}px;
+      {%- if section.settings.use_page_width -%}
+        padding-top: {{ section.settings.padding_top }}px;
+        padding-bottom: {{ section.settings.padding_bottom }}px;
+      {%- else -%}
+        padding: {{ section.settings.padding_top }}px {{ section.settings.padding_horizontal }}px {{ section.settings.padding_bottom }}px;
+      {%- endif -%}
     }
+  }
+
+  /* Text wrapper for max-width constraint */
+  #SLBanner-{{ section.id }} .sl-banner-text {
+    max-width: {{ section.settings.text_max_width }}px;
   }
 
   /* Title */
@@ -82,6 +137,19 @@
   }
 {%- endstyle -%}
 
+{%- if section.settings.show_breadcrumbs -%}
+  <nav class="sl-breadcrumbs" id="SLBanner-{{ section.id }}-breadcrumbs" aria-label="Breadcrumb">
+    <div class="page-width">
+      <ol class="sl-breadcrumb-list">
+        <li><a href="/">Home</a></li>
+        {%- if collection -%}
+          <li><span class="sl-breadcrumb-current">{{ collection.title }}</span></li>
+        {%- endif -%}
+      </ol>
+    </div>
+  </nav>
+{%- endif -%}
+
 <div id="SLBanner-{{ section.id }}">
   {%- if collection.image -%}
     <img
@@ -101,14 +169,16 @@
     >
   {%- endif -%}
 
-  <div class="sl-banner-content">
-    {%- if section.settings.show_title -%}
-      <h1 class="sl-banner-title">{{ collection.title }}</h1>
-    {%- endif -%}
+  <div class="sl-banner-content{% if section.settings.use_page_width %} page-width{% endif %}">
+    <div class="sl-banner-text">
+      {%- if section.settings.show_title -%}
+        <h1 class="sl-banner-title">{{ collection.title }}</h1>
+      {%- endif -%}
 
-    {%- if section.settings.show_description and collection.description != blank -%}
-      <div class="sl-banner-description">{{ collection.description }}</div>
-    {%- endif -%}
+      {%- if section.settings.show_description and collection.description != blank -%}
+        <div class="sl-banner-description">{{ collection.description }}</div>
+      {%- endif -%}
+    </div>
   </div>
 </div>
 
@@ -117,6 +187,60 @@
   "name": "SL Collection Banner",
   "class": "section",
   "settings": [
+    {
+      "type": "header",
+      "content": "Breadcrumbs"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_breadcrumbs",
+      "default": true,
+      "label": "Show breadcrumbs"
+    },
+    {
+      "type": "color",
+      "id": "breadcrumb_bg_color",
+      "label": "Breadcrumb background",
+      "default": "#f5f5f5"
+    },
+    {
+      "type": "color",
+      "id": "breadcrumb_text_color",
+      "label": "Breadcrumb text color",
+      "default": "#333333"
+    },
+    {
+      "type": "range",
+      "id": "breadcrumb_font_size",
+      "min": 10,
+      "max": 16,
+      "step": 1,
+      "default": 13,
+      "unit": "px",
+      "label": "Breadcrumb font size"
+    },
+    {
+      "type": "range",
+      "id": "breadcrumb_padding",
+      "min": 4,
+      "max": 24,
+      "step": 2,
+      "default": 10,
+      "unit": "px",
+      "label": "Breadcrumb vertical padding"
+    },
+    {
+      "type": "select",
+      "id": "breadcrumb_separator",
+      "label": "Breadcrumb separator",
+      "options": [
+        { "value": "/", "label": "/" },
+        { "value": ">", "label": ">" },
+        { "value": "|", "label": "|" },
+        { "value": "\\2022", "label": "Bullet" }
+      ],
+      "default": "/"
+    },
     {
       "type": "header",
       "content": "Banner"
@@ -199,6 +323,17 @@
       "default": 700,
       "unit": "px",
       "label": "Text max width"
+    },
+    {
+      "type": "header",
+      "content": "Content Layout (desktop)"
+    },
+    {
+      "type": "checkbox",
+      "id": "use_page_width",
+      "default": false,
+      "label": "Use Shopify page-width on desktop",
+      "info": "When enabled, content uses Shopify's page-width class on desktop instead of custom horizontal padding."
     },
     {
       "type": "header",
@@ -293,7 +428,8 @@
       "step": 4,
       "default": 40,
       "unit": "px",
-      "label": "Padding horizontal"
+      "label": "Padding horizontal",
+      "info": "Only used when page-width toggle is off."
     },
     {
       "type": "header",
