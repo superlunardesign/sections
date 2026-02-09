@@ -1265,8 +1265,8 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
                             {%- if child.type == 'page_link' -%}
                               {%- assign child_page_handle = child.url | split: '/pages/' | last | split: '?' | first -%}
                               {%- assign child_page = pages[child_page_handle] -%}
-                              {%- if child_page != blank and child_page.metafields.custom.featured_image != blank -%}
-                                {%- assign child_image = child_page.metafields.custom.featured_image.value -%}
+                              {%- if child_page != blank and child_page.metafields.custom.menu_preview_image != blank -%}
+                                {%- assign child_image = child_page.metafields.custom.menu_preview_image.value -%}
                                 {%- assign child_product_title = child_page.title -%}
                                 {%- assign child_product_url = child.url -%}
                                 {%- assign any_child_has_image = true -%}
@@ -1311,8 +1311,8 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
                                     {%- if child.type == 'page_link' -%}
                                       {%- assign child_page_handle = child.url | split: '/pages/' | last | split: '?' | first -%}
                                       {%- assign child_page = pages[child_page_handle] -%}
-                                      {%- if child_page != blank and child_page.metafields.custom.featured_image != blank -%}
-                                        {%- assign child_image = child_page.metafields.custom.featured_image.value -%}
+                                      {%- if child_page != blank and child_page.metafields.custom.menu_preview_image != blank -%}
+                                        {%- assign child_image = child_page.metafields.custom.menu_preview_image.value -%}
                                         {%- assign child_product_title = child_page.title -%}
                                         {%- assign child_product_url = child.url -%}
                                       {%- endif -%}
