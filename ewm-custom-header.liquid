@@ -482,11 +482,11 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
   cursor: pointer;
 }
 
-/* Nav container */
+/* Nav container — must be static so mega menu can position from header-wrapper */
 .sl-main-nav {
   grid-area: navigation;
   width: 100%;
-  position: relative;
+  position: static;
 }
 
 .sl-nav__list {
@@ -500,6 +500,11 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
 }
 
 .sl-nav__item {
+  position: static;
+}
+
+/* Simple dropdown needs relative parent */
+.sl-nav__item--has-dropdown:not(.sl-nav__item--mega) {
   position: relative;
 }
 
@@ -594,18 +599,18 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
 /* ---- Mega menu panel ---- */
 .sl-mega-menu {
   position: absolute;
-  left: 50%;
-  transform: translateX(-50%) translateY(6px);
+  left: 0;
+  right: 0;
+  width: 100%;
   top: 100%;
-  width: 100vw;
-  max-width: 100vw;
   background: #fff;
   border-top: 2px solid #c5c8a0;
   border-bottom: 2px solid #c5c8a0;
   box-shadow: 0 8px 24px rgba(0,0,0,0.06);
-  padding: 40px 0;
+  padding: 32px 0;
   opacity: 0;
   visibility: hidden;
+  transform: translateY(6px);
   transition: opacity 0.25s, visibility 0.25s, transform 0.25s;
   z-index: 10;
 }
@@ -613,19 +618,19 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
 .sl-nav__item:hover > .sl-mega-menu {
   opacity: 1;
   visibility: visible;
-  transform: translateX(-50%) translateY(0);
+  transform: translateY(0);
 }
 
 .sl-mega-menu__inner {
   display: grid;
-  grid-template-columns: 180px 1fr 240px;
-  gap: 40px;
+  grid-template-columns: 200px 1fr 240px;
+  gap: 32px;
   align-items: start;
 }
 
 /* Mega menu: only featured + links (no promo) */
 .sl-mega-menu__inner--no-promo {
-  grid-template-columns: 180px 1fr;
+  grid-template-columns: 200px 1fr;
 }
 
 /* Mega menu: only links + promo (no featured) */
@@ -660,10 +665,10 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
 /* Link columns (middle) */
 .sl-mega-menu__links {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0 40px;
+  grid-template-columns: repeat(2, minmax(0, max-content));
+  gap: 0 32px;
   border-left: 1px solid #e5e5e5;
-  padding-left: 40px;
+  padding-left: 32px;
 }
 
 .sl-mega-menu__inner--no-featured .sl-mega-menu__links,
@@ -680,7 +685,7 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
 
 .sl-mega-menu__col li a {
   display: block;
-  padding: 7px 0;
+  padding: 5px 0;
   font-family: var(--font-body-family);
   font-size: 14px;
   color: #333;
@@ -696,7 +701,7 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
 /* Promo block (right) */
 .sl-mega-menu__promo {
   border-left: 1px solid #e5e5e5;
-  padding-left: 40px;
+  padding-left: 32px;
 }
 
 .sl-mega-menu__promo a {
@@ -1182,18 +1187,57 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
                       {%- assign has_children = true -%}
                     {%- endif -%}
 
-                    {%- comment -%} Check if a block is mapped to this item (for featured image / promo) {%- endcomment -%}
+                    {%- comment -%} Check if a block is mapped to this item (for manual promo override) {%- endcomment -%}
                     {%- assign mega_block = nil -%}
-                    {%- assign has_featured = false -%}
                     {%- assign has_promo = false -%}
                     {%- for block in section.blocks -%}
                       {%- if block.settings.mega_1 == link.title -%}
                         {%- assign mega_block = block -%}
-                        {%- if block.settings.image_1 != blank -%}{%- assign has_featured = true -%}{%- endif -%}
                         {%- if block.settings.image_2 != blank -%}{%- assign has_promo = true -%}{%- endif -%}
                         {%- break -%}
                       {%- endif -%}
                     {%- endfor -%}
+
+                    {%- comment -%} Auto-detect featured image from the parent nav link {%- endcomment -%}
+                    {%- assign auto_featured_image = nil -%}
+                    {%- assign auto_featured_url = link.url -%}
+                    {%- assign auto_featured_alt = link.title -%}
+
+                    {%- comment -%} If parent links to a collection: show best-selling product image {%- endcomment -%}
+                    {%- if link.type == 'collection_link' -%}
+                      {%- assign col_handle = link.url | split: '/collections/' | last | split: '?' | first -%}
+                      {%- assign mega_col = collections[col_handle] -%}
+                      {%- if mega_col != blank and mega_col.products.size > 0 -%}
+                        {%- assign best_product = mega_col.products | sort: 'best_selling' | first -%}
+                        {%- if best_product != blank and best_product.featured_image != blank -%}
+                          {%- assign auto_featured_image = best_product.featured_image -%}
+                          {%- assign auto_featured_url = best_product.url -%}
+                          {%- assign auto_featured_alt = best_product.title -%}
+                        {%- endif -%}
+                      {%- endif -%}
+                    {%- endif -%}
+
+                    {%- comment -%} If parent links to a page: check for page.metafields.custom.featured_image {%- endcomment -%}
+                    {%- if link.type == 'page_link' -%}
+                      {%- assign page_handle = link.url | split: '/pages/' | last | split: '?' | first -%}
+                      {%- assign mega_page = pages[page_handle] -%}
+                      {%- if mega_page != blank and mega_page.metafields.custom.featured_image != blank -%}
+                        {%- assign auto_featured_image = mega_page.metafields.custom.featured_image.value -%}
+                        {%- assign auto_featured_alt = mega_page.title -%}
+                      {%- endif -%}
+                    {%- endif -%}
+
+                    {%- comment -%} Block image_1 overrides auto-detected image {%- endcomment -%}
+                    {%- if mega_block != nil and mega_block.settings.image_1 != blank -%}
+                      {%- assign auto_featured_image = mega_block.settings.image_1 -%}
+                      {%- if mega_block.settings.link_1 != blank -%}{%- assign auto_featured_url = mega_block.settings.link_1 -%}{%- endif -%}
+                      {%- if mega_block.settings.title_1 != blank -%}{%- assign auto_featured_alt = mega_block.settings.title_1 -%}{%- endif -%}
+                    {%- endif -%}
+
+                    {%- assign has_featured = false -%}
+                    {%- if auto_featured_image != blank -%}
+                      {%- assign has_featured = true -%}
+                    {%- endif -%}
 
                     {%- comment -%} Determine if mega menu or simple dropdown {%- endcomment -%}
                     {%- assign use_mega = false -%}
@@ -1219,11 +1263,11 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
 
                               {%- if has_featured -%}
                                 <div class="sl-mega-menu__featured">
-                                  <a href="{{ mega_block.settings.link_1 | default: link.url }}">
+                                  <a href="{{ auto_featured_url }}">
                                     <img
-                                      src="{{ mega_block.settings.image_1 | image_url: width: 360 }}"
-                                      alt="{{ mega_block.settings.title_1 | default: link.title | escape }}"
-                                      width="180"
+                                      src="{{ auto_featured_image | image_url: width: 400 }}"
+                                      alt="{{ auto_featured_alt | escape }}"
+                                      width="200"
                                       loading="lazy"
                                     >
                                   </a>
