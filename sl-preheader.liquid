@@ -48,9 +48,39 @@
     font-weight: 500;
   }
 
+  .sl-preheader__icon-link {
+    display: inline-flex;
+    align-items: center;
+    position: relative;
+    color: {{ section.settings.text_color }};
+  }
+
+  .sl-preheader__icon-link svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .sl-preheader__cart-count {
+    font-size: 9px;
+    font-weight: 600;
+    background: {{ section.settings.text_color }};
+    color: {{ section.settings.bg_color }};
+    border-radius: 50%;
+    min-width: 16px;
+    height: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: -6px;
+    right: -8px;
+    line-height: 1;
+  }
+
+  /* Mobile: hide CTA text and extra links */
   @media screen and (max-width: 749px) {
-    .sl-preheader {
-      display: none;
+    .sl-preheader__hide-mobile {
+      display: none !important;
     }
   }
 {%- endstyle -%}
@@ -74,18 +104,36 @@
         {%- endif -%}
 
         {%- if section.settings.link_1_text != blank -%}
-          <a href="{{ section.settings.link_1_url }}">{{ section.settings.link_1_text }}</a>
+          <a href="{{ section.settings.link_1_url }}" class="sl-preheader__hide-mobile">{{ section.settings.link_1_text }}</a>
         {%- endif -%}
 
         {%- if section.settings.link_2_text != blank -%}
-          <a href="{{ section.settings.link_2_url }}">{{ section.settings.link_2_text }}</a>
+          <a href="{{ section.settings.link_2_url }}" class="sl-preheader__hide-mobile">{{ section.settings.link_2_text }}</a>
         {%- endif -%}
       </div>
 
       <div class="sl-preheader__right">
         {%- if section.settings.cta_text != blank -%}
-          <a href="{{ section.settings.cta_url }}" class="sl-preheader__cta">{{ section.settings.cta_text }}</a>
+          <a href="{{ section.settings.cta_url }}" class="sl-preheader__cta sl-preheader__hide-mobile">{{ section.settings.cta_text }}</a>
         {%- endif -%}
+
+        <a href="{{ routes.search_url }}" class="sl-preheader__icon-link" aria-label="{{ 'general.search.search' | t }}">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.35-4.35"/>
+          </svg>
+        </a>
+
+        <a href="{{ routes.cart_url }}" class="sl-preheader__icon-link" aria-label="{{ 'templates.cart.cart' | t }}">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
+            <path d="M3 6h18"/>
+            <path d="M16 10a4 4 0 0 1-8 0"/>
+          </svg>
+          {%- if cart != empty -%}
+            <span class="sl-preheader__cart-count">{{ cart.item_count }}</span>
+          {%- endif -%}
+        </a>
       </div>
     </div>
   </div>
