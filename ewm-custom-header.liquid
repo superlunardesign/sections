@@ -1182,18 +1182,26 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
                       {%- assign has_children = true -%}
                     {%- endif -%}
 
-                    {%- comment -%} Check if a mega menu block is mapped to this item {%- endcomment -%}
-                    {%- assign has_mega_block = false -%}
+                    {%- comment -%} Check if a block is mapped to this item (for featured image / promo) {%- endcomment -%}
                     {%- assign mega_block = nil -%}
+                    {%- assign has_featured = false -%}
+                    {%- assign has_promo = false -%}
                     {%- for block in section.blocks -%}
                       {%- if block.settings.mega_1 == link.title -%}
-                        {%- assign has_mega_block = true -%}
                         {%- assign mega_block = block -%}
+                        {%- if block.settings.image_1 != blank -%}{%- assign has_featured = true -%}{%- endif -%}
+                        {%- if block.settings.image_2 != blank -%}{%- assign has_promo = true -%}{%- endif -%}
                         {%- break -%}
                       {%- endif -%}
                     {%- endfor -%}
 
-                    <li class="sl-nav__item{% if has_children %} sl-nav__item--has-dropdown{% endif %}{% if has_mega_block %} sl-nav__item--mega{% endif %}">
+                    {%- comment -%} Determine if mega menu or simple dropdown {%- endcomment -%}
+                    {%- assign use_mega = false -%}
+                    {%- if section.settings.enable_mega_menu and has_children -%}
+                      {%- assign use_mega = true -%}
+                    {%- endif -%}
+
+                    <li class="sl-nav__item{% if has_children %} sl-nav__item--has-dropdown{% endif %}{% if use_mega %} sl-nav__item--mega{% endif %}">
                       <a href="{{ link.url }}" class="sl-nav__link">
                         {{ link.title }}
                         {%- if has_children -%}
@@ -1204,14 +1212,9 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
                       </a>
 
                       {%- if has_children -%}
-                        {%- if has_mega_block -%}
-                          {%- comment -%} MEGA MENU PANEL {%- endcomment -%}
-                          {%- assign has_featured = false -%}
-                          {%- assign has_promo = false -%}
-                          {%- if mega_block.settings.image_1 != blank -%}{%- assign has_featured = true -%}{%- endif -%}
-                          {%- if mega_block.settings.image_2 != blank -%}{%- assign has_promo = true -%}{%- endif -%}
-
-                          <div class="sl-mega-menu" {{ mega_block.shopify_attributes }}>
+                        {%- if use_mega -%}
+                          {%- comment -%} MEGA MENU PANEL — auto for all items with children when toggle is on {%- endcomment -%}
+                          <div class="sl-mega-menu"{% if mega_block %} {{ mega_block.shopify_attributes }}{% endif %}>
                             <div class="sl-mega-menu__inner page-width{% unless has_featured %} sl-mega-menu__inner--no-featured{% endunless %}{% unless has_promo %} sl-mega-menu__inner--no-promo{% endunless %}{% unless has_featured or has_promo %} sl-mega-menu__inner--links-only{% endunless %}">
 
                               {%- if has_featured -%}
@@ -1265,7 +1268,7 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
                             </div>
                           </div>
                         {%- else -%}
-                          {%- comment -%} SIMPLE DROPDOWN {%- endcomment -%}
+                          {%- comment -%} SIMPLE DROPDOWN (mega menu toggle is off) {%- endcomment -%}
                           <div class="sl-dropdown">
                             <ul class="sl-dropdown__list">
                               {%- for child in link.links -%}
@@ -1832,6 +1835,17 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
       "id":"page_full_width_spacing",
        "default": false,
       "label": "t:sections.all.page_full_width_spacing.label"
+    },
+    {
+      "type": "header",
+      "content": "Mega menu"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_mega_menu",
+      "label": "Enable mega menu",
+      "default": true,
+      "info": "When enabled, nav items with sub-links show a full-width mega menu on hover. Add 'Promo image' blocks to attach a featured image or promo card to specific items."
     },
     {
       "type": "header",
