@@ -519,10 +519,49 @@
               {% render 'icon-hamburger' %}
             </span>
           </summary>
-          <div id="menu-drawer" class="gradient menu-drawer motion-reduce" tabindex="-1">     
-        <button class="header-drawer__close close_icon_button"  type="button" aria-label="{{ 'accessibility.close' | t }}">
-      {% render 'icon-close' %}
-      </button>
+          <div id="menu-drawer" class="gradient menu-drawer motion-reduce" tabindex="-1">
+
+            {%- comment -%} SL: Drawer utility bar (account + search/cart icons) {%- endcomment -%}
+            <div class="sl-drawer-utility">
+              <div class="sl-drawer-utility__left">
+                {%- if shop.customer_accounts_enabled -%}
+                  <a href="{%- if customer -%}{{ routes.account_url }}{%- else -%}{{ routes.account_login_url }}{%- endif -%}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    {%- if customer -%}{{ 'customer.account_fallback' | t }}{%- else -%}{{ 'customer.log_in' | t }}{%- endif -%}
+                  </a>
+                {%- endif -%}
+              </div>
+              <div class="sl-drawer-utility__right">
+                <a href="{{ routes.search_url }}" aria-label="{{ 'general.search.search' | t }}">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                </a>
+                <a href="{{ routes.cart_url }}" aria-label="{{ 'templates.cart.cart' | t }}">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                </a>
+              </div>
+            </div>
+
+            {%- comment -%} SL: Drawer header (logo + close) {%- endcomment -%}
+            <div class="sl-drawer-header">
+              <a href="{{ routes.root_url }}" class="sl-drawer-header__logo">
+                {%- if section.settings.logo != blank -%}
+                  <img
+                    src="{{ section.settings.logo | image_url: width: section.settings.logo_width }}"
+                    class="header__heading-logo"
+                    width="{{ section.settings.logo_width }}"
+                    height="{{ section.settings.logo.height }}"
+                    alt="{{ section.settings.logo.alt | default: shop.name | escape }}"
+                    loading="lazy"
+                  >
+                {%- else -%}
+                  <span class="h2">{{ shop.name }}</span>
+                {%- endif -%}
+              </a>
+              <button class="header-drawer__close close_icon_button" type="button" aria-label="{{ 'accessibility.close' | t }}">
+                {% render 'icon-close' %}
+              </button>
+            </div>
+
             <div class="menu-drawer__inner-container">
               <div class="menu-drawer__navigation-container">
                  <nav class="menu-drawer__navigation">
@@ -542,18 +581,13 @@
                     {%- endif -%}
                   </nav>
                 <div class="menu-drawer__utility-links">
-                  {%- if shop.customer_accounts_enabled -%}
-                    <a href="{%- if customer -%}{{ routes.account_url }}{%- else -%}{{ routes.account_login_url }}{%- endif -%}" class="menu-drawer__account link focus-inset h5">
-                      {% render 'icon-account' %}
-                      {%- liquid
-                        if customer
-                          echo 'customer.account_fallback' | t
-                        else
-                          echo 'customer.log_in' | t
-                        endif
-                      -%}
+                  {%- comment -%} SL: Mobile CTA button {%- endcomment -%}
+                  {%- if section.settings.mobile_cta_text != blank -%}
+                    <a href="{{ section.settings.mobile_cta_url }}" class="sl-drawer-cta">
+                      {{ section.settings.mobile_cta_text }}
                     </a>
                   {%- endif -%}
+
                   <ul class="list list-social list-unstyled" role="list">
                     {%- if settings.social_twitter_link != blank -%}
                       <li class="list-social__item">
@@ -1595,6 +1629,21 @@
     "label": "Text"
     }
     ]
+    },
+     {
+      "type": "header",
+      "content": "Mobile drawer CTA"
+    },
+    {
+      "type": "text",
+      "id": "mobile_cta_text",
+      "label": "CTA button text",
+      "default": "Book A Spa Service"
+    },
+    {
+      "type": "url",
+      "id": "mobile_cta_url",
+      "label": "CTA button URL"
     },
      {
       "type": "header",
