@@ -4,7 +4,8 @@ TO DEACTIVATE GLOBO SMART PRODUCT FILTER DISPLAY
   {%- capture productTemplate -%}{% render 'globo.filter.product', themeTranslation: shop.metafields.globoFilter.themeTranslation.value[request.locale.iso_code] %}{%- endcapture -%}{%- unless productTemplate contains 'Liquid error' -%}<script id="gspfProduct" type="template/html">{{- productTemplate | replace: "script>", "scripttag>" -}}</script>{%- endunless -%}
 2. PASTE THIS ENTIRE CODE FILE IN: main-collection-product-grid.liquid
 3. ENSURE BOTH EXCLUSION FIELDS FOR SUBSCRIBE & SAVE and COLLAPSED VARIANTS INCLUDE "merch" 
-4. STYLE BUTTONS & BACKGROUNDS
+4. TOGGLE OFF SMART PRODUCT FILTER IN APPS ON DEFAULT COLLECTION PAGE & CHARACTER PAGES
+5. STYLE BUTTONS & BACKGROUNDS IN THEME EDITOR
 */
 
 
