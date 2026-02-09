@@ -1348,8 +1348,25 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
 
                               {%- if has_featured -%}
                                 <div class="sl-mega-menu__featured" data-mega-featured>
-                                  {%- comment -%} Render one image per child link; first one is default visible {%- endcomment -%}
                                   {%- assign default_shown = false -%}
+
+                                  {%- comment -%} Block override image renders FIRST as the default {%- endcomment -%}
+                                  {%- if mega_block != nil and mega_block.settings.image_1 != blank -%}
+                                    <a href="{{ mega_block.settings.link_1 | default: link.url }}" class="sl-mega-featured__slide sl-mega-featured__slide--active" data-mega-slide="default">
+                                      <img
+                                        src="{{ mega_block.settings.image_1 | image_url: width: 400 }}"
+                                        alt="{{ mega_block.settings.title_1 | default: link.title | escape }}"
+                                        width="200"
+                                        loading="lazy"
+                                      >
+                                      {%- if mega_block.settings.title_1 != blank -%}
+                                        <span class="sl-mega-featured__name">{{ mega_block.settings.title_1 }}</span>
+                                      {%- endif -%}
+                                    </a>
+                                    {%- assign default_shown = true -%}
+                                  {%- endif -%}
+
+                                  {%- comment -%} One image per child link — swaps in on hover {%- endcomment -%}
                                   {%- for child in link.links -%}
                                     {%- assign child_image = nil -%}
                                     {%- assign child_product_url = child.url -%}
@@ -1396,18 +1413,6 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
                                       {%- assign default_shown = true -%}
                                     {%- endif -%}
                                   {%- endfor -%}
-
-                                  {%- comment -%} Block manual override image (shown as fallback if no child images) {%- endcomment -%}
-                                  {%- if mega_block != nil and mega_block.settings.image_1 != blank -%}
-                                    <a href="{{ mega_block.settings.link_1 | default: link.url }}" class="sl-mega-featured__slide sl-mega-featured__slide--manual{% unless default_shown %} sl-mega-featured__slide--active{% endunless %}" data-mega-slide="manual">
-                                      <img
-                                        src="{{ mega_block.settings.image_1 | image_url: width: 400 }}"
-                                        alt="{{ mega_block.settings.title_1 | default: link.title | escape }}"
-                                        width="200"
-                                        loading="lazy"
-                                      >
-                                    </a>
-                                  {%- endif -%}
                                 </div>
                               {%- endif -%}
 
