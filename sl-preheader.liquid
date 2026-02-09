@@ -1,0 +1,195 @@
+{%- style -%}
+  .sl-preheader {
+    background-color: {{ section.settings.bg_color }};
+    {%- if section.settings.show_border -%}
+      border-bottom: 1px solid {{ section.settings.border_color }};
+    {%- endif -%}
+  }
+
+  .sl-preheader__inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: {{ section.settings.padding_vertical }}px 0;
+    font-family: var(--font-body-family);
+    font-size: {{ section.settings.font_size }}px;
+    line-height: 1;
+  }
+
+  .sl-preheader__left,
+  .sl-preheader__right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .sl-preheader a {
+    color: {{ section.settings.text_color }};
+    text-decoration: none;
+    transition: opacity 0.2s;
+  }
+
+  .sl-preheader a:hover {
+    opacity: 0.7;
+  }
+
+  .sl-preheader__account-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .sl-preheader__account-link svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .sl-preheader__cta {
+    font-weight: 500;
+  }
+
+  @media screen and (max-width: 749px) {
+    .sl-preheader {
+      display: none;
+    }
+  }
+{%- endstyle -%}
+
+<div class="sl-preheader" id="SLPreheader-{{ section.id }}">
+  <div class="page-width">
+    <div class="sl-preheader__inner">
+      <div class="sl-preheader__left">
+        {%- if shop.customer_accounts_enabled -%}
+          <a href="{%- if customer -%}{{ routes.account_url }}{%- else -%}{{ routes.account_login_url }}{%- endif -%}" class="sl-preheader__account-link">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+            {%- if customer -%}
+              {{ 'customer.account_fallback' | t }}
+            {%- else -%}
+              {{ section.settings.login_text }}
+            {%- endif -%}
+          </a>
+        {%- endif -%}
+
+        {%- if section.settings.link_1_text != blank -%}
+          <a href="{{ section.settings.link_1_url }}">{{ section.settings.link_1_text }}</a>
+        {%- endif -%}
+
+        {%- if section.settings.link_2_text != blank -%}
+          <a href="{{ section.settings.link_2_url }}">{{ section.settings.link_2_text }}</a>
+        {%- endif -%}
+      </div>
+
+      <div class="sl-preheader__right">
+        {%- if section.settings.cta_text != blank -%}
+          <a href="{{ section.settings.cta_url }}" class="sl-preheader__cta">{{ section.settings.cta_text }}</a>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "SL Preheader",
+  "class": "section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Style"
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Background color",
+      "default": "#f7f7f5"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#333333"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_border",
+      "default": true,
+      "label": "Show bottom border"
+    },
+    {
+      "type": "color",
+      "id": "border_color",
+      "label": "Border color",
+      "default": "#e5e5e5"
+    },
+    {
+      "type": "range",
+      "id": "font_size",
+      "min": 10,
+      "max": 16,
+      "step": 1,
+      "default": 13,
+      "unit": "px",
+      "label": "Font size"
+    },
+    {
+      "type": "range",
+      "id": "padding_vertical",
+      "min": 4,
+      "max": 20,
+      "step": 2,
+      "default": 10,
+      "unit": "px",
+      "label": "Vertical padding"
+    },
+    {
+      "type": "header",
+      "content": "Left links"
+    },
+    {
+      "type": "text",
+      "id": "login_text",
+      "label": "Login text",
+      "default": "Log In"
+    },
+    {
+      "type": "text",
+      "id": "link_1_text",
+      "label": "Link 1 text",
+      "default": "Contact Us"
+    },
+    {
+      "type": "url",
+      "id": "link_1_url",
+      "label": "Link 1 URL"
+    },
+    {
+      "type": "text",
+      "id": "link_2_text",
+      "label": "Link 2 text"
+    },
+    {
+      "type": "url",
+      "id": "link_2_url",
+      "label": "Link 2 URL"
+    },
+    {
+      "type": "header",
+      "content": "Right CTA"
+    },
+    {
+      "type": "text",
+      "id": "cta_text",
+      "label": "CTA text",
+      "default": "Book A Spa Service"
+    },
+    {
+      "type": "url",
+      "id": "cta_url",
+      "label": "CTA URL"
+    }
+  ]
+}
+{% endschema %}

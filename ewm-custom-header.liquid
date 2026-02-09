@@ -245,6 +245,200 @@
   .header ul.dt-sc-list-inline.dt-desktop-menu.dt-nav {
     z-index: 2;
 }
+
+/* ================================================
+   SL CUSTOM OVERRIDES
+   ================================================ */
+
+/* Z-index: header wrapper sits above announcement bar */
+.header-wrapper {
+  position: relative;
+  z-index: 4;
+}
+
+/* Desktop nav: underline hover effect (matching design) */
+@media screen and (min-width: 750px) {
+  .header--top-center .dt-nav > li > a,
+  .header--top-center .dt-nav > li > .dt-sc-nav-link {
+    position: relative;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .header--top-center .dt-nav > li > a::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform 0.3s ease;
+  }
+
+  .header--top-center .dt-nav > li > a:hover::after,
+  .header--top-center .dt-nav > li.active > a::after,
+  .header--top-center .dt-nav > li:hover > a::after {
+    transform: scaleX(1);
+  }
+}
+
+/* Mega menu dropdown: must layer above announcement bar */
+.dt-nav .sub-menu-lists,
+.page-width.mega,
+.dt-sc-mega_menu {
+  z-index: 10;
+}
+
+/* Mega menu panel styling */
+@media screen and (min-width: 750px) {
+  .dt-nav .sub-menu-lists {
+    background: #fff;
+    border-top: 1px solid #e5e5e5;
+    border-bottom: 1px solid #e5e5e5;
+  }
+}
+
+/* ================================================
+   MOBILE DRAWER OVERRIDES
+   ================================================ */
+
+/* Drawer container */
+#menu-drawer {
+  background: #fff;
+}
+
+/* Drawer header area with logo and close */
+.sl-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.sl-drawer-header .header__heading-logo {
+  max-height: 30px;
+  width: auto;
+}
+
+.sl-drawer-header .header-drawer__close {
+  position: static;
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #333;
+}
+
+/* Drawer top utility bar (account, search, cart) */
+.sl-drawer-utility {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1px solid #eee;
+  font-family: var(--font-body-family);
+  font-size: 13px;
+}
+
+.sl-drawer-utility__left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sl-drawer-utility__left a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #333;
+  text-decoration: none;
+}
+
+.sl-drawer-utility__right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.sl-drawer-utility__right a {
+  color: #333;
+  text-decoration: none;
+  display: inline-flex;
+}
+
+.sl-drawer-utility__right svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Mobile nav items: uppercase with chevrons */
+.menu-drawer__navigation .menu-drawer__menu > li > a,
+.menu-drawer__navigation .menu-drawer__menu > li > button,
+.menu-drawer__navigation .menu-drawer__menu > li > details > summary {
+  text-transform: uppercase;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  color: #333;
+  text-decoration: none;
+  font-family: var(--font-body-family);
+}
+
+/* Chevron icon for items with submenus */
+.menu-drawer__menu > li > details > summary .sl-chevron {
+  width: 12px;
+  height: 12px;
+  transition: transform 0.3s ease;
+}
+
+.menu-drawer__menu > li > details[open] > summary .sl-chevron {
+  transform: rotate(180deg);
+}
+
+/* Sub-items in mobile drawer (not uppercase, slightly indented) */
+.menu-drawer__menu .menu-drawer__submenu a {
+  text-transform: none;
+  font-size: 14px;
+  letter-spacing: 0;
+  padding: 10px 20px 10px 32px;
+  display: block;
+  color: #333;
+  text-decoration: none;
+  font-family: var(--font-body-family);
+}
+
+.menu-drawer__menu .menu-drawer__submenu a:hover {
+  opacity: 0.7;
+}
+
+/* Mobile CTA button at bottom of drawer */
+.sl-drawer-cta {
+  display: block;
+  text-align: center;
+  padding: 14px 24px;
+  border: 1px solid #333;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 13px;
+  font-family: var(--font-body-family);
+  text-decoration: none;
+  color: #333;
+  margin: 24px 20px 0;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.sl-drawer-cta:hover {
+  background-color: #333;
+  color: #fff;
+}
 </style>
 
 {%- style -%}
