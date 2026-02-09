@@ -23,13 +23,15 @@
     gap: 20px;
   }
 
-  .sl-preheader a {
+  .sl-preheader a,
+  .sl-preheader button {
     color: {{ section.settings.text_color }};
     text-decoration: none;
     transition: opacity 0.2s;
   }
 
-  .sl-preheader a:hover {
+  .sl-preheader a:hover,
+  .sl-preheader button:hover {
     opacity: 0.7;
   }
 
@@ -48,14 +50,20 @@
     font-weight: 500;
   }
 
-  .sl-preheader__icon-link {
+  .sl-preheader__icon-btn {
     display: inline-flex;
     align-items: center;
     position: relative;
     color: {{ section.settings.text_color }};
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-size: inherit;
+    font-family: inherit;
   }
 
-  .sl-preheader__icon-link svg {
+  .sl-preheader__icon-btn svg {
     width: 18px;
     height: 18px;
   }
@@ -75,6 +83,85 @@
     top: -6px;
     right: -8px;
     line-height: 1;
+  }
+
+  /* Search dropdown overlay */
+  .sl-preheader__search-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 500;
+  }
+
+  .sl-preheader__search-overlay.is-open {
+    display: block;
+  }
+
+  .sl-preheader__search-box {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    padding: 20px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+  }
+
+  .sl-preheader__search-form {
+    display: flex;
+    align-items: center;
+    max-width: 640px;
+    margin: 0 auto;
+    gap: 0;
+    border: 1px solid #ddd;
+  }
+
+  .sl-preheader__search-form input[type="search"] {
+    flex: 1;
+    padding: 12px 16px;
+    border: none;
+    font-size: 15px;
+    font-family: var(--font-body-family);
+    outline: none;
+    background: transparent;
+    -webkit-appearance: none;
+    border-radius: 0;
+  }
+
+  .sl-preheader__search-form button[type="submit"] {
+    background: none;
+    border: none;
+    padding: 10px 14px;
+    cursor: pointer;
+    color: #333;
+    display: flex;
+    align-items: center;
+  }
+
+  .sl-preheader__search-form button[type="submit"] svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .sl-preheader__search-close {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #333;
+    padding: 4px;
+    display: flex;
+  }
+
+  .sl-preheader__search-close svg {
+    width: 20px;
+    height: 20px;
   }
 
   /* Mobile: hide CTA text and extra links */
@@ -117,14 +204,16 @@
           <a href="{{ section.settings.cta_url }}" class="sl-preheader__cta sl-preheader__hide-mobile">{{ section.settings.cta_text }}</a>
         {%- endif -%}
 
-        <a href="{{ routes.search_url }}" class="sl-preheader__icon-link" aria-label="{{ 'general.search.search' | t }}">
+        {%- comment -%} Search: opens a dropdown search form {%- endcomment -%}
+        <button type="button" class="sl-preheader__icon-btn" data-sl-search-open aria-label="{{ 'general.search.search' | t }}">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="11" cy="11" r="8"/>
             <path d="m21 21-4.35-4.35"/>
           </svg>
-        </a>
+        </button>
 
-        <a href="{{ routes.cart_url }}" class="sl-preheader__icon-link" aria-label="{{ 'templates.cart.cart' | t }}">
+        {%- comment -%} Cart: opens cart drawer or falls back to /cart {%- endcomment -%}
+        <button type="button" class="sl-preheader__icon-btn" data-sl-cart-open aria-label="{{ 'templates.cart.cart' | t }}">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
             <path d="M3 6h18"/>
@@ -133,11 +222,113 @@
           {%- if cart != empty -%}
             <span class="sl-preheader__cart-count">{{ cart.item_count }}</span>
           {%- endif -%}
-        </a>
+        </button>
       </div>
     </div>
   </div>
 </div>
+
+{%- comment -%} Search overlay (hidden by default, toggled by JS) {%- endcomment -%}
+<div class="sl-preheader__search-overlay" id="SLSearchOverlay" aria-hidden="true">
+  <div class="sl-preheader__search-box">
+    <form action="{{ routes.search_url }}" method="get" class="sl-preheader__search-form" role="search">
+      <input
+        type="search"
+        name="q"
+        placeholder="{{ 'general.search.search' | t }}..."
+        autocomplete="off"
+        autocorrect="off"
+        autocapitalize="off"
+      >
+      <input type="hidden" name="options[prefix]" value="last">
+      <button type="submit" aria-label="{{ 'general.search.search' | t }}">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.35-4.35"/>
+        </svg>
+      </button>
+    </form>
+    <button type="button" class="sl-preheader__search-close" data-sl-search-close aria-label="{{ 'accessibility.close' | t }}">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<script>
+  (function() {
+    var searchOverlay = document.getElementById('SLSearchOverlay');
+    var searchInput = searchOverlay ? searchOverlay.querySelector('input[type="search"]') : null;
+
+    /* Open search */
+    document.querySelectorAll('[data-sl-search-open]').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (searchOverlay) {
+          searchOverlay.classList.add('is-open');
+          searchOverlay.setAttribute('aria-hidden', 'false');
+          if (searchInput) searchInput.focus();
+        }
+      });
+    });
+
+    /* Close search — close button */
+    document.querySelectorAll('[data-sl-search-close]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (searchOverlay) {
+          searchOverlay.classList.remove('is-open');
+          searchOverlay.setAttribute('aria-hidden', 'true');
+        }
+      });
+    });
+
+    /* Close search — clicking the overlay background */
+    if (searchOverlay) {
+      searchOverlay.addEventListener('click', function(e) {
+        if (e.target === searchOverlay) {
+          searchOverlay.classList.remove('is-open');
+          searchOverlay.setAttribute('aria-hidden', 'true');
+        }
+      });
+    }
+
+    /* Close search — Escape key */
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && searchOverlay && searchOverlay.classList.contains('is-open')) {
+        searchOverlay.classList.remove('is-open');
+        searchOverlay.setAttribute('aria-hidden', 'true');
+      }
+    });
+
+    /* Cart: open cart drawer or navigate to /cart */
+    document.querySelectorAll('[data-sl-cart-open]').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        /* Try to open the theme's cart drawer */
+        var cartDrawer = document.querySelector('cart-drawer');
+        if (cartDrawer) {
+          var details = cartDrawer.querySelector('details');
+          if (details) {
+            details.setAttribute('open', '');
+            return;
+          }
+        }
+        /* Try cart-notification approach */
+        var cartNotification = document.querySelector('cart-notification');
+        if (cartNotification) {
+          var notifDetails = cartNotification.querySelector('details');
+          if (notifDetails) {
+            notifDetails.setAttribute('open', '');
+            return;
+          }
+        }
+        /* Fallback: navigate to cart page */
+        window.location.href = '{{ routes.cart_url }}';
+      });
+    });
+  })();
+</script>
 
 {% schema %}
 {

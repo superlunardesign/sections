@@ -359,98 +359,81 @@
   width: auto;
 }
 
-.sl-drawer-header .header-drawer__close {
+.sl-drawer-close {
   position: static;
   background: none;
   border: none;
   padding: 4px;
   cursor: pointer;
   color: #333;
-}
-
-/* Drawer top utility bar (account, search, cart) */
-.sl-drawer-utility {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 12px 20px;
+  justify-content: center;
+}
+
+/* Mobile drawer inline nav */
+.sl-drawer-nav {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sl-drawer-nav__item {
   border-bottom: 1px solid #eee;
-  font-family: var(--font-body-family);
-  font-size: 13px;
 }
 
-.sl-drawer-utility__left {
+.sl-drawer-nav__summary,
+.sl-drawer-nav__link {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 6px;
-}
-
-.sl-drawer-utility__left a {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: #333;
-  text-decoration: none;
-}
-
-.sl-drawer-utility__right {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.sl-drawer-utility__right a {
-  color: #333;
-  text-decoration: none;
-  display: inline-flex;
-}
-
-.sl-drawer-utility__right svg {
-  width: 18px;
-  height: 18px;
-}
-
-/* Mobile nav items: uppercase with chevrons */
-.menu-drawer__navigation .menu-drawer__menu > li > a,
-.menu-drawer__navigation .menu-drawer__menu > li > button,
-.menu-drawer__navigation .menu-drawer__menu > li > details > summary {
+  padding: 15px 20px;
   text-transform: uppercase;
   font-size: 14px;
   letter-spacing: 0.04em;
-  padding: 15px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #eee;
   color: #333;
   text-decoration: none;
   font-family: var(--font-body-family);
+  cursor: pointer;
+  background: none;
+  border: none;
+  width: 100%;
+  -webkit-appearance: none;
 }
 
-/* Chevron icon for items with submenus */
-.menu-drawer__menu > li > details > summary .sl-chevron {
-  width: 12px;
-  height: 12px;
+.sl-drawer-nav__summary::-webkit-details-marker,
+.sl-drawer-nav__summary::marker {
+  display: none;
+  content: '';
+}
+
+.sl-drawer-nav__chevron {
   transition: transform 0.3s ease;
+  flex-shrink: 0;
 }
 
-.menu-drawer__menu > li > details[open] > summary .sl-chevron {
+.sl-drawer-nav__details[open] > .sl-drawer-nav__summary .sl-drawer-nav__chevron {
   transform: rotate(180deg);
 }
 
-/* Sub-items in mobile drawer (not uppercase, slightly indented) */
-.menu-drawer__menu .menu-drawer__submenu a {
-  text-transform: none;
-  font-size: 14px;
-  letter-spacing: 0;
-  padding: 10px 20px 10px 32px;
+.sl-drawer-submenu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: #fafafa;
+}
+
+.sl-drawer-submenu li a {
   display: block;
+  padding: 12px 20px 12px 32px;
+  font-size: 14px;
   color: #333;
   text-decoration: none;
   font-family: var(--font-body-family);
+  border-top: 1px solid #f0f0f0;
 }
 
-.menu-drawer__menu .menu-drawer__submenu a:hover {
+.sl-drawer-submenu li a:hover {
   opacity: 0.7;
 }
 
@@ -941,26 +924,6 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
           </summary>
           <div id="menu-drawer" class="gradient menu-drawer motion-reduce" tabindex="-1">
 
-            {%- comment -%} SL: Drawer utility bar (account + search/cart icons) {%- endcomment -%}
-            <div class="sl-drawer-utility">
-              <div class="sl-drawer-utility__left">
-                {%- if shop.customer_accounts_enabled -%}
-                  <a href="{%- if customer -%}{{ routes.account_url }}{%- else -%}{{ routes.account_login_url }}{%- endif -%}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    {%- if customer -%}{{ 'customer.account_fallback' | t }}{%- else -%}{{ 'customer.log_in' | t }}{%- endif -%}
-                  </a>
-                {%- endif -%}
-              </div>
-              <div class="sl-drawer-utility__right">
-                <a href="{{ routes.search_url }}" aria-label="{{ 'general.search.search' | t }}">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                </a>
-                <a href="{{ routes.cart_url }}" aria-label="{{ 'templates.cart.cart' | t }}">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-                </a>
-              </div>
-            </div>
-
             {%- comment -%} SL: Drawer header (logo + close) {%- endcomment -%}
             <div class="sl-drawer-header">
               <a href="{{ routes.root_url }}" class="sl-drawer-header__logo">
@@ -977,29 +940,40 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
                   <span class="h2">{{ shop.name }}</span>
                 {%- endif -%}
               </a>
-              <button class="header-drawer__close close_icon_button" type="button" aria-label="{{ 'accessibility.close' | t }}">
-                {% render 'icon-close' %}
+              <button class="sl-drawer-close" type="button" aria-label="{{ 'accessibility.close' | t }}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
               </button>
             </div>
 
+            {%- comment -%} SL: Inline mobile navigation with details/summary dropdowns {%- endcomment -%}
             <div class="menu-drawer__inner-container">
               <div class="menu-drawer__navigation-container">
-                 <nav class="menu-drawer__navigation">
+                <nav class="menu-drawer__navigation">
                   {%- if section.settings.menu != blank -%}
-                    <ul class="menu-drawer__menu has-submenu list-menu dt-sc-list-inline" role="list"> 
-                    {%- for link in linklists[section.settings.menu].links -%}  
-                    {% render 'mobile-navigation', class: 'primaryMenu', link: link %}
-                    {%- endfor -%}
-                    {%- if section.settings.show_secondary_menu -%}
-                    {%- if section.settings.secondary_menu != blank -%}
-                    {%- for link in linklists[section.settings.secondary_menu].links -%}  
-                    {% render 'mobile-navigation', class: 'secondaryMenu', link: link %}
-                    {%- endfor -%}
-                    {%- endif -%}
-                    {%- endif -%}
+                    <ul class="sl-drawer-nav" role="list">
+                      {%- for link in linklists[section.settings.menu].links -%}
+                        <li class="sl-drawer-nav__item">
+                          {%- if link.links.size > 0 -%}
+                            <details class="sl-drawer-nav__details">
+                              <summary class="sl-drawer-nav__summary">
+                                <span>{{ link.title }}</span>
+                                <svg class="sl-drawer-nav__chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                              </summary>
+                              <ul class="sl-drawer-submenu">
+                                <li><a href="{{ link.url }}">All {{ link.title }}</a></li>
+                                {%- for child in link.links -%}
+                                  <li><a href="{{ child.url }}">{{ child.title }}</a></li>
+                                {%- endfor -%}
+                              </ul>
+                            </details>
+                          {%- else -%}
+                            <a href="{{ link.url }}" class="sl-drawer-nav__link">{{ link.title }}</a>
+                          {%- endif -%}
+                        </li>
+                      {%- endfor -%}
                     </ul>
-                    {%- endif -%}
-                  </nav>
+                  {%- endif -%}
+                </nav>
                 <div class="menu-drawer__utility-links">
                   {%- comment -%} SL: Mobile CTA button {%- endcomment -%}
                   {%- if section.settings.mobile_cta_text != blank -%}
@@ -2050,6 +2024,31 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
       }
     });
   });
+
+  /* SL Mobile Drawer: close button + overlay click to close */
+  document.querySelectorAll('.sl-drawer-close').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var details = document.getElementById('Details-menu-drawer-container');
+      if (details) {
+        details.removeAttribute('open');
+        document.body.classList.remove('overflow-hidden');
+      }
+    });
+  });
+
+  /* Close drawer when clicking the overlay */
+  var drawerContainer = document.getElementById('Details-menu-drawer-container');
+  if (drawerContainer) {
+    drawerContainer.addEventListener('click', function(e) {
+      /* Only close if clicking the overlay (the container itself), not the drawer content */
+      if (e.target === this || e.target === this.querySelector('summary')) return;
+      var drawer = document.getElementById('menu-drawer');
+      if (drawer && !drawer.contains(e.target)) {
+        this.removeAttribute('open');
+        document.body.classList.remove('overflow-hidden');
+      }
+    });
+  }
 </script>
 
 <script type="application/ld+json">
