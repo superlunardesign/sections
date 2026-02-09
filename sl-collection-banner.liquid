@@ -128,9 +128,14 @@
 {%- if section.settings.show_breadcrumbs -%}
   <div class="sl-breadcrumbs" id="SLBreadcrumbs-{{ section.id }}">
     <nav class="sl-breadcrumbs__nav page-width" aria-label="Breadcrumb">
-      <a href="/">Home</a>
-      <span class="sl-breadcrumbs__separator">/</span>
-      <a href="{{ routes.collections_url }}">Collections</a>
+      <a href="/collections/all">Shop</a>
+      
+      {%- assign parent = collection.metafields.custom.parent_collection.value -%}
+{%- if parent != blank -%}
+  <span class="sl-breadcrumbs__separator">/</span>
+  <a href="{{ parent.url }}">{{ parent.title }}</a>
+{%- endif -%}
+
       <span class="sl-breadcrumbs__separator">/</span>
       <span aria-current="page">{{ collection.title }}</span>
     </nav>
