@@ -481,7 +481,7 @@
   opacity: 0.7;
 }
 
-/* Mobile CTA button at bottom of drawer */
+/* Mobile CTA button directly below nav */
 .sl-drawer-cta {
   display: block;
   text-align: center;
@@ -493,7 +493,7 @@
   font-family: var(--font-body-family);
   text-decoration: none;
   color: #333;
-  margin: 24px 20px 0;
+  margin: 16px 20px 0;
   transition: background-color 0.2s, color 0.2s;
 }
 
@@ -1039,14 +1039,15 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
                     </ul>
                   {%- endif -%}
                 </nav>
-                <div class="menu-drawer__utility-links">
-                  {%- comment -%} SL: Mobile CTA button {%- endcomment -%}
-                  {%- if section.settings.mobile_cta_text != blank -%}
-                    <a href="{{ section.settings.mobile_cta_url }}" class="sl-drawer-cta">
-                      {{ section.settings.mobile_cta_text }}
-                    </a>
-                  {%- endif -%}
 
+                {%- comment -%} SL: Mobile CTA button — directly after nav {%- endcomment -%}
+                {%- if section.settings.mobile_cta_text != blank -%}
+                  <a href="{{ section.settings.mobile_cta_url }}" class="sl-drawer-cta">
+                    {{ section.settings.mobile_cta_text }}
+                  </a>
+                {%- endif -%}
+
+                <div class="menu-drawer__utility-links">
                   <ul class="list list-social list-unstyled" role="list">
                     {%- if settings.social_twitter_link != blank -%}
                       <li class="list-social__item">
