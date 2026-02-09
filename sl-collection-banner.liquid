@@ -39,7 +39,7 @@
   }
 
   @media screen and (min-width: 750px) {
-    #SLBanner-{{ section.id }} .sl-banner-content {
+    #SLBanner-{{ section.id }} .sl-banner-content .page-width{
       min-height: {{ section.settings.banner_height }}px;
       padding: {{ section.settings.padding_top }}px {{ section.settings.padding_horizontal }}px {{ section.settings.padding_bottom }}px;
     }
@@ -188,7 +188,7 @@
         { "value": "center", "label": "Center" },
         { "value": "flex-end", "label": "Bottom" }
       ],
-      "default": "flex-end"
+      "default": "center"
     },
     {
       "type": "range",
