@@ -643,23 +643,45 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
   grid-template-columns: 1fr;
 }
 
-/* Featured image (left) */
+/* Featured image (left) — stacked slides, one visible at a time */
 .sl-mega-menu__featured {
-  display: flex;
-  align-items: flex-start;
+  position: relative;
+  min-height: 180px;
 }
 
-.sl-mega-menu__featured a {
-  display: block;
+.sl-mega-featured__slide {
+  display: none;
   text-decoration: none;
+  color: #333;
   cursor: pointer;
 }
 
-.sl-mega-menu__featured img {
+.sl-mega-featured__slide--active {
+  display: block;
+}
+
+.sl-mega-featured__slide img {
   width: 100%;
   height: auto;
   display: block;
   object-fit: contain;
+  margin-bottom: 8px;
+}
+
+.sl-mega-featured__name {
+  display: block;
+  font-family: var(--font-body-family);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.sl-mega-featured__price {
+  display: block;
+  font-family: var(--font-body-family);
+  font-size: 13px;
+  color: #666;
+  margin-top: 2px;
 }
 
 /* Link columns (middle) */
@@ -1198,47 +1220,6 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
                       {%- endif -%}
                     {%- endfor -%}
 
-                    {%- comment -%} Auto-detect featured image from the parent nav link {%- endcomment -%}
-                    {%- assign auto_featured_image = nil -%}
-                    {%- assign auto_featured_url = link.url -%}
-                    {%- assign auto_featured_alt = link.title -%}
-
-                    {%- comment -%} If parent links to a collection: show best-selling product image {%- endcomment -%}
-                    {%- if link.type == 'collection_link' -%}
-                      {%- assign col_handle = link.url | split: '/collections/' | last | split: '?' | first -%}
-                      {%- assign mega_col = collections[col_handle] -%}
-                      {%- if mega_col != blank and mega_col.products.size > 0 -%}
-                        {%- assign best_product = mega_col.products | sort: 'best_selling' | first -%}
-                        {%- if best_product != blank and best_product.featured_image != blank -%}
-                          {%- assign auto_featured_image = best_product.featured_image -%}
-                          {%- assign auto_featured_url = best_product.url -%}
-                          {%- assign auto_featured_alt = best_product.title -%}
-                        {%- endif -%}
-                      {%- endif -%}
-                    {%- endif -%}
-
-                    {%- comment -%} If parent links to a page: check for page.metafields.custom.featured_image {%- endcomment -%}
-                    {%- if link.type == 'page_link' -%}
-                      {%- assign page_handle = link.url | split: '/pages/' | last | split: '?' | first -%}
-                      {%- assign mega_page = pages[page_handle] -%}
-                      {%- if mega_page != blank and mega_page.metafields.custom.featured_image != blank -%}
-                        {%- assign auto_featured_image = mega_page.metafields.custom.featured_image.value -%}
-                        {%- assign auto_featured_alt = mega_page.title -%}
-                      {%- endif -%}
-                    {%- endif -%}
-
-                    {%- comment -%} Block image_1 overrides auto-detected image {%- endcomment -%}
-                    {%- if mega_block != nil and mega_block.settings.image_1 != blank -%}
-                      {%- assign auto_featured_image = mega_block.settings.image_1 -%}
-                      {%- if mega_block.settings.link_1 != blank -%}{%- assign auto_featured_url = mega_block.settings.link_1 -%}{%- endif -%}
-                      {%- if mega_block.settings.title_1 != blank -%}{%- assign auto_featured_alt = mega_block.settings.title_1 -%}{%- endif -%}
-                    {%- endif -%}
-
-                    {%- assign has_featured = false -%}
-                    {%- if auto_featured_image != blank -%}
-                      {%- assign has_featured = true -%}
-                    {%- endif -%}
-
                     {%- comment -%} Determine if mega menu or simple dropdown {%- endcomment -%}
                     {%- assign use_mega = false -%}
                     {%- if section.settings.enable_mega_menu and has_children -%}
@@ -1257,20 +1238,114 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
 
                       {%- if has_children -%}
                         {%- if use_mega -%}
-                          {%- comment -%} MEGA MENU PANEL — auto for all items with children when toggle is on {%- endcomment -%}
+                          {%- comment -%} MEGA MENU PANEL — auto for all items with children {%- endcomment -%}
+                          {%- comment -%} Pre-collect featured images for each child link {%- endcomment -%}
+                          {%- assign any_child_has_image = false -%}
+                          {%- for child in link.links -%}
+                            {%- assign child_image = nil -%}
+                            {%- assign child_product_url = child.url -%}
+                            {%- assign child_product_title = child.title -%}
+                            {%- assign child_product_price = '' -%}
+
+                            {%- if child.type == 'collection_link' -%}
+                              {%- assign child_col_handle = child.url | split: '/collections/' | last | split: '?' | first -%}
+                              {%- assign child_col = collections[child_col_handle] -%}
+                              {%- if child_col != blank and child_col.products.size > 0 -%}
+                                {%- assign child_best = child_col.products.first -%}
+                                {%- if child_best != blank and child_best.featured_image != blank -%}
+                                  {%- assign child_image = child_best.featured_image -%}
+                                  {%- assign child_product_url = child_best.url -%}
+                                  {%- assign child_product_title = child_best.title -%}
+                                  {%- assign child_product_price = child_best.price | money -%}
+                                  {%- assign any_child_has_image = true -%}
+                                {%- endif -%}
+                              {%- endif -%}
+                            {%- endif -%}
+
+                            {%- if child.type == 'page_link' -%}
+                              {%- assign child_page_handle = child.url | split: '/pages/' | last | split: '?' | first -%}
+                              {%- assign child_page = pages[child_page_handle] -%}
+                              {%- if child_page != blank and child_page.metafields.custom.featured_image != blank -%}
+                                {%- assign child_image = child_page.metafields.custom.featured_image.value -%}
+                                {%- assign child_product_title = child_page.title -%}
+                                {%- assign child_product_url = child.url -%}
+                                {%- assign any_child_has_image = true -%}
+                              {%- endif -%}
+                            {%- endif -%}
+                          {%- endfor -%}
+
+                          {%- comment -%} Also check if block has a manual override image {%- endcomment -%}
+                          {%- if mega_block != nil and mega_block.settings.image_1 != blank -%}
+                            {%- assign any_child_has_image = true -%}
+                          {%- endif -%}
+
+                          {%- assign has_featured = any_child_has_image -%}
+
                           <div class="sl-mega-menu"{% if mega_block %} {{ mega_block.shopify_attributes }}{% endif %}>
                             <div class="sl-mega-menu__inner page-width{% unless has_featured %} sl-mega-menu__inner--no-featured{% endunless %}{% unless has_promo %} sl-mega-menu__inner--no-promo{% endunless %}{% unless has_featured or has_promo %} sl-mega-menu__inner--links-only{% endunless %}">
 
                               {%- if has_featured -%}
-                                <div class="sl-mega-menu__featured">
-                                  <a href="{{ auto_featured_url }}">
-                                    <img
-                                      src="{{ auto_featured_image | image_url: width: 400 }}"
-                                      alt="{{ auto_featured_alt | escape }}"
-                                      width="200"
-                                      loading="lazy"
-                                    >
-                                  </a>
+                                <div class="sl-mega-menu__featured" data-mega-featured>
+                                  {%- comment -%} Render one image per child link; first one is default visible {%- endcomment -%}
+                                  {%- assign default_shown = false -%}
+                                  {%- for child in link.links -%}
+                                    {%- assign child_image = nil -%}
+                                    {%- assign child_product_url = child.url -%}
+                                    {%- assign child_product_title = child.title -%}
+                                    {%- assign child_product_price = '' -%}
+
+                                    {%- if child.type == 'collection_link' -%}
+                                      {%- assign child_col_handle = child.url | split: '/collections/' | last | split: '?' | first -%}
+                                      {%- assign child_col = collections[child_col_handle] -%}
+                                      {%- if child_col != blank and child_col.products.size > 0 -%}
+                                        {%- assign child_best = child_col.products.first -%}
+                                        {%- if child_best != blank and child_best.featured_image != blank -%}
+                                          {%- assign child_image = child_best.featured_image -%}
+                                          {%- assign child_product_url = child_best.url -%}
+                                          {%- assign child_product_title = child_best.title -%}
+                                          {%- assign child_product_price = child_best.price | money -%}
+                                        {%- endif -%}
+                                      {%- endif -%}
+                                    {%- endif -%}
+
+                                    {%- if child.type == 'page_link' -%}
+                                      {%- assign child_page_handle = child.url | split: '/pages/' | last | split: '?' | first -%}
+                                      {%- assign child_page = pages[child_page_handle] -%}
+                                      {%- if child_page != blank and child_page.metafields.custom.featured_image != blank -%}
+                                        {%- assign child_image = child_page.metafields.custom.featured_image.value -%}
+                                        {%- assign child_product_title = child_page.title -%}
+                                        {%- assign child_product_url = child.url -%}
+                                      {%- endif -%}
+                                    {%- endif -%}
+
+                                    {%- if child_image != blank -%}
+                                      <a href="{{ child_product_url }}" class="sl-mega-featured__slide{% unless default_shown %} sl-mega-featured__slide--active{% endunless %}" data-mega-slide="{{ forloop.index0 }}">
+                                        <img
+                                          src="{{ child_image | image_url: width: 400 }}"
+                                          alt="{{ child_product_title | escape }}"
+                                          width="200"
+                                          loading="lazy"
+                                        >
+                                        <span class="sl-mega-featured__name">{{ child_product_title }}</span>
+                                        {%- if child_product_price != '' -%}
+                                          <span class="sl-mega-featured__price">{{ child_product_price }}</span>
+                                        {%- endif -%}
+                                      </a>
+                                      {%- assign default_shown = true -%}
+                                    {%- endif -%}
+                                  {%- endfor -%}
+
+                                  {%- comment -%} Block manual override image (shown as fallback if no child images) {%- endcomment -%}
+                                  {%- if mega_block != nil and mega_block.settings.image_1 != blank -%}
+                                    <a href="{{ mega_block.settings.link_1 | default: link.url }}" class="sl-mega-featured__slide sl-mega-featured__slide--manual{% unless default_shown %} sl-mega-featured__slide--active{% endunless %}" data-mega-slide="manual">
+                                      <img
+                                        src="{{ mega_block.settings.image_1 | image_url: width: 400 }}"
+                                        alt="{{ mega_block.settings.title_1 | default: link.title | escape }}"
+                                        width="200"
+                                        loading="lazy"
+                                      >
+                                    </a>
+                                  {%- endif -%}
                                 </div>
                               {%- endif -%}
 
@@ -1283,7 +1358,7 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
                                     {%- if forloop.index == split_at -%}
                                       </ul><ul class="sl-mega-menu__col">
                                     {%- endif -%}
-                                    <li><a href="{{ child.url }}">{{ child.title }}</a></li>
+                                    <li><a href="{{ child.url }}" data-mega-link="{{ forloop.index0 }}">{{ child.title }}</a></li>
                                   {%- endfor -%}
                                 </ul>
                               </div>
@@ -1822,6 +1897,44 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
 
   customElements.define('localization-form', LocalizationForm);
 {% endjavascript %}
+
+<script>
+  /* SL Mega Menu: swap featured image on sub-link hover */
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.sl-mega-menu').forEach(function(megaPanel) {
+      var featured = megaPanel.querySelector('[data-mega-featured]');
+      if (!featured) return;
+
+      var slides = featured.querySelectorAll('[data-mega-slide]');
+      var links = megaPanel.querySelectorAll('[data-mega-link]');
+      if (slides.length === 0) return;
+
+      var firstSlide = featured.querySelector('.sl-mega-featured__slide--active');
+
+      links.forEach(function(link) {
+        link.addEventListener('mouseenter', function() {
+          var idx = this.getAttribute('data-mega-link');
+          var target = featured.querySelector('[data-mega-slide="' + idx + '"]');
+          slides.forEach(function(s) { s.classList.remove('sl-mega-featured__slide--active'); });
+          if (target) {
+            target.classList.add('sl-mega-featured__slide--active');
+          } else if (firstSlide) {
+            firstSlide.classList.add('sl-mega-featured__slide--active');
+          }
+        });
+      });
+
+      /* Reset to first slide when mouse leaves the links area */
+      var linksArea = megaPanel.querySelector('.sl-mega-menu__links');
+      if (linksArea && firstSlide) {
+        linksArea.addEventListener('mouseleave', function() {
+          slides.forEach(function(s) { s.classList.remove('sl-mega-featured__slide--active'); });
+          firstSlide.classList.add('sl-mega-featured__slide--active');
+        });
+      }
+    });
+  });
+</script>
 
 <script type="application/ld+json">
   {
