@@ -1415,7 +1415,14 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
                             {%- assign any_child_has_image = true -%}
                           {%- endif -%}
 
+                          {%- comment -%} Featured area shows if ANY child has an image OR a fallback exists {%- endcomment -%}
                           {%- assign has_featured = any_child_has_image -%}
+                          {%- if has_featured == false and link.links.size > 0 -%}
+                            {%- comment -%} Even if no child has its own image, the fallback (block or first child) will fill in {%- endcomment -%}
+                            {%- if mega_block != nil and mega_block.settings.image_1 != blank -%}
+                              {%- assign has_featured = true -%}
+                            {%- endif -%}
+                          {%- endif -%}
 
                           <div class="sl-mega-menu"{% if mega_block %} {{ mega_block.shopify_attributes }}{% endif %}>
                             <div class="sl-mega-menu__inner page-width{% unless has_featured %} sl-mega-menu__inner--no-featured{% endunless %}{% unless has_promo %} sl-mega-menu__inner--no-promo{% endunless %}{% unless has_featured or has_promo %} sl-mega-menu__inner--links-only{% endunless %}">
@@ -1440,7 +1447,42 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
                                     {%- assign default_shown = true -%}
                                   {%- endif -%}
 
-                                  {%- comment -%} One image per child link — swaps in on hover {%- endcomment -%}
+                                  {%- comment -%} One image per child link — swaps in on hover. Falls back to default for children without images. {%- endcomment -%}
+                                  {%- comment -%} First pass: find the first available child image for fallback {%- endcomment -%}
+                                  {%- assign fallback_image = nil -%}
+                                  {%- assign fallback_url = link.url -%}
+                                  {%- assign fallback_title = link.title -%}
+                                  {%- assign fallback_price = '' -%}
+                                  {%- if mega_block != nil and mega_block.settings.image_1 != blank -%}
+                                    {%- assign fallback_image = mega_block.settings.image_1 -%}
+                                    {%- assign fallback_url = mega_block.settings.link_1 | default: link.url -%}
+                                    {%- assign fallback_title = mega_block.settings.title_1 | default: link.title -%}
+                                  {%- else -%}
+                                    {%- for child in link.links -%}
+                                      {%- if child.type == 'collection_link' -%}
+                                        {%- assign fc_handle = child.url | split: '/collections/' | last | split: '?' | first -%}
+                                        {%- assign fc = collections[fc_handle] -%}
+                                        {%- if fc != blank and fc.products.size > 0 and fc.products.first.featured_image != blank -%}
+                                          {%- assign fallback_image = fc.products.first.featured_image -%}
+                                          {%- assign fallback_url = fc.products.first.url -%}
+                                          {%- assign fallback_title = fc.products.first.title -%}
+                                          {%- assign fallback_price = fc.products.first.price | money -%}
+                                          {%- break -%}
+                                        {%- endif -%}
+                                      {%- endif -%}
+                                      {%- if child.type == 'page_link' -%}
+                                        {%- assign fp_handle = child.url | split: '/pages/' | last | split: '?' | first -%}
+                                        {%- assign fp = pages[fp_handle] -%}
+                                        {%- if fp != blank and fp.metafields.custom.menu_preview_image != blank -%}
+                                          {%- assign fallback_image = fp.metafields.custom.menu_preview_image.value -%}
+                                          {%- assign fallback_url = child.url -%}
+                                          {%- assign fallback_title = fp.title -%}
+                                          {%- break -%}
+                                        {%- endif -%}
+                                      {%- endif -%}
+                                    {%- endfor -%}
+                                  {%- endif -%}
+
                                   {%- for child in link.links -%}
                                     {%- assign child_image = nil -%}
                                     {%- assign child_product_url = child.url -%}
@@ -1469,6 +1511,14 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
                                         {%- assign child_product_title = child_page.title -%}
                                         {%- assign child_product_url = child.url -%}
                                       {%- endif -%}
+                                    {%- endif -%}
+
+                                    {%- comment -%} Fall back to default image if this child has none {%- endcomment -%}
+                                    {%- if child_image == blank and fallback_image != blank -%}
+                                      {%- assign child_image = fallback_image -%}
+                                      {%- assign child_product_url = fallback_url -%}
+                                      {%- assign child_product_title = fallback_title -%}
+                                      {%- assign child_product_price = fallback_price -%}
                                     {%- endif -%}
 
                                     {%- if child_image != blank -%}
