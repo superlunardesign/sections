@@ -883,7 +883,7 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
 /* SL: Center mega menu links when no featured image */
 .sl-mega-menu__inner--no-featured .sl-mega-menu__links,
 .sl-mega-menu__inner--links-only .sl-mega-menu__links {
-  margin: auto;
+  justify-self: center;
 }
 </style>
 
@@ -1417,12 +1417,14 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
                             {%- assign any_child_has_image = true -%}
                           {%- endif -%}
 
-                          {%- comment -%} Featured area shows if ANY child has an image OR a fallback exists {%- endcomment -%}
-                          {%- assign has_featured = any_child_has_image -%}
-                          {%- if has_featured == false and link.links.size > 0 -%}
-                            {%- comment -%} Even if no child has its own image, the fallback (block or first child) will fill in {%- endcomment -%}
-                            {%- if mega_block != nil and mega_block.settings.image_1 != blank -%}
-                              {%- assign has_featured = true -%}
+                          {%- comment -%} Featured area shows if toggle is on AND images exist {%- endcomment -%}
+                          {%- assign has_featured = false -%}
+                          {%- if section.settings.enable_mega_featured -%}
+                            {%- assign has_featured = any_child_has_image -%}
+                            {%- if has_featured == false and link.links.size > 0 -%}
+                              {%- if mega_block != nil and mega_block.settings.image_1 != blank -%}
+                                {%- assign has_featured = true -%}
+                              {%- endif -%}
                             {%- endif -%}
                           {%- endif -%}
 
@@ -2238,6 +2240,13 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
       "label": "Enable mega menu",
       "default": true,
       "info": "When enabled, nav items with sub-links show a full-width mega menu on hover. Add 'Promo image' blocks to attach a featured image or promo card to specific items."
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_mega_featured",
+      "label": "Show featured product image",
+      "default": true,
+      "info": "Show the featured product/page image on the left side of the mega menu."
     },
     {
       "type": "header",
