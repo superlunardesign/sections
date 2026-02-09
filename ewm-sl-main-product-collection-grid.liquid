@@ -143,17 +143,17 @@
     color: #ffffff;
   }
 
-  #SLCollection-{{ section.id }} .sl-badge--acne-safe {
-    background: {{ section.settings.acne_safe_badge_color }};
+  #SLCollection-{{ section.id }} .sl-badge--tag {
+    background: {{ section.settings.tag_badge_color }};
     color: #ffffff;
   }
 
   #SLCollection-{{ section.id }} .sl-badges {
     position: absolute;
-    top: 12px;
+    bottom: 12px;
     left: 12px;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     gap: 6px;
     z-index: 2;
   }
@@ -470,13 +470,400 @@ min-height:40px;
       font-size: 20px;
     }
   }
+
+  /* ========== Filter & Sort Bar ========== */
+  #SLCollection-{{ section.id }} .sl-filter-sort-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 28px;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  #SLCollection-{{ section.id }} .sl-filter-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+  }
+
+  #SLCollection-{{ section.id }} .sl-filter-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: {{ section.settings.title_color }};
+    letter-spacing: 0.3px;
+    font-family: var(--font-body-family);
+  }
+
+  #SLCollection-{{ section.id }} .sl-tag-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  #SLCollection-{{ section.id }} .sl-tag-btn {
+    padding: 8px 22px;
+    border-radius: 24px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    border: 1.5px solid {{ section.settings.filter_tag_border_color }};
+    background: transparent;
+    color: {{ section.settings.filter_tag_text_color }};
+    font-family: var(--font-body-family);
+    white-space: nowrap;
+  }
+
+  #SLCollection-{{ section.id }} .sl-tag-btn:hover {
+    border-color: {{ section.settings.filter_tag_active_bg }};
+    color: {{ section.settings.filter_tag_active_bg }};
+  }
+
+  #SLCollection-{{ section.id }} .sl-tag-btn--active {
+    background: {{ section.settings.filter_tag_active_bg }};
+    color: {{ section.settings.filter_tag_active_text }};
+    border-color: {{ section.settings.filter_tag_active_bg }};
+  }
+
+  #SLCollection-{{ section.id }} .sl-tag-btn--active:hover {
+    opacity: 0.9;
+    color: {{ section.settings.filter_tag_active_text }};
+  }
+
+  #SLCollection-{{ section.id }} .sl-sort-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding-top: 2px;
+  }
+
+  #SLCollection-{{ section.id }} .sl-sort-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: {{ section.settings.title_color }};
+    font-family: var(--font-body-family);
+  }
+
+  #SLCollection-{{ section.id }} .sl-sort-select {
+    appearance: none;
+    -webkit-appearance: none;
+    border: none;
+    background: transparent;
+    font-size: 14px;
+    font-weight: 400;
+    cursor: pointer;
+    color: {{ section.settings.title_color }};
+    font-family: var(--font-body-family);
+    padding: 4px 24px 4px 4px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 4px center;
+    background-size: 14px;
+  }
+
+  #SLCollection-{{ section.id }} .sl-sort-select:focus {
+    outline: none;
+  }
+
+  /* Mobile Controls */
+  #SLCollection-{{ section.id }} .sl-mobile-controls {
+    display: none;
+  }
+
+  #SLCollection-{{ section.id }} .sl-mobile-active-tags {
+    display: none;
+  }
+
+  @media screen and (max-width: 749px) {
+    #SLCollection-{{ section.id }} .sl-filter-section {
+      display: none;
+    }
+
+    #SLCollection-{{ section.id }} .sl-sort-wrapper.sl-sort-desktop {
+      display: none;
+    }
+
+    #SLCollection-{{ section.id }} .sl-mobile-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      gap: 12px;
+    }
+
+    #SLCollection-{{ section.id }} .sl-mobile-filter-btn,
+    #SLCollection-{{ section.id }} .sl-mobile-sort-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0;
+      font-size: 13px;
+      font-weight: 500;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: {{ section.settings.title_color }};
+      font-family: var(--font-body-family);
+    }
+
+    #SLCollection-{{ section.id }} .sl-mobile-filter-btn svg,
+    #SLCollection-{{ section.id }} .sl-mobile-sort-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    #SLCollection-{{ section.id }} .sl-mobile-active-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    #SLCollection-{{ section.id }} .sl-mobile-active-tags:empty {
+      display: none;
+    }
+
+    #SLCollection-{{ section.id }} .sl-mobile-tag-drawer {
+      display: none;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 12px 0;
+      width: 100%;
+    }
+
+    #SLCollection-{{ section.id }} .sl-mobile-tag-drawer.sl-drawer-open {
+      display: flex;
+    }
+
+    #SLCollection-{{ section.id }} .sl-mobile-sort-drawer {
+      display: none;
+      flex-direction: column;
+      gap: 0;
+      padding: 8px 0;
+      width: 100%;
+    }
+
+    #SLCollection-{{ section.id }} .sl-mobile-sort-drawer.sl-drawer-open {
+      display: flex;
+    }
+
+    #SLCollection-{{ section.id }} .sl-mobile-sort-option {
+      display: block;
+      padding: 10px 0;
+      font-size: 14px;
+      color: {{ section.settings.title_color }};
+      text-decoration: none;
+      font-family: var(--font-body-family);
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+
+    #SLCollection-{{ section.id }} .sl-mobile-sort-option.sl-sort-active {
+      font-weight: 600;
+    }
+
+    #SLCollection-{{ section.id }} .sl-filter-sort-bar {
+      flex-direction: column;
+      gap: 0;
+    }
+  }
+
+  /* ========== Custom Pagination ========== */
+  #SLCollection-{{ section.id }} .sl-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 40px;
+    padding: 20px 0;
+  }
+
+  #SLCollection-{{ section.id }} .sl-pagination a,
+  #SLCollection-{{ section.id }} .sl-pagination span {
+    text-decoration: none;
+    font-size: 15px;
+    font-family: var(--font-body-family);
+    color: {{ section.settings.title_color }};
+    transition: opacity 0.2s ease;
+  }
+
+  #SLCollection-{{ section.id }} .sl-page-num {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+  }
+
+  #SLCollection-{{ section.id }} a.sl-page-num:hover {
+    opacity: 0.7;
+  }
+
+  #SLCollection-{{ section.id }} .sl-page-current {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: {{ section.settings.pagination_active_color }};
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+  }
+
+  #SLCollection-{{ section.id }} .sl-page-arrow {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    border-radius: 50%;
+  }
+
+  #SLCollection-{{ section.id }} a.sl-page-arrow:hover {
+    opacity: 0.7;
+  }
+
+  #SLCollection-{{ section.id }} .sl-page-arrow--disabled {
+    opacity: 0.25;
+    cursor: default;
+  }
+
+  #SLCollection-{{ section.id }} .sl-page-ellipsis {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 {%- endstyle -%}
 
 <div class="section-{{ section.id }}-padding" id="SLCollection-{{ section.id }}">
-  {%- if section.settings.enable_filtering or section.settings.enable_sorting -%}
+  {%- if section.settings.enable_tag_filtering or section.settings.enable_sorting -%}
+    {%- assign current_sort_by = collection.sort_by | default: collection.default_sort_by -%}
+    {%- capture sort_param -%}{%- if current_sort_by != blank and current_sort_by != collection.default_sort_by -%}?sort_by={{ current_sort_by }}{%- endif -%}{%- endcapture -%}
+    {%- assign sort_param = sort_param | strip -%}
+
+    <div class="page-width">
+      <div class="sl-filter-sort-bar">
+        {%- if section.settings.enable_tag_filtering -%}
+          {%- comment -%} Desktop: Filter label + tag pills {%- endcomment -%}
+          <div class="sl-filter-section">
+            <div class="sl-filter-label">{{ section.settings.filter_label }}</div>
+            <div class="sl-tag-filters">
+              {%- assign filter_tags = section.settings.filter_tags | split: ',' -%}
+              {%- for tag in filter_tags -%}
+                {%- assign clean_tag = tag | strip -%}
+                {%- if clean_tag != blank -%}
+                  {%- assign is_active = false -%}
+                  {%- assign clean_tag_handle = clean_tag | handleize -%}
+                  {%- for current_tag in current_tags -%}
+                    {%- assign current_tag_handle = current_tag | handleize -%}
+                    {%- if current_tag_handle == clean_tag_handle -%}
+                      {%- assign is_active = true -%}
+                    {%- endif -%}
+                  {%- endfor -%}
+                  {%- if is_active -%}
+                    <a href="{{ collection.url }}{{ sort_param }}" class="sl-tag-btn sl-tag-btn--active">{{ clean_tag }}</a>
+                  {%- else -%}
+                    <a href="{{ collection.url }}/{{ clean_tag_handle }}{{ sort_param }}" class="sl-tag-btn">{{ clean_tag }}</a>
+                  {%- endif -%}
+                {%- endif -%}
+              {%- endfor -%}
+            </div>
+          </div>
+        {%- endif -%}
+
+        {%- comment -%} Desktop: Sort dropdown {%- endcomment -%}
+        {%- if section.settings.enable_sorting -%}
+          <div class="sl-sort-wrapper sl-sort-desktop">
+            <label for="sl-sort-{{ section.id }}" class="sl-sort-label">Sort:</label>
+            <select id="sl-sort-{{ section.id }}" class="sl-sort-select" data-sort-select>
+              <option value="manual" {% if current_sort_by == 'manual' %}selected{% endif %}>Featured</option>
+              <option value="best-selling" {% if current_sort_by == 'best-selling' %}selected{% endif %}>Best Selling</option>
+              <option value="title-ascending" {% if current_sort_by == 'title-ascending' %}selected{% endif %}>A–Z</option>
+              <option value="title-descending" {% if current_sort_by == 'title-descending' %}selected{% endif %}>Z–A</option>
+              <option value="price-ascending" {% if current_sort_by == 'price-ascending' %}selected{% endif %}>Price (Low to High)</option>
+              <option value="price-descending" {% if current_sort_by == 'price-descending' %}selected{% endif %}>Price (High to Low)</option>
+              <option value="created-ascending" {% if current_sort_by == 'created-ascending' %}selected{% endif %}>Oldest</option>
+              <option value="created-descending" {% if current_sort_by == 'created-descending' %}selected{% endif %}>Newest</option>
+            </select>
+          </div>
+        {%- endif -%}
+
+        {%- comment -%} Mobile: Compact filter + sort buttons {%- endcomment -%}
+        <div class="sl-mobile-controls">
+          {%- if section.settings.enable_tag_filtering -%}
+            <button type="button" class="sl-mobile-filter-btn" data-mobile-filter-toggle>
+              {{ section.settings.filter_label }}
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            </button>
+          {%- endif -%}
+          {%- if section.settings.enable_sorting -%}
+            <button type="button" class="sl-mobile-sort-btn" data-mobile-sort-toggle>
+              Sort
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+            </button>
+          {%- endif -%}
+        </div>
+
+        {%- comment -%} Mobile: Tag drawer (hidden by default) {%- endcomment -%}
+        {%- if section.settings.enable_tag_filtering -%}
+          <div class="sl-mobile-tag-drawer" data-mobile-tag-drawer>
+            {%- for tag in filter_tags -%}
+              {%- assign clean_tag = tag | strip -%}
+              {%- if clean_tag != blank -%}
+                {%- assign is_active = false -%}
+                {%- assign clean_tag_handle = clean_tag | handleize -%}
+                {%- for current_tag in current_tags -%}
+                  {%- assign current_tag_handle = current_tag | handleize -%}
+                  {%- if current_tag_handle == clean_tag_handle -%}
+                    {%- assign is_active = true -%}
+                  {%- endif -%}
+                {%- endfor -%}
+                {%- if is_active -%}
+                  <a href="{{ collection.url }}{{ sort_param }}" class="sl-tag-btn sl-tag-btn--active">{{ clean_tag }} ✕</a>
+                {%- else -%}
+                  <a href="{{ collection.url }}/{{ clean_tag_handle }}{{ sort_param }}" class="sl-tag-btn">{{ clean_tag }}</a>
+                {%- endif -%}
+              {%- endif -%}
+            {%- endfor -%}
+          </div>
+        {%- endif -%}
+
+        {%- comment -%} Mobile: Sort drawer (hidden by default) {%- endcomment -%}
+        {%- if section.settings.enable_sorting -%}
+          <div class="sl-mobile-sort-drawer" data-mobile-sort-drawer>
+            {%- assign sort_options = 'manual:Featured,best-selling:Best Selling,title-ascending:A–Z,title-descending:Z–A,price-ascending:Price (Low to High),price-descending:Price (High to Low),created-ascending:Oldest,created-descending:Newest' | split: ',' -%}
+            {%- for opt in sort_options -%}
+              {%- assign opt_parts = opt | split: ':' -%}
+              {%- assign opt_value = opt_parts[0] -%}
+              {%- assign opt_label = opt_parts[1] -%}
+              <a href="{{ collection.url }}{% if current_tags.size > 0 %}/{{ current_tags | join: '+' }}{% endif %}?sort_by={{ opt_value }}"
+                 class="sl-mobile-sort-option {% if current_sort_by == opt_value %}sl-sort-active{% endif %}">
+                {{ opt_label }}
+              </a>
+            {%- endfor -%}
+          </div>
+        {%- endif -%}
+      </div>
+
+      {%- comment -%} Mobile: Active tag pills (always visible) {%- endcomment -%}
+      <div class="sl-mobile-active-tags">
+        {%- for current_tag in current_tags -%}
+          <a href="{{ collection.url }}{{ sort_param }}" class="sl-tag-btn sl-tag-btn--active">{{ current_tag }} ✕</a>
+        {%- endfor -%}
+      </div>
+    </div>
+  {%- elsif section.settings.enable_filtering -%}
     {{ 'component-facets.css' | asset_url | stylesheet_tag }}
     <script src="{{ 'facets.js' | asset_url }}" defer="defer"></script>
-
     <div class="page-width" id="main-collection-filters" data-id="{{ section.id }}">
       {% render 'facets', results: collection, enable_filtering: section.settings.enable_filtering, enable_sorting: section.settings.enable_sorting, collapse_on_larger_devices: section.settings.collapse_on_larger_devices %}
     </div>
@@ -553,19 +940,21 @@ min-height:40px;
                   {%- comment -%} COMPACT LAYOUT - Card contains only image/title/price {%- endcomment -%}
                   <div class="sl-card-wrapper" data-product-id="{{ product.id }}">
                     <div class="sl-product-card">
-                      <div class="sl-badges">
-                        {%- if product.available == false -%}
-                          <span class="sl-badge sl-badge--soldout">{{ section.settings.soldout_text }}</span>
-                        {%- elsif product.compare_at_price > product.price -%}
-                          <span class="sl-badge sl-badge--sale">{{ section.settings.sale_text }}</span>
-                        {%- endif -%}
-                        {%- if product.tags contains 'ACNE SAFE' -%}
-                          <span class="sl-badge sl-badge--acne-safe">{{ section.settings.acne_safe_text }}</span>
-                        {%- endif -%}
-                      </div>
-
                       <div class="sl-product-image">
-                        
+                        <div class="sl-badges">
+                          {%- if product.available == false -%}
+                            <span class="sl-badge sl-badge--soldout">{{ section.settings.soldout_text }}</span>
+                          {%- elsif product.compare_at_price > product.price -%}
+                            <span class="sl-badge sl-badge--sale">{{ section.settings.sale_text }}</span>
+                          {%- endif -%}
+                          {%- assign badge_tags_list = section.settings.badge_tags | split: ',' -%}
+                          {%- for badge_tag in badge_tags_list -%}
+                            {%- assign clean_badge_tag = badge_tag | strip -%}
+                            {%- if clean_badge_tag != blank and product.tags contains clean_badge_tag -%}
+                              <span class="sl-badge sl-badge--tag">{{ clean_badge_tag }}</span>
+                            {%- endif -%}
+                          {%- endfor -%}
+                        </div>
                         <a href="{{ product.url }}">
                           {%- if product.featured_image -%}
                             <img src="{{ product.featured_image | img_url: '600x600' }}"
@@ -665,44 +1054,50 @@ min-height:40px;
                     </div>
                   </div>
                 {%- else -%}
-                  {%- comment -%} REGULAR LAYOUT - Full card with all elements inside {%- endcomment -%}
-                  <div class="sl-product-card" data-product-id="{{ product.id }}">
-                    <div class="sl-badges">
-                      {%- if product.available == false -%}
-                        <span class="sl-badge sl-badge--soldout">{{ section.settings.soldout_text }}</span>
-                      {%- elsif product.compare_at_price > product.price -%}
-                        <span class="sl-badge sl-badge--sale">{{ section.settings.sale_text }}</span>
-                      {%- endif -%}
-                      {%- if product.tags contains 'ACNE SAFE' -%}
-                        <span class="sl-badge sl-badge--acne-safe">{{ section.settings.acne_safe_text }}</span>
-                      {%- endif -%}
-                    </div>
+                  {%- comment -%} REGULAR LAYOUT - Card with actions outside {%- endcomment -%}
+                  <div class="sl-card-wrapper" data-product-id="{{ product.id }}">
+                    <div class="sl-product-card">
+                      <div class="sl-product-image">
+                        <div class="sl-badges">
+                          {%- if product.available == false -%}
+                            <span class="sl-badge sl-badge--soldout">{{ section.settings.soldout_text }}</span>
+                          {%- elsif product.compare_at_price > product.price -%}
+                            <span class="sl-badge sl-badge--sale">{{ section.settings.sale_text }}</span>
+                          {%- endif -%}
+                          {%- assign badge_tags_list = section.settings.badge_tags | split: ',' -%}
+                          {%- for badge_tag in badge_tags_list -%}
+                            {%- assign clean_badge_tag = badge_tag | strip -%}
+                            {%- if clean_badge_tag != blank and product.tags contains clean_badge_tag -%}
+                              <span class="sl-badge sl-badge--tag">{{ clean_badge_tag }}</span>
+                            {%- endif -%}
+                          {%- endfor -%}
+                        </div>
+                        <a href="{{ product.url }}">
+                          {%- if product.featured_image -%}
+                            <img src="{{ product.featured_image | img_url: '600x600' }}"
+                                 alt="{{ product.featured_image.alt | escape }}"
+                                 loading="{% if product_index <= 4 %}eager{% else %}lazy{% endif %}"
+                                 width="600"
+                                 height="600">
+                          {%- else -%}
+                            {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}
+                          {%- endif -%}
+                        </a>
+                      </div>
 
-                    <div class="sl-product-image">
-                      <a href="{{ product.url }}">
-                        {%- if product.featured_image -%}
-                          <img src="{{ product.featured_image | img_url: '600x600' }}"
-                               alt="{{ product.featured_image.alt | escape }}"
-                               loading="{% if product_index <= 4 %}eager{% else %}lazy{% endif %}"
-                               width="600"
-                               height="600">
-                        {%- else -%}
-                          {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}
-                        {%- endif -%}
-                      </a>
-                    </div>
-
-                    <div class="sl-product-info">
-                      <h5 class="sl-product-vendor" style="margin:0px;font-size:10px;font-family:var(--font-body-family)">
-                          {{ product.vendor}}
+                      <div class="sl-product-info">
+                        <h5 class="sl-product-vendor" style="margin:0px;font-size:10px;font-family:var(--font-body-family)">
+                          {{ product.vendor }}
                         </h5>
-                      <h3 class="sl-product-title">
-                        <a href="{{ product.url }}">{{ product.title }}</a>
-                      </h3>
-                      
+                        <h3 class="sl-product-title">
+                          <a href="{{ product.url }}">{{ product.title }}</a>
+                        </h3>
+                      </div>
+                    </div>
 
-                    {%- comment -%} Variant Options {%- endcomment -%}
-                    {%- if section.settings.show_variants and product.has_only_default_variant == false -%}
+                    {%- comment -%} Variants (outside card) {%- endcomment -%}
+                    <div class="sl-outside-variants">
+                      {%- if section.settings.show_variants and product.has_only_default_variant == false -%}
                       <div class="sl-variant-options">
                         <script type="application/json" class="sl-variant-data">
                           {{ product.variants | json }}
@@ -751,15 +1146,12 @@ min-height:40px;
                           </div>
                         {%- endfor -%}
                       </div>
-                    {%- elsif section.settings.show_variants -%}
-                      {%- comment -%} Spacer for products without variants to maintain equal height {%- endcomment -%}
-                      <div class="sl-variant-spacer"></div>
-                    {%- endif -%}
-</div>
-                    {%- comment -%} Action Buttons {%- endcomment -%}
-                    {%- if section.settings.show_add_to_cart or section.settings.show_subscribe -%}
-                      <div class="sl-product-actions">
-                        {%- if section.settings.show_add_to_cart -%}
+                      {%- endif -%}
+                    </div>
+
+                    {%- comment -%} Action Buttons (outside card) {%- endcomment -%}
+                    <div class="sl-outside-button">
+                      {%- if section.settings.show_add_to_cart -%}
                           {%- if product.available -%}
                             <button type="button"
                                     class="sl-add-to-cart-btn"
@@ -795,18 +1187,38 @@ min-height:40px;
                              data-variant-id="{{ product.selected_or_first_available_variant.id }}">
                             {{ section.settings.subscribe_text }}
                           </a>
-                        {%- endif -%}
-                      
-                    {%- endif -%}
+                      {%- endif -%}
+                    </div>
                   </div>
-                </div>
                 {%- endif -%}
               </li>
             {%- endfor -%}
           </ul>
 
           {%- if paginate.pages > 1 -%}
-            {% render 'pagination', paginate: paginate, anchor: '' %}
+            <nav class="sl-pagination" aria-label="Pagination">
+              {%- if paginate.previous -%}
+                <a href="{{ paginate.previous.url }}" class="sl-page-arrow" aria-label="Previous page">&lsaquo;</a>
+              {%- else -%}
+                <span class="sl-page-arrow sl-page-arrow--disabled" aria-hidden="true">&lsaquo;</span>
+              {%- endif -%}
+
+              {%- for part in paginate.parts -%}
+                {%- if part.is_link -%}
+                  <a href="{{ part.url }}" class="sl-page-num">{{ part.title }}</a>
+                {%- elsif part.title == '&hellip;' -%}
+                  <span class="sl-page-ellipsis">&hellip;</span>
+                {%- else -%}
+                  <span class="sl-page-current" aria-current="page">{{ part.title }}</span>
+                {%- endif -%}
+              {%- endfor -%}
+
+              {%- if paginate.next -%}
+                <a href="{{ paginate.next.url }}" class="sl-page-arrow" aria-label="Next page">&rsaquo;</a>
+              {%- else -%}
+                <span class="sl-page-arrow sl-page-arrow--disabled" aria-hidden="true">&rsaquo;</span>
+              {%- endif -%}
+            </nav>
           {%- endif -%}
         </div>
       {%- endif -%}
@@ -819,6 +1231,36 @@ min-height:40px;
   const sectionId = '{{ section.id }}';
   const section = document.getElementById('SLCollection-' + sectionId);
   if (!section) return;
+
+  // Sort select handler (desktop)
+  const sortSelect = section.querySelector('[data-sort-select]');
+  if (sortSelect) {
+    sortSelect.addEventListener('change', function() {
+      const url = new URL(window.location.href);
+      url.searchParams.set('sort_by', this.value);
+      window.location.href = url.toString();
+    });
+  }
+
+  // Mobile filter toggle
+  const filterToggle = section.querySelector('[data-mobile-filter-toggle]');
+  const tagDrawer = section.querySelector('[data-mobile-tag-drawer]');
+  const sortToggle = section.querySelector('[data-mobile-sort-toggle]');
+  const sortDrawer = section.querySelector('[data-mobile-sort-drawer]');
+
+  if (filterToggle && tagDrawer) {
+    filterToggle.addEventListener('click', function() {
+      tagDrawer.classList.toggle('sl-drawer-open');
+      if (sortDrawer) sortDrawer.classList.remove('sl-drawer-open');
+    });
+  }
+
+  if (sortToggle && sortDrawer) {
+    sortToggle.addEventListener('click', function() {
+      sortDrawer.classList.toggle('sl-drawer-open');
+      if (tagDrawer) tagDrawer.classList.remove('sl-drawer-open');
+    });
+  }
 
   // Mark unavailable variants on page load
   // Use [data-product-id] to match both regular (.sl-product-card) and compact (.sl-card-wrapper) layouts
@@ -1204,15 +1646,16 @@ min-height:40px;
       "default": "#666666"
     },
     {
-      "type": "text",
-      "id": "acne_safe_text",
-      "label": "Acne Safe badge text",
-      "default": "Acne Safe"
+      "type": "textarea",
+      "id": "badge_tags",
+      "label": "Tags to show as badges",
+      "info": "Comma-separated. Products with these tags show a badge on the card image.",
+      "default": "ACNE SAFE"
     },
     {
       "type": "color",
-      "id": "acne_safe_badge_color",
-      "label": "Acne Safe badge color",
+      "id": "tag_badge_color",
+      "label": "Tag badge color",
       "default": "#8C9B6D"
     },
     {
@@ -1464,13 +1907,51 @@ min-height:40px;
     },
     {
       "type": "header",
-      "content": "Filtering & Sorting"
+      "content": "Tag Filtering & Sorting"
     },
     {
       "type": "checkbox",
-      "id": "enable_filtering",
+      "id": "enable_tag_filtering",
       "default": true,
-      "label": "Enable filtering"
+      "label": "Enable tag filter bar",
+      "info": "Shows tag-based pill filters above the grid"
+    },
+    {
+      "type": "text",
+      "id": "filter_label",
+      "label": "Filter bar label",
+      "default": "Filter For Your Skin"
+    },
+    {
+      "type": "textarea",
+      "id": "filter_tags",
+      "label": "Filter tags",
+      "info": "Comma-separated tags to show as filter pills",
+      "default": "Acne Safe, Anti-Aging, SPF, Sensitive Skin, Body Care"
+    },
+    {
+      "type": "color",
+      "id": "filter_tag_border_color",
+      "label": "Filter tag border",
+      "default": "#999999"
+    },
+    {
+      "type": "color",
+      "id": "filter_tag_text_color",
+      "label": "Filter tag text",
+      "default": "#333333"
+    },
+    {
+      "type": "color",
+      "id": "filter_tag_active_bg",
+      "label": "Active filter background",
+      "default": "#8C9B6D"
+    },
+    {
+      "type": "color",
+      "id": "filter_tag_active_text",
+      "label": "Active filter text",
+      "default": "#ffffff"
     },
     {
       "type": "checkbox",
@@ -1479,10 +1960,27 @@ min-height:40px;
       "label": "Enable sorting"
     },
     {
+      "type": "color",
+      "id": "pagination_active_color",
+      "label": "Pagination active page color",
+      "default": "#8C9B6D"
+    },
+    {
+      "type": "header",
+      "content": "Shopify Facets (Fallback)"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_filtering",
+      "default": false,
+      "label": "Enable Shopify facet filtering",
+      "info": "Used when tag filtering is disabled"
+    },
+    {
       "type": "checkbox",
       "id": "collapse_on_larger_devices",
       "default": false,
-      "label": "Collapse filters on desktop"
+      "label": "Collapse facets on desktop"
     },
     {
       "type": "header",
