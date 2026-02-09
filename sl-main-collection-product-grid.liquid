@@ -681,7 +681,9 @@ min-height:40px;
                                           class="sl-color-swatch"
                                           data-option-position="{{ option.position }}"
                                           data-option-value="{{ value | escape }}"
-                                          style="background-color: {{ value | handleize }};"
+                                          style="background-color:{%- assign matching_color = product.metafields.shopify.color-pattern.value | where: "label", value | first -%}
+{{ matching_color.color }}
+;""
                                           title="{{ value }}"
                                           {% if forloop.first %}data-selected="true"{% endif %}>
                                   </button>
