@@ -720,6 +720,21 @@ button.slick-next.slick-arrow { display:none !important; }
             {% render 'main-product-sidebar' %}
           </aside>
         {%- endunless -%}
+
+        {%- comment -%} Breadcrumbs block — renders above the product grid {%- endcomment -%}
+        {%- for block in section.blocks -%}
+          {%- if block.type == 'breadcrumbs' -%}
+            {%- if product.collections.size > 0 -%}
+              <div class="sl-pdp-breadcrumb" style="{% if block.settings.breadcrumb_color != blank %}color: {{ block.settings.breadcrumb_color }};{% endif %}{% if block.settings.font_size > 0 %}font-size: {{ block.settings.font_size }}px;{% endif %}{% if block.settings.margin_bottom > 0 %}margin-bottom: {{ block.settings.margin_bottom }}px;{% endif %}" {{ block.shopify_attributes }}>
+                {%- for col in product.collections limit: 2 -%}
+                  <a href="{{ col.url }}" style="{% if block.settings.breadcrumb_color != blank %}color: {{ block.settings.breadcrumb_color }};{% endif %}">{{ col.title }}</a>
+                  {%- unless forloop.last %}<span class="sl-pdp-breadcrumb__sep">/</span>{% endunless -%}
+                {%- endfor -%}
+              </div>
+            {%- endif -%}
+          {%- endif -%}
+        {%- endfor -%}
+
         <div class="main-product_info product  product--{{ section.settings.media_size }} product--{{ section.settings.gallery_layout }}  {%  if thumb_carousel_layout %}{% if thumb_slick_layout %} media-slick-slider{% endif %} product--{{ section.settings.thumb_carousel_layout }}{% endif %} grid grid--1-col {% if product.media.size > 0 %}grid--2-col-tablet{% else %}product--no-media{% endif %} ">
           <div class="grid__item product__media-wrapper {% if product.metafields.custom.grouped_variant == true  %}show-grouped__variant{% endif %}">
             <media-gallery
@@ -1052,20 +1067,13 @@ button.slick-next.slick-arrow { display:none !important; }
                       {{- block.settings.text -}}
                     </p>
 
-                  {%- when 'title' -%}
-                    <div class="sl-pdp-title-block" style="{% if block.settings.margin_top > 0 %}margin-top: {{ block.settings.margin_top }}px;{% endif %}{% if block.settings.margin_bottom > 0 %}margin-bottom: {{ block.settings.margin_bottom }}px;{% endif %}">
-                    {%- comment -%} Breadcrumb category path {%- endcomment -%}
-                    {%- if product.collections.size > 0 -%}
-                      <div class="sl-pdp-breadcrumb" style="{% if block.settings.breadcrumb_color != blank %}color: {{ block.settings.breadcrumb_color }};{% endif %}" {{ block.shopify_attributes }}>
-                        {%- for col in product.collections limit: 2 -%}
-                          <a href="{{ col.url }}" style="{% if block.settings.breadcrumb_color != blank %}color: {{ block.settings.breadcrumb_color }};{% endif %}">{{ col.title }}</a>
-                          {%- unless forloop.last %}<span class="sl-pdp-breadcrumb__sep">/</span>{% endunless -%}
-                        {%- endfor -%}
-                      </div>
-                    {%- endif -%}
+                  {%- when 'breadcrumbs' -%}
+                    {%- comment -%} Breadcrumbs rendered above the grid — skip here {%- endcomment -%}
 
+                  {%- when 'title' -%}
+                    <div class="sl-pdp-title-block" style="{% if block.settings.margin_top > 0 %}margin-top: {{ block.settings.margin_top }}px;{% endif %}{% if block.settings.margin_bottom > 0 %}margin-bottom: {{ block.settings.margin_bottom }}px;{% endif %}" {{ block.shopify_attributes }}>
                     <div class="sl-pdp-title-row">
-                      <div class="product__title" {{ block.shopify_attributes }}>
+                      <div class="product__title">
                         <h1 style="{% if block.settings.heading_color != blank %}color: {{ block.settings.heading_color }};{% endif %}{% if block.settings.heading_size != blank %}font-size: {{ block.settings.heading_size }}px;{% endif %}">{{ product.title | escape }}</h1>
                         <a href="{{ product.url }}" class="product__title">
                           <h2 class="h1" style="{% if block.settings.heading_color != blank %}color: {{ block.settings.heading_color }};{% endif %}{% if block.settings.heading_size != blank %}font-size: {{ block.settings.heading_size }}px;{% endif %}">
@@ -1090,15 +1098,24 @@ button.slick-next.slick-arrow { display:none !important; }
                     {%- if product.metafields.custom.subtitle != blank -%}
                       <p class="sl-pdp-subtitle" style="{% if block.settings.subtitle_color != blank %}color: {{ block.settings.subtitle_color }};{% endif %}{% if block.settings.subtitle_size != blank %}font-size: {{ block.settings.subtitle_size }}px;{% endif %}">{{ product.metafields.custom.subtitle.value }}</p>
                     {%- endif -%}
+                    </div>
 
-                    {%- comment -%} Notable tags (Acne Safe etc.) {%- endcomment -%}
-                    <div class="notable-tags" style="{% if block.settings.badge_color != blank %}color: {{ block.settings.badge_color }};{% endif %}">
+                  {%- when 'notable_tags' -%}
+                    <div class="notable-tags" style="{% if block.settings.tag_color != blank %}color: {{ block.settings.tag_color }};{% endif %}{% if block.settings.font_size > 0 %}font-size: {{ block.settings.font_size }}px;{% endif %}{% if block.settings.margin_top > 0 %}margin-top: {{ block.settings.margin_top }}px;{% endif %}{% if block.settings.margin_bottom > 0 %}margin-bottom: {{ block.settings.margin_bottom }}px;{% endif %}" {{ block.shopify_attributes }}>
                       {% for tag in product.tags %}
                         {% if tag == 'ACNE SAFE' %}
                           <p>✓ Acne Safe Skincare</p>
                         {% endif %}
+                        {% if tag == 'VEGAN' %}
+                          <p>✓ Vegan</p>
+                        {% endif %}
+                        {% if tag == 'CRUELTY FREE' %}
+                          <p>✓ Cruelty Free</p>
+                        {% endif %}
+                        {% if tag == 'FRAGRANCE FREE' %}
+                          <p>✓ Fragrance Free</p>
+                        {% endif %}
                       {% endfor %}
-                    </div>
                     </div>
 
                   {%- when 'deal' -%}
@@ -2320,6 +2337,39 @@ function updateDeliveryOption(input) {
   ]
   },
   {
+  "type": "breadcrumbs",
+  "name": "Breadcrumbs",
+  "limit": 1,
+  "settings": [
+  {
+  "type": "color",
+  "id": "breadcrumb_color",
+  "label": "Text color",
+  "default": "#888888"
+  },
+  {
+  "type": "range",
+  "id": "font_size",
+  "min": 10,
+  "max": 16,
+  "step": 1,
+  "unit": "px",
+  "label": "Font size",
+  "default": 13
+  },
+  {
+  "type": "range",
+  "id": "margin_bottom",
+  "min": 0,
+  "max": 24,
+  "step": 2,
+  "unit": "px",
+  "label": "Spacing below",
+  "default": 8
+  }
+  ]
+  },
+  {
   "type": "title",
   "name": "t:sections.main-product.blocks.title.name",
   "limit": 1,
@@ -2360,11 +2410,6 @@ function updateDeliveryOption(input) {
   },
   {
   "type": "color",
-  "id": "breadcrumb_color",
-  "label": "Breadcrumb color"
-  },
-  {
-  "type": "color",
   "id": "badge_color",
   "label": "Badge color",
   "default": "#8C9B6D"
@@ -2388,6 +2433,49 @@ function updateDeliveryOption(input) {
   "unit": "px",
   "label": "Spacing below",
   "default": 0
+  }
+  ]
+  },
+  {
+  "type": "notable_tags",
+  "name": "Notable Tags",
+  "limit": 1,
+  "settings": [
+  {
+  "type": "color",
+  "id": "tag_color",
+  "label": "Tag color",
+  "default": "#8C9B6D"
+  },
+  {
+  "type": "range",
+  "id": "font_size",
+  "min": 12,
+  "max": 18,
+  "step": 1,
+  "unit": "px",
+  "label": "Font size",
+  "default": 14
+  },
+  {
+  "type": "range",
+  "id": "margin_top",
+  "min": 0,
+  "max": 40,
+  "step": 4,
+  "unit": "px",
+  "label": "Spacing above",
+  "default": 0
+  },
+  {
+  "type": "range",
+  "id": "margin_bottom",
+  "min": 0,
+  "max": 40,
+  "step": 4,
+  "unit": "px",
+  "label": "Spacing below",
+  "default": 4
   }
   ]
   },
