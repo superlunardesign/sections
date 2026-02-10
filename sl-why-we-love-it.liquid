@@ -102,6 +102,10 @@
 
 {%- assign wwl_heading = section.settings.heading -%}
 {%- assign wwl_body = section.settings.body -%}
+{%- comment -%} Fallback: read metafield directly if dynamic source didn't map {%- endcomment -%}
+{%- if wwl_body == blank and product.metafields.custom.why_we_love_it != blank -%}
+  {%- assign wwl_body = product.metafields.custom.why_we_love_it.value -%}
+{%- endif -%}
 {%- assign wwl_image = section.settings.image -%}
 
 {%- comment -%}
@@ -123,7 +127,7 @@
   {%- endif -%}
 {%- endif -%}
 
-{%- if wwl_heading != blank and wwl_body != blank -%}
+{%- if wwl_body != blank -%}
 <div id="SLWhyWeLove-{{ section.id }}" class="page-width">
   <div class="sl-wwl__card">
     <div class="sl-wwl__text">
@@ -166,13 +170,13 @@
       "type": "text",
       "id": "heading",
       "label": "Heading",
-      "info": "Connect to a dynamic source (metafield) or type manually. Section hides if heading or body is empty."
+      "info": "Optional heading. Section visibility is controlled by body text."
     },
     {
       "type": "richtext",
       "id": "body",
       "label": "Body text",
-      "info": "Connect to a dynamic source (metafield) or type manually. Section hides if heading or body is empty."
+      "info": "Connect to a dynamic source (metafield). Section hides when this is empty. Falls back to product.metafields.custom.why_we_love_it."
     },
     {
       "type": "image_picker",
