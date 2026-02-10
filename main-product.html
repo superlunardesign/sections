@@ -116,7 +116,10 @@
    ========================================================= */
 .main-product-template .product__media-item {
   background: #d6dce8;
-  border-radius: 12px;
+  border-radius: {{ section.settings.image_border_radius | default: 12 }}px;
+  {% if section.settings.image_border_width > 0 %}
+    border: {{ section.settings.image_border_width }}px solid {{ section.settings.image_border_color }};
+  {% endif %}
 }
 @media (max-width: 989px){ .main-product-template .product__media-item { padding: 18px; } }
 .main-product-template .product__media-gallery { width: 100%; }
@@ -142,10 +145,10 @@
 
 .main-product-template .thumbnail-list__item .thumbnail {
   width: 140px; height: 110px;
-  border-radius: 12px;
+  border-radius: {{ section.settings.image_border_radius | default: 12 }}px;
   overflow: hidden;
   background: #efefef;
-  border: 1px solid rgba(0,0,0,.06);
+  border: {{ section.settings.image_border_width | default: 1 }}px solid {{ section.settings.image_border_color | default: 'rgba(0,0,0,.06)' }};
   scroll-snap-align: start;
 }
 @media (max-width: 989px){
@@ -3465,6 +3468,56 @@ function updateDeliveryOption(input) {
   "id": "enable_video_looping",
   "default": false,
   "label": "t:sections.main-product.settings.enable_video_looping.label"
+  },
+  {
+  "type": "select",
+  "id": "mobile_thumbnails",
+  "options": [
+    { "value": "show", "label": "Show" },
+    { "value": "hide", "label": "Hide" }
+  ],
+  "default": "show",
+  "label": "Mobile thumbnails"
+  },
+  {
+  "type": "select",
+  "id": "slider_position",
+  "options": [
+    { "value": "bottom", "label": "Bottom" },
+    { "value": "side", "label": "Side" }
+  ],
+  "default": "bottom",
+  "label": "Thumbnail position"
+  },
+  {
+  "type": "header",
+  "content": "Image style"
+  },
+  {
+  "type": "range",
+  "id": "image_border_radius",
+  "min": 0,
+  "max": 24,
+  "step": 2,
+  "default": 12,
+  "unit": "px",
+  "label": "Image border radius"
+  },
+  {
+  "type": "range",
+  "id": "image_border_width",
+  "min": 0,
+  "max": 5,
+  "step": 1,
+  "default": 0,
+  "unit": "px",
+  "label": "Image border width"
+  },
+  {
+  "type": "color",
+  "id": "image_border_color",
+  "label": "Image border color",
+  "default": "#e0e0e0"
   },
   {
   "type": "header",

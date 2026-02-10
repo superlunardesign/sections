@@ -108,7 +108,7 @@
   {%- assign htu_image = product.images[0] -%}
 {%- endif -%}
 
-{%- if htu_heading != blank or htu_body != blank -%}
+{%- if htu_heading != blank and htu_body != blank -%}
 <div id="SLHowToUse-{{ section.id }}" class="page-width">
   <div class="sl-htu__card">
     <div class="sl-htu__image-wrap">
@@ -151,13 +151,13 @@
       "type": "text",
       "id": "heading",
       "label": "Heading",
-      "info": "Connect to a dynamic source (metafield) or type manually. Section hides if heading and body are both empty."
+      "info": "Connect to a dynamic source (metafield) or type manually. Section hides if heading or body is empty."
     },
     {
       "type": "richtext",
       "id": "body",
       "label": "Body text",
-      "info": "Connect to a dynamic source (metafield) or type manually. Section hides if heading and body are both empty."
+      "info": "Connect to a dynamic source (metafield) or type manually. Section hides if heading or body is empty."
     },
     {
       "type": "image_picker",
