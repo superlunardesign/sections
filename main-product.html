@@ -24,9 +24,9 @@
 {%- style -%}
 /* ====================  MAIN PRODUCT STYLES  ==================== */
 
-{%- assign _br = section.settings.image_border_radius | default: 12 -%}
+{%- assign _br = section.settings.image_border_radius | default: 0 -%}
 {%- assign _bw = section.settings.image_border_width | default: 0 -%}
-{%- assign _bc = section.settings.image_border_color | default: '#e0e0e0' -%}
+{%- assign _bc = section.settings.image_border_color | default: 'transparent' -%}
 {%- assign _gl = section.settings.gallery_layout -%}
 {%- assign _sp = section.settings.slider_position -%}
 {%- assign _ms = section.settings.media_size -%}
@@ -89,9 +89,9 @@
 .main-product-template .product__media-gallery { width: 100%; overflow: hidden; }
 
 .main-product-template .product__media-item {
-  background: #d6dce8;
+  background: transparent;
   border-radius: {{ _br }}px;
-  {% if _bw > 0 %}border: {{ _bw }}px solid {{ _bc }};{% endif %}
+  border: {{ _bw }}px solid {{ _bc }};
   overflow: hidden;
   max-height: 70vh;
 }
@@ -100,6 +100,12 @@
     aspect-ratio: 1 / 1;
     max-height: none;
   }
+}
+/* Kill theme's ::before pseudo-elements that add padding/borders */
+.main-product-template .product__media-item::before,
+.main-product-template .product__media-item::after {
+  content: none !important;
+  display: none !important;
 }
 .main-product-template .product__media-item img,
 .main-product-template .product__media-item .product-media-container {
@@ -200,10 +206,17 @@
   height: 90px !important;
   border-radius: {{ _br }}px;
   overflow: hidden !important;
-  background: #efefef;
-  border: {{ _bw | default: 1 }}px solid {{ _bc | default: 'rgba(0,0,0,.06)' }};
+  background: transparent;
+  border: {{ _bw }}px solid {{ _bc }};
   padding: 0 !important;
   position: relative !important;
+}
+/* Kill theme's ::before padding on thumbnails */
+.main-product-template .thumbnail-list__item .thumbnail::before,
+.main-product-template .thumbnail-list__item .thumbnail::after {
+  content: none !important;
+  display: none !important;
+  padding: 0 !important;
 }
 .main-product-template .thumbnail-list__item .thumbnail img {
   position: absolute !important;
