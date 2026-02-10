@@ -147,30 +147,42 @@
 /* Side thumbnails */
 .main-product-template .product__media-gallery {
   display: flex !important;
-  {% if section.settings.thumb_carousel_layout == 'thumbnail_slider_right' %}flex-direction: row;{% else %}flex-direction: row-reverse;{% endif %}
+  flex-direction: row !important;
   gap: 12px;
 }
+/* Main image takes remaining space */
+.main-product-template .product__media-gallery > slider-component:first-of-type,
+.main-product-template .product__media-gallery > .slider-mobile-gutter {
+  flex: 1 1 auto !important;
+  min-width: 0;
+  order: 1;
+}
+/* Thumbnail strip fixed width on the side */
 .main-product-template .thumbnail-slider,
 .main-product-template .thumbnail-slider.slider-vertical {
   width: 90px !important;
-  flex-shrink: 0;
+  flex: 0 0 90px !important;
   margin: 0;
+  {% if section.settings.thumb_carousel_layout == 'thumbnail_slider_right' %}order: 2;{% else %}order: 0;{% endif %}
 }
 .main-product-template .thumbnail-slider .thumbnail-list,
 .main-product-template .thumbnail-slider .thumbnail-list.slider {
   display: flex !important;
   flex-direction: column !important;
-  gap: 10px;
+  gap: 8px;
   overflow-y: auto !important;
   overflow-x: hidden !important;
   width: 100% !important;
   height: auto !important;
   max-height: 600px;
+  padding: 0 !important;
 }
 @media (max-width: 989px) {
   .main-product-template .product__media-gallery { flex-direction: column !important; }
+  .main-product-template .product__media-gallery > slider-component:first-of-type,
+  .main-product-template .product__media-gallery > .slider-mobile-gutter { order: 0; }
   .main-product-template .thumbnail-slider,
-  .main-product-template .thumbnail-slider.slider-vertical { width: 100% !important; margin-top: 12px; }
+  .main-product-template .thumbnail-slider.slider-vertical { width: 100% !important; flex: 0 0 auto !important; margin-top: 8px; order: 1; }
   .main-product-template .thumbnail-slider .thumbnail-list,
   .main-product-template .thumbnail-slider .thumbnail-list.slider {
     flex-direction: row !important; gap: 8px; overflow-x: auto !important; overflow-y: hidden !important; max-height: none; padding: 0 !important;
