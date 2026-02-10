@@ -185,32 +185,32 @@
 {% elsif sp == 'side' %}
 /* SIDE THUMBNAILS: vertical strip beside the main image */
 .main-product-template .product__media-gallery {
-  display: flex;
+  display: flex !important;
   flex-direction: row-reverse;
   gap: 12px;
 }
 .main-product-template .thumbnail-slider,
 .main-product-template .thumbnail-slider.slider-vertical {
-  width: 90px;
+  width: 90px !important;
   order: 0;
-  display: block;
-  height: auto;
-  position: relative;
+  display: block !important;
+  height: auto !important;
+  position: relative !important;
   flex-shrink: 0;
   margin-top: 0;
 }
-.main-product-template .thumbnail-slider .slider-button { display: none; }
+.main-product-template .thumbnail-slider .slider-button { display: none !important; }
 
 .main-product-template .thumbnail-slider .thumbnail-list,
 .main-product-template .thumbnail-slider .thumbnail-list.slider {
-  display: flex;
-  flex-direction: column;
-  flex-wrap: nowrap;
+  display: flex !important;
+  flex-direction: column !important;
+  flex-wrap: nowrap !important;
   gap: 10px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  width: 100%;
-  height: auto;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  width: 100% !important;
+  height: auto !important;
   max-height: 600px;
   padding-right: 2px;
 }
@@ -229,69 +229,72 @@
   }
   .main-product-template .thumbnail-slider,
   .main-product-template .thumbnail-slider.slider-vertical {
-    width: 100%;
+    width: 100% !important;
     margin-top: 12px;
   }
   .main-product-template .thumbnail-slider .thumbnail-list,
   .main-product-template .thumbnail-slider .thumbnail-list.slider {
-    flex-direction: row;
-    overflow-x: auto;
-    overflow-y: hidden;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
     max-height: none;
+    height: auto !important;
   }
 }
 {% else %}
 /* BOTTOM THUMBNAILS: horizontal row below main image */
 .main-product-template .thumbnail-slider,
 .main-product-template .thumbnail-slider.slider-vertical {
-  width: 100%;
+  width: 100% !important;
   margin-top: 14px;
   order: 2;
-  display: block;
-  height: auto;
-  position: relative;
+  display: block !important;
+  height: auto !important;
+  position: relative !important;
 }
-.main-product-template .thumbnail-slider .slider-button { display: none; }
+.main-product-template .thumbnail-slider .slider-button { display: none !important; }
 
 .main-product-template .thumbnail-slider .thumbnail-list,
 .main-product-template .thumbnail-slider .thumbnail-list.slider {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
   gap: 12px;
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
   scroll-snap-type: x proximity;
   padding-bottom: 4px;
-  width: 100%;
-  height: auto;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 100px;
 }
 {% endif %}
 
 /* --- Shared thumbnail item styling --- */
 .main-product-template .thumbnail-list__item {
-  flex: 0 0 auto;
+  flex: 0 0 auto !important;
+  position: relative !important;
 }
 
 .main-product-template .thumbnail-list__item .thumbnail {
-  width: 90px;
-  height: 90px;
+  width: 90px !important;
+  height: 90px !important;
   border-radius: {{ section.settings.image_border_radius | default: 12 }}px;
   overflow: hidden;
   background: #efefef;
   border: {{ section.settings.image_border_width | default: 1 }}px solid {{ section.settings.image_border_color | default: 'rgba(0,0,0,.06)' }};
   scroll-snap-align: start;
   aspect-ratio: 1 / 1;
-  padding: 0;
+  padding: 0 !important;
 }
 .main-product-template .thumbnail-list__item .thumbnail img {
-  width: 100%;
-  height: 100%;
+  width: 100% !important;
+  height: 100% !important;
   object-fit: cover;
   border-radius: {{ section.settings.image_border_radius | default: 12 }}px;
 }
 @media (max-width: 989px){
-  .main-product-template .thumbnail-list__item .thumbnail { width: 80px; height: 80px; }
+  .main-product-template .thumbnail-list__item .thumbnail { width: 80px !important; height: 80px !important; }
 }
 .main-product-template .thumbnail-list__item[aria-current="true"] .thumbnail,
 .main-product-template .thumbnail-list__item.is-active .thumbnail{
