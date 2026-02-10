@@ -30,6 +30,7 @@
 {%- assign _gl = section.settings.gallery_layout -%}
 {%- assign _sp = section.settings.slider_position -%}
 {%- assign _ms = section.settings.media_size -%}
+{%- assign _ml = section.settings.mobile_layout | default: 'carousel' -%}
 
 /* --- Resets --- */
 .main-product-template * { box-sizing: border-box; }
@@ -123,10 +124,79 @@
   object-fit: contain;
 }
 
-/* Contain slides without breaking swipe */
-.main-product-template .product__media-list.grid--peek { margin: 0 !important; padding: 0 !important; }
-.main-product-template .product__media-list .slider__slide { width: 100% !important; min-width: 100% !important; padding: 0 !important; }
+/* Contain slides */
+.main-product-template .product__media-list.grid--peek { margin: 0 !important; }
 .main-product-template .grid--peek.slider--mobile .grid__item { box-sizing: border-box !important; }
+
+{% if _ml == 'carousel' %}
+/* ====================  MOBILE CAROUSEL  ==================== */
+@media (max-width: 989px) {
+  /* Carousel: each slide ~80%, next peeks from right */
+  .main-product-template .product__media-list.grid--peek { padding: 0 !important; }
+  .main-product-template .product__media-list {
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+  .main-product-template .product__media-list .slider__slide {
+    flex: 0 0 82% !important;
+    width: 82% !important;
+    min-width: 82% !important;
+    scroll-snap-align: center;
+    padding: 0 4px !important;
+  }
+  .main-product-template .product__media-list .slider__slide:first-child { margin-left: 4%; }
+  .main-product-template .product__media-list .slider__slide:last-child  { margin-right: 4%; }
+
+  /* Hide thumbnails on mobile in carousel mode */
+  .main-product-template .thumbnail-slider { display: none !important; }
+
+  /* Arrow buttons */
+  .main-product-template .product__media-wrapper { position: relative; }
+  .main-product-template .slider-buttons {
+    display: flex !important;
+    position: absolute;
+    top: 50%;
+    left: 0; right: 0;
+    transform: translateY(-50%);
+    justify-content: space-between;
+    padding: 0 8px;
+    pointer-events: none;
+    z-index: 5;
+  }
+  .main-product-template .slider-buttons .slider-counter { display: none; }
+  .main-product-template .slider-button {
+    pointer-events: all;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.65) !important;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: none !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 1px 6px rgba(0,0,0,.08);
+    transition: background 0.2s ease;
+    padding: 0;
+  }
+  .main-product-template .slider-button:hover { background: rgba(255, 255, 255, 0.9) !important; }
+  .main-product-template .slider-button svg,
+  .main-product-template .slider-button .icon-caret {
+    width: 8px; height: 12px;
+    color: #333;
+  }
+}
+/* Desktop: full-width slides (no peek) */
+@media (min-width: 990px) {
+  .main-product-template .product__media-list.grid--peek { padding: 0 !important; }
+  .main-product-template .product__media-list .slider__slide { width: 100% !important; min-width: 100% !important; padding: 0 !important; }
+}
+{% else %}
+/* ====================  MOBILE THUMBNAILS  ==================== */
+.main-product-template .product__media-list.grid--peek { padding: 0 !important; }
+.main-product-template .product__media-list .slider__slide { width: 100% !important; min-width: 100% !important; padding: 0 !important; }
+{% endif %}
 
 {% if _gl == 'stacked' %}
 /* Stacked: all images visible, no thumbnails */
@@ -153,8 +223,8 @@
 }
 .main-product-template .thumbnail-slider .slider-button { display: none !important; }
 
-{% if _sp == 'side' %}
-/* Side thumbnails */
+{% if _sp == 'left' or _sp == 'right' %}
+/* Side thumbnails ({{ _sp }}) */
 .main-product-template .product__media-gallery {
   display: flex !important;
   flex-direction: row !important;
@@ -173,7 +243,7 @@
   width: 90px !important;
   flex: 0 0 90px !important;
   margin: 0;
-  {% if section.settings.thumb_carousel_layout == 'thumbnail_slider_right' %}order: 2;{% else %}order: 0;{% endif %}
+  {% if _sp == 'right' %}order: 2;{% else %}order: 0;{% endif %}
 }
 .main-product-template .thumbnail-slider .thumbnail-list,
 .main-product-template .thumbnail-slider .thumbnail-list.slider {
@@ -530,9 +600,7 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
       {%- if section.settings.gallery_layout == 'thumbnail_slider' %}
         {%- assign thumb_carousel_layout = true -%}
       {%- endif -%}
-      {%- if section.settings.thumb_carousel_layout == 'thumbnail_slider_left'
-        or section.settings.thumb_carousel_layout == 'thumbnail_slider_right'
-      %}
+      {%- if section.settings.slider_position == 'left' or section.settings.slider_position == 'right' %}
         {%- assign thumb_slick_layout = true -%}
       {%- endif -%}
       {%- if first_3d_model -%}
@@ -574,7 +642,7 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
           {%- endif -%}
         {%- endfor -%}
 
-        <div class="main-product_info product  product--{{ section.settings.media_size }} product--{{ section.settings.gallery_layout }}  {%  if thumb_carousel_layout %}{% if thumb_slick_layout %} media-slick-slider{% endif %} product--{{ section.settings.thumb_carousel_layout }}{% endif %} grid grid--1-col {% if product.media.size > 0 %}grid--2-col-tablet{% else %}product--no-media{% endif %} ">
+        <div class="main-product_info product product--{{ section.settings.media_size }} product--{{ section.settings.gallery_layout }} {% if thumb_carousel_layout %}{% if thumb_slick_layout %} media-slick-slider{% endif %} product--thumbnail_slider_{{ section.settings.slider_position }}{% endif %} grid grid--1-col {% if product.media.size > 0 %}grid--2-col-tablet{% else %}product--no-media{% endif %}">
           <div class="grid__item product__media-wrapper {% if product.metafields.custom.grouped_variant == true  %}show-grouped__variant{% endif %}">
             <media-gallery
               id="MediaGallery-{{ section.id }}"
@@ -656,7 +724,7 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
                     {%- endunless -%}
                   {%- endfor -%}
                 </ul>
-                <div class="slider-buttons no-js-hidden quick-add-hidden{% if media_count < 2 or section.settings.mobile_thumbnails == 'show' %} small-hide{% endif %}">
+                <div class="slider-buttons no-js-hidden quick-add-hidden{% if media_count < 2 or section.settings.mobile_layout == 'thumbnails' %} small-hide{% endif %}">
                   <button
                     type="button"
                     class="slider-button slider-button--prev"
@@ -697,11 +765,11 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
               {%- endif -%}
               {%- if media_count > 1
                 and section.settings.gallery_layout != 'stacked'
-                or section.settings.mobile_thumbnails == 'show'
+                or section.settings.mobile_layout == 'thumbnails'
               -%}
                 <slider-component
                   id="GalleryThumbnails-{{ section.id }}"
-                  class="slider-vertical thumbnail-slider slider-mobile-gutter quick-add-hidden{% if section.settings.mobile_thumbnails == 'hide' %} small-hide{% endif %}{% if media_count <= 3 %} thumbnail-slider--no-slide{% endif %}"
+                  class="slider-vertical thumbnail-slider slider-mobile-gutter quick-add-hidden{% if section.settings.mobile_layout == 'carousel' %} small-hide{% endif %}{% if media_count <= 3 %} thumbnail-slider--no-slide{% endif %}"
                 >
                   <button
                     type="button"
@@ -3325,95 +3393,79 @@ function updateDeliveryOption(input) {
   },
   {
   "type": "header",
-  "content": "t:sections.main-product.settings.header.content",
-  "info": "t:sections.main-product.settings.header.info"
+  "content": "Desktop gallery"
   },
   {
   "type": "select",
   "id": "gallery_layout",
   "options": [
-  {
-  "value": "stacked",
-  "label": "t:sections.main-product.settings.gallery_layout.options__1.label"
-  },
-  {
-  "value": "thumbnail",
-  "label": "t:sections.main-product.settings.gallery_layout.options__2.label"
-  },
-  {
-  "value": "thumbnail_slider",
-  "label": "t:sections.main-product.settings.gallery_layout.options__3.label"
-  }
+    { "value": "stacked", "label": "Stacked" },
+    { "value": "thumbnail_slider", "label": "Thumbnails" }
   ],
-  "default": "stacked",
-  "label": "t:sections.main-product.settings.gallery_layout.label"
+  "default": "thumbnail_slider",
+  "label": "Gallery style",
+  "info": "Stacked shows all images. Thumbnails shows one image with a thumbnail strip."
   },
   {
   "type": "select",
   "id": "stacked_column_alignment",
   "options": [
-  {
-  "value": "one",
-  "label": "One"
-  },
-  {
-  "value": "two",
-  "label": "Two"
-  }
+    { "value": "one", "label": "One column" },
+    { "value": "two", "label": "Two columns" }
   ],
   "default": "two",
-  "label": "Stacked Column Alignment"
+  "label": "Stacked columns"
   },
-     {
+  {
   "type": "select",
-  "id": "thumb_carousel_layout",
+  "id": "slider_position",
   "options": [
-  {
-  "value": "thumbnail_slider_left",
-  "label": "t:sections.main-product.settings.thumb_carousel_layout.options__1.label"
-  },
-  {
-  "value": "thumbnail_slider_right",
-  "label": "t:sections.main-product.settings.thumb_carousel_layout.options__2.label"
-  }
+    { "value": "bottom", "label": "Bottom" },
+    { "value": "left", "label": "Left side" },
+    { "value": "right", "label": "Right side" }
   ],
-  "default": "thumbnail_slider_left",
-  "label": "t:sections.main-product.settings.thumb_carousel_layout.label"
+  "default": "bottom",
+  "label": "Thumbnail position",
+  "info": "Where thumbnails appear relative to the main image on desktop."
   },
   {
   "type": "select",
   "id": "media_size",
   "options": [
-  {
-  "value": "small",
-  "label": "t:sections.main-product.settings.media_size.options__1.label"
-  },
-  {
-  "value": "medium",
-  "label": "t:sections.main-product.settings.media_size.options__2.label"
-  },
-  {
-  "value": "large",
-  "label": "t:sections.main-product.settings.media_size.options__3.label"
-  }
+    { "value": "small", "label": "Small" },
+    { "value": "medium", "label": "Medium" },
+    { "value": "large", "label": "Large" }
   ],
   "default": "large",
-  "label": "t:sections.main-product.settings.media_size.label",
-  "info": "t:sections.main-product.settings.media_size.info"
+  "label": "Image column size",
+  "info": "Controls the width of the image column vs the info column."
   },
-   {
+  {
+  "type": "header",
+  "content": "Mobile gallery"
+  },
+  {
+  "type": "select",
+  "id": "mobile_layout",
+  "options": [
+    { "value": "carousel", "label": "Swipe carousel" },
+    { "value": "thumbnails", "label": "Thumbnails" }
+  ],
+  "default": "carousel",
+  "label": "Mobile gallery style",
+  "info": "Carousel shows a swipeable slideshow with the next image peeking. Thumbnails shows a scrollable thumbnail strip below."
+  },
+  {
+  "type": "header",
+  "content": "Media options"
+  },
+  {
   "type": "radio",
   "id": "meta_style",
   "label": "t:sections.main-product.settings.meta_style.label",
   "options": [
-  {
-  "value": "one-half",
-  "label": "t:sections.main-product.settings.meta_style.options_1"
-  },
-  {
-  "value": "full-width",
-  "label": "t:sections.main-product.settings.meta_style.options_2"
-  }
+    { "value": "one-half", "label": "t:sections.main-product.settings.meta_style.options_1" },
+    { "value": "full-width", "label": "t:sections.main-product.settings.meta_style.options_2" }
   ],
   "default": "one-half"
   },
@@ -3428,26 +3480,6 @@ function updateDeliveryOption(input) {
   "id": "enable_video_looping",
   "default": false,
   "label": "t:sections.main-product.settings.enable_video_looping.label"
-  },
-  {
-  "type": "select",
-  "id": "mobile_thumbnails",
-  "options": [
-    { "value": "show", "label": "Show" },
-    { "value": "hide", "label": "Hide" }
-  ],
-  "default": "show",
-  "label": "Mobile thumbnails"
-  },
-  {
-  "type": "select",
-  "id": "slider_position",
-  "options": [
-    { "value": "bottom", "label": "Bottom" },
-    { "value": "side", "label": "Side" }
-  ],
-  "default": "bottom",
-  "label": "Thumbnail position"
   },
   {
   "type": "header",
