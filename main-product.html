@@ -86,7 +86,7 @@
 .grid--2-col-tablet .grid__item { width: 100%; }
 
 /* ====================  PRODUCT IMAGE  ==================== */
-.main-product-template .product__media-gallery { width: 100%; overflow: hidden; }
+.main-product-template .product__media-gallery { width: 100%; }
 
 .main-product-template .product__media-item {
   background: transparent;
@@ -114,8 +114,8 @@
   object-fit: contain;
 }
 
-/* Kill theme's peek-slider overflow on mobile */
-.main-product-template .product__media-list.grid--peek { margin: 0 !important; padding: 0 !important; overflow: hidden; }
+/* Contain slides without breaking swipe */
+.main-product-template .product__media-list.grid--peek { margin: 0 !important; padding: 0 !important; }
 .main-product-template .product__media-list .slider__slide { width: 100% !important; min-width: 100% !important; }
 
 {% if _gl == 'stacked' %}
@@ -173,7 +173,7 @@
   .main-product-template .thumbnail-slider.slider-vertical { width: 100% !important; margin-top: 12px; }
   .main-product-template .thumbnail-slider .thumbnail-list,
   .main-product-template .thumbnail-slider .thumbnail-list.slider {
-    flex-direction: row !important; overflow-x: auto !important; overflow-y: hidden !important; max-height: none;
+    flex-direction: row !important; gap: 8px; overflow-x: auto !important; overflow-y: hidden !important; max-height: none; padding: 0 !important;
   }
 }
 {% else %}
@@ -187,14 +187,14 @@
 .main-product-template .thumbnail-slider .thumbnail-list.slider {
   display: flex !important;
   flex-direction: row !important;
-  gap: 12px;
+  gap: 8px;
   overflow-x: auto !important;
   overflow-y: hidden !important;
   width: 100% !important;
   height: auto !important;
   min-height: 94px;
   scroll-snap-type: x proximity;
-  padding-bottom: 4px;
+  padding: 0 !important;
 }
 {% endif %}
 
