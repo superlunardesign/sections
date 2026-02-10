@@ -1,6 +1,7 @@
 {%- comment -%}
   SL Why We Love It — full-width product feature row.
-  Pulls content from product metafields or manual overrides.
+  Content comes from customizer settings (wire to metafields via dynamic source).
+  Section hides entirely if heading and body are both empty.
   Layout: text left, image right.
 {%- endcomment -%}
 
@@ -163,19 +164,19 @@
       "type": "text",
       "id": "heading",
       "label": "Heading",
-      "info": "Leave blank to pull from product metafield (custom.why_we_love_it_heading) or default to 'Why We Love It'"
+      "info": "Connect to a dynamic source (metafield) or type manually. Section hides if heading and body are both empty."
     },
     {
       "type": "richtext",
       "id": "body",
       "label": "Body text",
-      "info": "Leave blank to pull from product metafield (custom.why_we_love_it) or product description"
+      "info": "Connect to a dynamic source (metafield) or type manually. Section hides if heading and body are both empty."
     },
     {
       "type": "image_picker",
       "id": "image",
       "label": "Image",
-      "info": "Leave blank to use product featured image"
+      "info": "Leave blank to auto-use product image 2 (or image 1 if only one image)"
     },
     {
       "type": "header",

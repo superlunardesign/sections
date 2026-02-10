@@ -1,6 +1,7 @@
 {%- comment -%}
   SL How To Use — full-width product feature row.
-  Pulls content from product metafields or manual overrides.
+  Content comes from customizer settings (wire to metafields via dynamic source).
+  Section hides entirely if heading and body are both empty.
   Layout: image left, text right.
 {%- endcomment -%}
 
@@ -150,19 +151,19 @@
       "type": "text",
       "id": "heading",
       "label": "Heading",
-      "info": "Leave blank to auto-generate from product title"
+      "info": "Connect to a dynamic source (metafield) or type manually. Section hides if heading and body are both empty."
     },
     {
       "type": "richtext",
       "id": "body",
       "label": "Body text",
-      "info": "Leave blank to pull from product metafield (custom.how_to_use)"
+      "info": "Connect to a dynamic source (metafield) or type manually. Section hides if heading and body are both empty."
     },
     {
       "type": "image_picker",
       "id": "image",
       "label": "Image",
-      "info": "Leave blank to use product featured image"
+      "info": "Leave blank to auto-use product image 1 (only when product has 2+ images)"
     },
     {
       "type": "header",
