@@ -96,12 +96,15 @@
 {%- assign htu_body = section.settings.body -%}
 {%- assign htu_image = section.settings.image -%}
 
-{%- comment -%} Pull from product metafields if manual fields are blank {%- endcomment -%}
-{%- if htu_heading == blank and product != blank -%}
-  {%- assign htu_heading = product.metafields.custom.how_to_use_heading.value | default: 'How To Use ' | append: product.title -%}
-{%- endif -%}
-{%- if htu_body == blank and product != blank -%}
-  {%- assign htu_body = product.metafields.custom.how_to_use.value -%}
+{%- comment -%}
+  No auto-generated defaults — if the customizer fields (wired via dynamic source)
+  are empty, the section hides entirely. This lets merchants control visibility
+  by simply connecting or disconnecting metafields.
+{%- endcomment -%}
+
+{%- comment -%} Image logic: use setting first, then product.images[0] only if product has 2+ images {%- endcomment -%}
+{%- if htu_image == blank and product != blank and product.images.size > 1 -%}
+  {%- assign htu_image = product.images[0] -%}
 {%- endif -%}
 
 {%- if htu_heading != blank or htu_body != blank -%}
@@ -119,15 +122,6 @@
           width="{{ htu_image.width }}"
           height="{{ htu_image.height }}"
           loading="lazy"
-        >
-      {%- elsif product.featured_image != blank -%}
-        <img
-          src="{{ product.featured_image | image_url: width: 800 }}"
-          alt="{{ product.title | escape }}"
-          width="{{ product.featured_image.width }}"
-          height="{{ product.featured_image.height }}"
-          loading="lazy"
-          style="object-fit: contain; padding: 20px;"
         >
       {%- endif -%}
     </div>

@@ -101,12 +101,23 @@
 {%- assign wwl_body = section.settings.body -%}
 {%- assign wwl_image = section.settings.image -%}
 
-{%- comment -%} Pull from product metafields if manual fields are blank {%- endcomment -%}
-{%- if wwl_heading == blank -%}
-  {%- assign wwl_heading = product.metafields.custom.why_we_love_it_heading.value | default: 'Why We Love It' -%}
-{%- endif -%}
-{%- if wwl_body == blank and product != blank -%}
-  {%- assign wwl_body = product.metafields.custom.why_we_love_it.value | default: product.description -%}
+{%- comment -%}
+  No auto-generated defaults — if the customizer fields (wired via dynamic source)
+  are empty, the section hides entirely. This lets merchants control visibility
+  by simply connecting or disconnecting metafields.
+{%- endcomment -%}
+
+{%- comment -%}
+  Image logic: use setting first, then product.images[1] if 2+ images,
+  otherwise product.images[0] if at least 1 image exists.
+  (If product has only 1 image, Why We Love It gets it; How To Use does not.)
+{%- endcomment -%}
+{%- if wwl_image == blank and product != blank -%}
+  {%- if product.images.size > 1 -%}
+    {%- assign wwl_image = product.images[1] -%}
+  {%- elsif product.images.size == 1 -%}
+    {%- assign wwl_image = product.images[0] -%}
+  {%- endif -%}
 {%- endif -%}
 
 {%- if wwl_heading != blank or wwl_body != blank -%}
@@ -132,15 +143,6 @@
           width="{{ wwl_image.width }}"
           height="{{ wwl_image.height }}"
           loading="lazy"
-        >
-      {%- elsif product.featured_image != blank -%}
-        <img
-          src="{{ product.featured_image | image_url: width: 800 }}"
-          alt="{{ product.title | escape }}"
-          width="{{ product.featured_image.width }}"
-          height="{{ product.featured_image.height }}"
-          loading="lazy"
-          style="object-fit: contain; padding: 20px;"
         >
       {%- endif -%}
     </div>

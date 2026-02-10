@@ -1010,17 +1010,19 @@ button.slick-next.slick-arrow { display:none !important; }
                   {%- when 'text' -%}
                     <p
                       class="product__text{% if block.settings.text_style == 'uppercase' %} caption-with-letter-spacing{% elsif block.settings.text_style == 'subtitle' %} subtitle{% endif %}"
+                      style="{% if block.settings.text_color != blank %}color: {{ block.settings.text_color }};{% endif %}{% if block.settings.text_size != blank %}font-size: {{ block.settings.text_size }}px;{% endif %}{% if block.settings.margin_top > 0 %}margin-top: {{ block.settings.margin_top }}px;{% endif %}{% if block.settings.margin_bottom > 0 %}margin-bottom: {{ block.settings.margin_bottom }}px;{% endif %}"
                       {{ block.shopify_attributes }}
                     >
                       {{- block.settings.text -}}
                     </p>
 
                   {%- when 'title' -%}
+                    <div class="sl-pdp-title-block" style="{% if block.settings.margin_top > 0 %}margin-top: {{ block.settings.margin_top }}px;{% endif %}{% if block.settings.margin_bottom > 0 %}margin-bottom: {{ block.settings.margin_bottom }}px;{% endif %}">
                     {%- comment -%} Breadcrumb category path {%- endcomment -%}
                     {%- if product.collections.size > 0 -%}
-                      <div class="sl-pdp-breadcrumb" {{ block.shopify_attributes }}>
+                      <div class="sl-pdp-breadcrumb" style="{% if block.settings.breadcrumb_color != blank %}color: {{ block.settings.breadcrumb_color }};{% endif %}" {{ block.shopify_attributes }}>
                         {%- for col in product.collections limit: 2 -%}
-                          <a href="{{ col.url }}">{{ col.title }}</a>
+                          <a href="{{ col.url }}" style="{% if block.settings.breadcrumb_color != blank %}color: {{ block.settings.breadcrumb_color }};{% endif %}">{{ col.title }}</a>
                           {%- unless forloop.last %}<span class="sl-pdp-breadcrumb__sep">/</span>{% endunless -%}
                         {%- endfor -%}
                       </div>
@@ -1028,9 +1030,9 @@ button.slick-next.slick-arrow { display:none !important; }
 
                     <div class="sl-pdp-title-row">
                       <div class="product__title" {{ block.shopify_attributes }}>
-                        <h1>{{ product.title | escape }}</h1>
+                        <h1 style="{% if block.settings.heading_color != blank %}color: {{ block.settings.heading_color }};{% endif %}{% if block.settings.heading_size != blank %}font-size: {{ block.settings.heading_size }}px;{% endif %}">{{ product.title | escape }}</h1>
                         <a href="{{ product.url }}" class="product__title">
-                          <h2 class="h1">
+                          <h2 class="h1" style="{% if block.settings.heading_color != blank %}color: {{ block.settings.heading_color }};{% endif %}{% if block.settings.heading_size != blank %}font-size: {{ block.settings.heading_size }}px;{% endif %}">
                             {{ product.title | escape }}
                           </h2>
                         </a>
@@ -1039,7 +1041,7 @@ button.slick-next.slick-arrow { display:none !important; }
                       <div class="sl-pdp-title-badges">
                         {%- for tag in product.tags -%}
                           {%- if tag == 'editors-pick' -%}
-                            <span class="sl-shannons-pick-badge">
+                            <span class="sl-shannons-pick-badge" style="{% if block.settings.badge_color != blank %}color: {{ block.settings.badge_color }}; border-color: {{ block.settings.badge_color }};{% endif %}">
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
                               SHANNON'S PICK
                             </span>
@@ -1050,23 +1052,24 @@ button.slick-next.slick-arrow { display:none !important; }
 
                     {%- comment -%} Product size / subtitle from metafield {%- endcomment -%}
                     {%- if product.metafields.custom.subtitle != blank -%}
-                      <p class="sl-pdp-subtitle">{{ product.metafields.custom.subtitle.value }}</p>
+                      <p class="sl-pdp-subtitle" style="{% if block.settings.subtitle_color != blank %}color: {{ block.settings.subtitle_color }};{% endif %}{% if block.settings.subtitle_size != blank %}font-size: {{ block.settings.subtitle_size }}px;{% endif %}">{{ product.metafields.custom.subtitle.value }}</p>
                     {%- endif -%}
 
                     {%- comment -%} Notable tags (Acne Safe etc.) {%- endcomment -%}
-                    <div class="notable-tags">
+                    <div class="notable-tags" style="{% if block.settings.badge_color != blank %}color: {{ block.settings.badge_color }};{% endif %}">
                       {% for tag in product.tags %}
                         {% if tag == 'ACNE SAFE' %}
                           <p>✓ Acne Safe Skincare</p>
                         {% endif %}
                       {% endfor %}
                     </div>
+                    </div>
 
                   {%- when 'deal' -%}
                     {% render 'deal-snippet', product: product %}
 
                   {%- when 'price' -%}
-                    <div class="no-js-hidden" id="price-{{ section.id }}" role="status" {{ block.shopify_attributes }}>
+                    <div class="no-js-hidden" id="price-{{ section.id }}" role="status" style="{% if block.settings.price_color != blank %}color: {{ block.settings.price_color }};{% endif %}{% if block.settings.price_size != blank %}font-size: {{ block.settings.price_size }}px;{% endif %}{% if block.settings.margin_top > 0 %}margin-top: {{ block.settings.margin_top }}px;{% endif %}{% if block.settings.margin_bottom > 0 %}margin-bottom: {{ block.settings.margin_bottom }}px;{% endif %}" {{ block.shopify_attributes }}>
                       {%- render 'price',
                         product: product,
                         use_variant: true,
@@ -1105,9 +1108,7 @@ button.slick-next.slick-arrow { display:none !important; }
                     </div>
 
                   {%- when 'richtext' -%}
-                    <br>
-                    <p style="font-size:16px; font-weight:100">{{ block.settings.description-rich }}</p>
-                    <br>
+                    <div class="product__richtext" style="{% if block.settings.text_color != blank %}color: {{ block.settings.text_color }};{% endif %}{% if block.settings.text_size != blank %}font-size: {{ block.settings.text_size }}px;{% endif %} font-weight:100;{% if block.settings.margin_top > 0 %}margin-top: {{ block.settings.margin_top }}px;{% else %}margin-top: 12px;{% endif %}{% if block.settings.margin_bottom > 0 %}margin-bottom: {{ block.settings.margin_bottom }}px;{% else %}margin-bottom: 12px;{% endif %}">{{ block.settings.description-rich }}</div>
 
                   {%- when 'sku' -%}
                     {% if product.selected_or_first_available_variant.sku != blank %}
@@ -1163,7 +1164,7 @@ button.slick-next.slick-arrow { display:none !important; }
 
                   {%- when 'inventory_status' -%}
                     {% assign current_variant = product.selected_or_first_available_variant %}
-                    <div class="inventory-form__label">
+                    <div class="inventory-form__label" style="{% if block.settings.text_color != blank %}color: {{ block.settings.text_color }};{% endif %}{% if block.settings.margin_top > 0 %}margin-top: {{ block.settings.margin_top }}px;{% endif %}{% if block.settings.margin_bottom > 0 %}margin-bottom: {{ block.settings.margin_bottom }}px;{% endif %}">
                       {% if current_variant.available %}
                         {% if current_variant.inventory_quantity > 0 %}
                           <p class="low-stock-message">
@@ -1174,13 +1175,13 @@ button.slick-next.slick-arrow { display:none !important; }
                     </div>
 
                   {%- when 'product_highlights' -%}
-                    <div class="product-highlights-block" {{ block.shopify_attributes }}>
+                    <div class="product-highlights-block" style="{% if block.settings.margin_top > 0 %}margin-top: {{ block.settings.margin_top }}px;{% endif %}{% if block.settings.margin_bottom > 0 %}margin-bottom: {{ block.settings.margin_bottom }}px;{% endif %}" {{ block.shopify_attributes }}>
                       {% assign highlights = product.metafields.custom.product_highlights2.value %}
                       {% if highlights and highlights.size > 0 %}
-                        <h3 class="highlights-heading">Highlights</h3>
+                        <h3 class="highlights-heading" style="{% if block.settings.heading_color != blank %}color: {{ block.settings.heading_color }};{% endif %}{% if block.settings.heading_size != blank %}font-size: {{ block.settings.heading_size }}px;{% endif %}">Highlights</h3>
                         <div class="highlights-pills-container">
                           {% for item in highlights %}
-                            <div class="highlight-pill">
+                            <div class="highlight-pill" style="{% if block.settings.pill_bg != blank %}background: {{ block.settings.pill_bg }};{% endif %}{% if block.settings.pill_text_color != blank %}color: {{ block.settings.pill_text_color }};{% endif %}">
                               <span class="pill-icon">
                                 {% case item %}
                                   {% when 'Safe on Sensitive Skin' %}
@@ -1227,8 +1228,8 @@ button.slick-next.slick-arrow { display:none !important; }
 
                   {%- when 'badge' -%}
                     {% if block.settings.image != blank %}
-                      <div class="secure-badges">
-                        <p class="badge-label">{{ block.settings.badge_label }}</p>
+                      <div class="secure-badges" style="{% if block.settings.margin_top > 0 %}margin-top: {{ block.settings.margin_top }}px;{% endif %}{% if block.settings.margin_bottom > 0 %}margin-bottom: {{ block.settings.margin_bottom }}px;{% endif %}">
+                        <p class="badge-label" style="{% if block.settings.label_color != blank %}color: {{ block.settings.label_color }};{% endif %}">{{ block.settings.badge_label }}</p>
                         <img src="{{ block.settings.image | img_url: 'master' }}" alt="{{ block.settings.image.alt }}">
                       </div>
                     {% endif %}
@@ -1432,7 +1433,7 @@ button.slick-next.slick-arrow { display:none !important; }
                     </noscript>
 
                   {%- when 'buy_buttons' -%}
-                    <div {{ block.shopify_attributes }}>
+                    <div style="{% if block.settings.margin_top > 0 %}margin-top: {{ block.settings.margin_top }}px;{% endif %}{% if block.settings.margin_bottom > 0 %}margin-bottom: {{ block.settings.margin_bottom }}px;{% endif %}" {{ block.shopify_attributes }}>
                       <product-form class="product-form">
                         <div class="product-form__error-message-wrapper" role="alert" hidden>
                           <svg
@@ -1464,6 +1465,7 @@ button.slick-next.slick-arrow { display:none !important; }
                           >
                           <div class="product-form__buttons">
                             <button type="submit" class="add-to-cart-btn product-form__submit product-form__s button button--full-width {% if block.settings.show_dynamic_checkout and product.selling_plan_groups == empty %}button--secondary{% else %}button--primary{% endif %}"
+                              style="{% if block.settings.button_color != blank %}color: {{ block.settings.button_color }};{% endif %}{% if block.settings.button_bg != blank %}background-color: {{ block.settings.button_bg }}; border-color: {{ block.settings.button_bg }};{% endif %}"
                               {% if product.selected_or_first_available_variant.available == false %}disabled{% endif %}
                               data-variant-id="{{ product.selected_or_first_available_variant.id }}"
                               onclick="addToCart(this)">
@@ -1516,7 +1518,7 @@ button.slick-next.slick-arrow { display:none !important; }
                     </div>
 
                   {%- when 'delivery-options' -%}
-                    <div class="delivery-options-section">
+                    <div class="delivery-options-section" style="{% if block.settings.margin_top > 0 %}margin-top: {{ block.settings.margin_top }}px;{% endif %}{% if block.settings.margin_bottom > 0 %}margin-bottom: {{ block.settings.margin_bottom }}px;{% endif %}">
                       <p class="delivery-options-title">Delivery Options</p>
                       <div class="delivery-options-container">
                         <label class="delivery-option-card selected" for="delivery-option">
@@ -1632,18 +1634,17 @@ button.slick-next.slick-arrow { display:none !important; }
     {%- for block in section.blocks -%}
       {%- case block.type -%}
         {%- when 'description' -%}
-          <div class="product__accordion accordion" {{ block.shopify_attributes }}>
+          <div class="product__accordion accordion" style="{% if block.settings.margin_top > 0 %}margin-top: {{ block.settings.margin_top }}px;{% endif %}{% if block.settings.margin_bottom > 0 %}margin-bottom: {{ block.settings.margin_bottom }}px;{% endif %}" {{ block.shopify_attributes }}>
             <details class="dt-details" open>
               <summary>
                 <div class="summary__title">
-
-                  <h6 class="accordion__title">
+                  <h6 class="accordion__title" style="{% if block.settings.heading_color != blank %}color: {{ block.settings.heading_color }};{% endif %}">
                     Details
                   </h6>
                 </div>
                 {% render 'icon-caret' %}
               </summary>
-              <div class="accordion__content rte">
+              <div class="accordion__content rte" style="{% if block.settings.content_color != blank %}color: {{ block.settings.content_color }};{% endif %}{% if block.settings.content_size != blank %}font-size: {{ block.settings.content_size }}px;{% endif %}">
                 {%- if product.description != blank -%}
                   {{ product.description }}
                 {%- endif -%}
@@ -1651,18 +1652,17 @@ button.slick-next.slick-arrow { display:none !important; }
             </details>
           </div>
         {%- when 'collapsible_tab' -%}
-          <div class="product__accordion accordion" {{ block.shopify_attributes }}>
+          <div class="product__accordion accordion" style="{% if block.settings.margin_top > 0 %}margin-top: {{ block.settings.margin_top }}px;{% endif %}{% if block.settings.margin_bottom > 0 %}margin-bottom: {{ block.settings.margin_bottom }}px;{% endif %}" {{ block.shopify_attributes }}>
             <details class="dt-details">
               <summary>
                 <div class="summary__title">
-                  
-                  <h6 class="accordion__title">
+                  <h6 class="accordion__title" style="{% if block.settings.heading_color != blank %}color: {{ block.settings.heading_color }};{% endif %}">
                     {{ block.settings.heading | default: block.settings.page.title }}
                   </h6>
                 </div>
                 {% render 'icon-caret' %}
               </summary>
-              <div class="accordion__content rte">
+              <div class="accordion__content rte" style="{% if block.settings.content_color != blank %}color: {{ block.settings.content_color }};{% endif %}{% if block.settings.content_size != blank %}font-size: {{ block.settings.content_size }}px;{% endif %}">
                 {{ block.settings.content }}
                 {{ block.settings.page.content }}
               </div>
@@ -1792,18 +1792,17 @@ button.slick-next.slick-arrow { display:none !important; }
           {%- for block in section.blocks -%}
             {%- case block.type -%}
               {%- when 'description' -%}
-                <div class="product__accordion accordion" {{ block.shopify_attributes }}>
+                <div class="product__accordion accordion" style="{% if block.settings.margin_top > 0 %}margin-top: {{ block.settings.margin_top }}px;{% endif %}{% if block.settings.margin_bottom > 0 %}margin-bottom: {{ block.settings.margin_bottom }}px;{% endif %}" {{ block.shopify_attributes }}>
                   <details class="dt-details" open>
                     <summary>
                       <div class="summary__title">
-
-                        <h6 class="accordion__title">
+                        <h6 class="accordion__title" style="{% if block.settings.heading_color != blank %}color: {{ block.settings.heading_color }};{% endif %}">
                           Details
                         </h6>
                       </div>
                       {% render 'icon-caret' %}
                     </summary>
-                    <div class="accordion__content rte">
+                    <div class="accordion__content rte" style="{% if block.settings.content_color != blank %}color: {{ block.settings.content_color }};{% endif %}{% if block.settings.content_size != blank %}font-size: {{ block.settings.content_size }}px;{% endif %}">
                       {%- if product.description != blank -%}
                         {{ product.description }}
                       {%- endif -%}
@@ -1811,17 +1810,17 @@ button.slick-next.slick-arrow { display:none !important; }
                   </details>
                 </div>
               {%- when 'collapsible_tab' -%}
-                <div class="product__accordion accordion" {{ block.shopify_attributes }}>
+                <div class="product__accordion accordion" style="{% if block.settings.margin_top > 0 %}margin-top: {{ block.settings.margin_top }}px;{% endif %}{% if block.settings.margin_bottom > 0 %}margin-bottom: {{ block.settings.margin_bottom }}px;{% endif %}" {{ block.shopify_attributes }}>
                   <details class="dt-details">
                     <summary>
                       <div class="summary__title">
-                        <h6 class="accordion__title">
+                        <h6 class="accordion__title" style="{% if block.settings.heading_color != blank %}color: {{ block.settings.heading_color }};{% endif %}">
                           {{ block.settings.heading | default: block.settings.page.title }}
                         </h6>
                       </div>
                       {% render 'icon-caret' %}
                     </summary>
-                    <div class="accordion__content rte">
+                    <div class="accordion__content rte" style="{% if block.settings.content_color != blank %}color: {{ block.settings.content_color }};{% endif %}{% if block.settings.content_size != blank %}font-size: {{ block.settings.content_size }}px;{% endif %}">
                       {{ block.settings.content }}
                     </div>
                   </details>
@@ -2242,19 +2241,162 @@ function updateDeliveryOption(input) {
   ],
   "default": "body",
   "label": "t:sections.main-product.blocks.text.settings.text_style.label"
+  },
+  {
+  "type": "header",
+  "content": "Style"
+  },
+  {
+  "type": "color",
+  "id": "text_color",
+  "label": "Text color"
+  },
+  {
+  "type": "range",
+  "id": "text_size",
+  "min": 10,
+  "max": 24,
+  "step": 1,
+  "unit": "px",
+  "label": "Font size",
+  "default": 14
+  },
+  {
+  "type": "range",
+  "id": "margin_top",
+  "min": 0,
+  "max": 60,
+  "step": 4,
+  "unit": "px",
+  "label": "Spacing above",
+  "default": 0
+  },
+  {
+  "type": "range",
+  "id": "margin_bottom",
+  "min": 0,
+  "max": 60,
+  "step": 4,
+  "unit": "px",
+  "label": "Spacing below",
+  "default": 0
   }
   ]
   },
   {
   "type": "title",
   "name": "t:sections.main-product.blocks.title.name",
-  "limit": 1
+  "limit": 1,
+  "settings": [
+  {
+  "type": "header",
+  "content": "Style"
+  },
+  {
+  "type": "color",
+  "id": "heading_color",
+  "label": "Heading color"
+  },
+  {
+  "type": "range",
+  "id": "heading_size",
+  "min": 18,
+  "max": 42,
+  "step": 1,
+  "unit": "px",
+  "label": "Heading size",
+  "default": 28
+  },
+  {
+  "type": "color",
+  "id": "subtitle_color",
+  "label": "Subtitle color"
+  },
+  {
+  "type": "range",
+  "id": "subtitle_size",
+  "min": 11,
+  "max": 18,
+  "step": 1,
+  "unit": "px",
+  "label": "Subtitle size",
+  "default": 14
+  },
+  {
+  "type": "color",
+  "id": "breadcrumb_color",
+  "label": "Breadcrumb color"
+  },
+  {
+  "type": "color",
+  "id": "badge_color",
+  "label": "Badge color",
+  "default": "#8C9B6D"
+  },
+  {
+  "type": "range",
+  "id": "margin_top",
+  "min": 0,
+  "max": 60,
+  "step": 4,
+  "unit": "px",
+  "label": "Spacing above",
+  "default": 0
+  },
+  {
+  "type": "range",
+  "id": "margin_bottom",
+  "min": 0,
+  "max": 60,
+  "step": 4,
+  "unit": "px",
+  "label": "Spacing below",
+  "default": 0
+  }
+  ]
   },
 
   {
   "type": "price",
   "name": "t:sections.main-product.blocks.price.name",
-  "limit": 1
+  "limit": 1,
+  "settings": [
+  {
+  "type": "color",
+  "id": "price_color",
+  "label": "Price color"
+  },
+  {
+  "type": "range",
+  "id": "price_size",
+  "min": 14,
+  "max": 32,
+  "step": 1,
+  "unit": "px",
+  "label": "Price size",
+  "default": 18
+  },
+  {
+  "type": "range",
+  "id": "margin_top",
+  "min": 0,
+  "max": 60,
+  "step": 4,
+  "unit": "px",
+  "label": "Spacing above",
+  "default": 0
+  },
+  {
+  "type": "range",
+  "id": "margin_bottom",
+  "min": 0,
+  "max": 60,
+  "step": 4,
+  "unit": "px",
+  "label": "Spacing below",
+  "default": 0
+  }
+  ]
   },
   {
       "type": "richtext",
@@ -2266,6 +2408,45 @@ function updateDeliveryOption(input) {
           "id": "description-rich",
           "default": "<p>Share information about your brand with your customers. Describe a product, make announcements, or welcome customers to your store.</p>",
           "label": "t:sections.rich-text.blocks.text.settings.text.label"
+        },
+        {
+          "type": "header",
+          "content": "Style"
+        },
+        {
+          "type": "color",
+          "id": "text_color",
+          "label": "Text color"
+        },
+        {
+          "type": "range",
+          "id": "text_size",
+          "min": 12,
+          "max": 22,
+          "step": 1,
+          "unit": "px",
+          "label": "Font size",
+          "default": 16
+        },
+        {
+          "type": "range",
+          "id": "margin_top",
+          "min": 0,
+          "max": 60,
+          "step": 4,
+          "unit": "px",
+          "label": "Spacing above",
+          "default": 0
+        },
+        {
+          "type": "range",
+          "id": "margin_bottom",
+          "min": 0,
+          "max": 60,
+          "step": 4,
+          "unit": "px",
+          "label": "Spacing below",
+          "default": 0
         }
       ]
     },
@@ -2282,7 +2463,34 @@ function updateDeliveryOption(input) {
   {
   "type": "inventory_status",
   "name": "t:sections.main-product.blocks.inventory_status.name",
-  "limit": 1
+  "limit": 1,
+  "settings": [
+  {
+  "type": "color",
+  "id": "text_color",
+  "label": "Text color"
+  },
+  {
+  "type": "range",
+  "id": "margin_top",
+  "min": 0,
+  "max": 60,
+  "step": 4,
+  "unit": "px",
+  "label": "Spacing above",
+  "default": 0
+  },
+  {
+  "type": "range",
+  "id": "margin_bottom",
+  "min": 0,
+  "max": 60,
+  "step": 4,
+  "unit": "px",
+  "label": "Spacing below",
+  "default": 0
+  }
+  ]
   },
   {
   "type": "icon_text",
@@ -2397,6 +2605,28 @@ function updateDeliveryOption(input) {
   "type": "delivery-options",
   "name": "Delivery Options",
   "limit": 1,
+  "settings": [
+  {
+  "type": "range",
+  "id": "margin_top",
+  "min": 0,
+  "max": 60,
+  "step": 4,
+  "unit": "px",
+  "label": "Spacing above",
+  "default": 0
+  },
+  {
+  "type": "range",
+  "id": "margin_bottom",
+  "min": 0,
+  "max": 60,
+  "step": 4,
+  "unit": "px",
+  "label": "Spacing below",
+  "default": 0
+  }
+  ]
 },
   {
   "type": "Html_c",
@@ -2466,13 +2696,93 @@ function updateDeliveryOption(input) {
   "default": true,
   "label": "t:sections.main-product.blocks.buy_buttons.settings.show_dynamic_checkout.label",
   "info": "t:sections.main-product.blocks.buy_buttons.settings.show_dynamic_checkout.info"
+  },
+  {
+  "type": "header",
+  "content": "Style"
+  },
+  {
+  "type": "color",
+  "id": "button_color",
+  "label": "Button text color"
+  },
+  {
+  "type": "color",
+  "id": "button_bg",
+  "label": "Button background"
+  },
+  {
+  "type": "range",
+  "id": "margin_top",
+  "min": 0,
+  "max": 60,
+  "step": 4,
+  "unit": "px",
+  "label": "Spacing above",
+  "default": 0
+  },
+  {
+  "type": "range",
+  "id": "margin_bottom",
+  "min": 0,
+  "max": 60,
+  "step": 4,
+  "unit": "px",
+  "label": "Spacing below",
+  "default": 0
   }
   ]
   },
   {
   "type": "description",
   "name": "t:sections.main-product.blocks.description.name",
-  "limit": 1
+  "limit": 1,
+  "settings": [
+  {
+  "type": "header",
+  "content": "Style"
+  },
+  {
+  "type": "color",
+  "id": "heading_color",
+  "label": "Heading color"
+  },
+  {
+  "type": "color",
+  "id": "content_color",
+  "label": "Content text color"
+  },
+  {
+  "type": "range",
+  "id": "content_size",
+  "min": 12,
+  "max": 20,
+  "step": 1,
+  "unit": "px",
+  "label": "Content font size",
+  "default": 15
+  },
+  {
+  "type": "range",
+  "id": "margin_top",
+  "min": 0,
+  "max": 60,
+  "step": 4,
+  "unit": "px",
+  "label": "Spacing above",
+  "default": 0
+  },
+  {
+  "type": "range",
+  "id": "margin_bottom",
+  "min": 0,
+  "max": 60,
+  "step": 4,
+  "unit": "px",
+  "label": "Spacing below",
+  "default": 0
+  }
+  ]
   },
   {
       "type": "deal",
@@ -2515,13 +2825,95 @@ function updateDeliveryOption(input) {
 "id": "badge_label",
  "label": "t:sections.main-product.blocks.badge.settings.badge_label.label",
 "default": "100% Secured Payment"
+},
+{
+"type": "header",
+"content": "Style"
+},
+{
+"type": "color",
+"id": "label_color",
+"label": "Label color"
+},
+{
+"type": "range",
+"id": "margin_top",
+"min": 0,
+"max": 60,
+"step": 4,
+"unit": "px",
+"label": "Spacing above",
+"default": 0
+},
+{
+"type": "range",
+"id": "margin_bottom",
+"min": 0,
+"max": 60,
+"step": 4,
+"unit": "px",
+"label": "Spacing below",
+"default": 0
 }
 ]
 },
 {
   "type": "product_highlights",
   "name": "Product Highlights",
-  "limit": 4
+  "limit": 4,
+  "settings": [
+  {
+  "type": "header",
+  "content": "Style"
+  },
+  {
+  "type": "color",
+  "id": "heading_color",
+  "label": "Heading color"
+  },
+  {
+  "type": "range",
+  "id": "heading_size",
+  "min": 12,
+  "max": 24,
+  "step": 1,
+  "unit": "px",
+  "label": "Heading size",
+  "default": 16
+  },
+  {
+  "type": "color",
+  "id": "pill_bg",
+  "label": "Pill background",
+  "default": "#f5f5f5"
+  },
+  {
+  "type": "color",
+  "id": "pill_text_color",
+  "label": "Pill text color",
+  "default": "#333333"
+  },
+  {
+  "type": "range",
+  "id": "margin_top",
+  "min": 0,
+  "max": 60,
+  "step": 4,
+  "unit": "px",
+  "label": "Spacing above",
+  "default": 0
+  },
+  {
+  "type": "range",
+  "id": "margin_bottom",
+  "min": 0,
+  "max": 60,
+  "step": 4,
+  "unit": "px",
+  "label": "Spacing below",
+  "default": 0
+  }
+  ]
 },
 
   {
@@ -2840,6 +3232,50 @@ function updateDeliveryOption(input) {
   "type": "page",
   "id": "page",
   "label": "t:sections.main-product.blocks.collapsible_tab.settings.page.label"
+  },
+  {
+  "type": "header",
+  "content": "Style"
+  },
+  {
+  "type": "color",
+  "id": "heading_color",
+  "label": "Heading color"
+  },
+  {
+  "type": "color",
+  "id": "content_color",
+  "label": "Content text color"
+  },
+  {
+  "type": "range",
+  "id": "content_size",
+  "min": 12,
+  "max": 20,
+  "step": 1,
+  "unit": "px",
+  "label": "Content font size",
+  "default": 15
+  },
+  {
+  "type": "range",
+  "id": "margin_top",
+  "min": 0,
+  "max": 60,
+  "step": 4,
+  "unit": "px",
+  "label": "Spacing above",
+  "default": 0
+  },
+  {
+  "type": "range",
+  "id": "margin_bottom",
+  "min": 0,
+  "max": 60,
+  "step": 4,
+  "unit": "px",
+  "label": "Spacing below",
+  "default": 0
   }
   ]
   },
