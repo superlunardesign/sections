@@ -22,10 +22,15 @@
       {{ 'product-detail-page.css' | asset_url | stylesheet_tag }}
       {{ 'component-facets.css' | asset_url | stylesheet_tag }}
 {%- style -%}
-/* =========================================================
-   MAIN PRODUCT — FULL REPLACEMENT STYLES (layout + visuals)
-   Scope: .main-product-template
-   ========================================================= */
+/* ====================  MAIN PRODUCT STYLES  ==================== */
+
+{%- assign _br = section.settings.image_border_radius | default: 0 -%}
+{%- assign _bw = section.settings.image_border_width | default: 0 -%}
+{%- assign _bc = section.settings.image_border_color | default: 'transparent' -%}
+{%- assign _gl = section.settings.gallery_layout -%}
+{%- assign _sp = section.settings.slider_position -%}
+{%- assign _ms = section.settings.media_size -%}
+{%- assign _ml = section.settings.mobile_layout | default: 'carousel' -%}
 
 /* Basic scoped resets */
 .main-product-template * { box-sizing: border-box; }
@@ -136,6 +141,105 @@ width:100%;
 }
 @media (max-width: 989px){ .main-product-template .product__media-item { padding: 0px; } }
 .main-product-template .product__media-gallery { width: 100%; }
+
+/* Contain slides */
+.main-product-template .product__media-list.grid--peek { margin: 0 !important; }
+.main-product-template .grid--peek.slider--mobile .grid__item { box-sizing: border-box !important; }
+
+{% if _ml == 'carousel' %}
+/* ====================  MOBILE CAROUSEL  ==================== */
+@media (max-width: 989px) {
+  /* Carousel: each slide ~82%, next peeks from right */
+  .main-product-template .product__media-list {
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .main-product-template .product__media-list .slider__slide {
+    flex: 0 0 82% !important;
+    width: 82% !important;
+    min-width: 82% !important;
+    max-width: 82% !important;
+    scroll-snap-align: center;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .main-product-template .product__media-list .slider__slide:first-child { margin-left: 4% !important; }
+  .main-product-template .product__media-list .slider__slide:last-child  { margin-right: 4% !important; }
+  /* Override base.css grid--peek margins */
+  .main-product-template .grid--peek.slider .grid__item:first-of-type { margin-left: 4% !important; }
+  .main-product-template .grid--peek.slider .grid__item:last-of-type  { margin-right: 4% !important; }
+  .main-product-template .grid--peek .grid__item { min-width: 0 !important; }
+
+  /* Hide thumbnails completely in carousel mode */
+  .main-product-template .thumbnail-slider,
+  .main-product-template .thumbnail-slider.slider-vertical { display: none !important; }
+
+  /* Arrow buttons */
+  .main-product-template .product__media-wrapper { position: relative; }
+  .main-product-template .slider-buttons {
+    display: flex !important;
+    position: absolute;
+    top: 50%;
+    left: 0; right: 0;
+    transform: translateY(-50%);
+    justify-content: space-between;
+    padding: 0 6px;
+    pointer-events: none;
+    z-index: 5;
+  }
+  .main-product-template .slider-buttons .slider-counter { display: none !important; }
+  .main-product-template .slider-button {
+    pointer-events: all;
+    width: 40px !important; height: 40px !important;
+    min-width: 40px !important; min-height: 40px !important;
+    border-radius: 50% !important;
+    background: rgba(255, 255, 255, 0.7) !important;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,.1);
+    transition: background 0.2s ease;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+  .main-product-template .slider-button:hover { background: rgba(255, 255, 255, 0.95) !important; }
+  .main-product-template .slider-button svg,
+  .main-product-template .slider-button .icon-caret {
+    width: 16px !important; height: 16px !important;
+    min-width: 16px !important; min-height: 16px !important;
+    color: #333;
+    display: block !important;
+  }
+}
+/* Desktop: full-width slides, no carousel peek */
+@media (min-width: 990px) {
+  .main-product-template .product__media-list { padding: 0 !important; margin: 0 !important; }
+  .main-product-template .product__media-list .slider__slide {
+    width: 100% !important; min-width: 100% !important;
+    padding: 0 !important; margin: 0 !important;
+  }
+}
+{% else %}
+/* ====================  MOBILE THUMBNAILS  ==================== */
+/* Full-width slides, no peek, no arrows */
+.main-product-template .product__media-list { padding: 0 !important; margin: 0 !important; }
+.main-product-template .product__media-list .slider__slide {
+  width: 100% !important; min-width: 100% !important;
+  padding: 0 !important; margin: 0 !important;
+}
+@media (max-width: 989px) {
+  .main-product-template .slider-buttons { display: none !important; }
+  .main-product-template .grid--peek .grid__item { min-width: 100% !important; }
+  .main-product-template .grid--peek.slider .grid__item:first-of-type { margin-left: 0 !important; }
+  .main-product-template .grid--peek.slider .grid__item:last-of-type  { margin-right: 0 !important; }
+}
+{% endif %}
 
 /* =========================================================
    HORIZONTAL THUMB STRIP (force row; hide vertical arrows)
@@ -321,38 +425,52 @@ padding:0px;
   }
 }
 
-/* =========================================================
-   ADD TO CART (wishlist moved to title row)
-   ========================================================= */
-.main-product-template .product-form__buttons {
-  display: flex !important;
-  grid-template-columns: none !important;
+/* ====================  QUANTITY + ADD TO CART GRID  ==================== */
+/* Side-by-side: quantity | ATC button */
+.main-product-template .product-form__input.product-form__quantity {
+  margin-bottom: 0 !important;
+}
+.main-product-template .product-form__input.product-form__quantity .form__label { display: none; }
+.main-product-template .sl-qty-atc-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: stretch;
+}
+.main-product-template .sl-qty-atc-row .quantity {
+  min-height: 52px;
+  border: 1.5px solid #d4d4d4;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
   gap: 0;
 }
+.main-product-template .sl-qty-atc-row .quantity__button {
+  width: 44px; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; border: none; cursor: pointer;
+  font-size: 18px; color: #333;
+}
+.main-product-template .sl-qty-atc-row .quantity__input {
+  width: 40px; text-align: center;
+  border: none !important; background: transparent;
+  font-size: 16px; font-weight: 600;
+  -moz-appearance: textfield;
+}
+.main-product-template .sl-qty-atc-row .quantity__input::-webkit-outer-spin-button,
+.main-product-template .sl-qty-atc-row .quantity__input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
+/* ====================  ADD TO CART + WISHLIST  ==================== */
+.main-product-template .product-form__buttons { display: grid; gap: 10px; grid-template-columns: 1fr; }
+{% if section.settings.show_wishlist %}
+.main-product-template .product-form__buttons { grid-template-columns: 1fr 52px; align-items: stretch; }
+{% endif %}
 .main-product-template .product-form__submit {
-  border-radius: 8px;
-  min-height: 48px;
-  font-weight: 600;
-  font-size: 14px;
-  letter-spacing: 0.02em;
-  background: #7f9f6f !important;
-  border-color: #7f9f6f !important;
-  color: #fff;
-  width: 100%;
+  border-radius: 8px; min-height: 52px; font-weight: 600; font-size: 15px;
+  letter-spacing: .02em; background: #7f9f6f !important; border-color: #7f9f6f !important;
+  text-transform: lowercase;
 }
-
-.main-product-template .product-form__submit[disabled] { opacity: 0.6; }
-
-/* Hide old wishlist in form buttons (moved to title row) */
-.main-product-template .product-form__buttons .dT_VProdWishList {
-  display: none !important;
-}
-
-
-.add-wishlist{
-      -webkit-writing-mode: vertical-rl;
-}
+.main-product-template .product-form__submit[disabled] { opacity: .6; }
 
 .dT_VProdWishList .add-wishlist {
   display: flex;
@@ -409,12 +527,104 @@ padding:0px;
   display: inline;
 }
 
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.2); }
-  100% { transform: scale(1); }
+@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+
+{% if section.settings.enable_sticky_bar %}
+/* ====================  STICKY ADD-TO-CART BAR  ==================== */
+.sl-sticky-atc {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 999;
+  background: #fff;
+  border-top: 1px solid rgba(0,0,0,.08);
+  box-shadow: 0 -2px 12px rgba(0,0,0,.06);
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 10px 16px;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+}
+.sl-sticky-atc.is-visible { transform: translateY(0); }
+
+.sl-sticky-atc__inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: center;
+}
+@media (min-width: 750px) {
+  .sl-sticky-atc__inner {
+    grid-template-columns: 1fr auto auto;
+    gap: 16px;
+  }
 }
 
+/* Product info (title + price) — hidden on mobile for clean look */
+.sl-sticky-atc__info { display: none; }
+@media (min-width: 750px) {
+  .sl-sticky-atc__info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+  .sl-sticky-atc__title {
+    font-size: 14px; font-weight: 600;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    color: #1a1a1a;
+  }
+  .sl-sticky-atc__price {
+    font-size: 14px; font-weight: 600;
+    color: #7f9f6f;
+    white-space: nowrap;
+  }
+}
+
+/* Quantity in sticky bar */
+.sl-sticky-atc .quantity {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid #d4d4d4;
+  border-radius: 8px;
+  height: 46px;
+}
+.sl-sticky-atc .quantity__button {
+  width: 38px; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; border: none; cursor: pointer;
+  font-size: 16px; color: #333;
+}
+.sl-sticky-atc .quantity__input {
+  width: 32px; text-align: center;
+  border: none; background: transparent;
+  font-size: 15px; font-weight: 600;
+  -moz-appearance: textfield;
+}
+.sl-sticky-atc .quantity__input::-webkit-outer-spin-button,
+.sl-sticky-atc .quantity__input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+/* ATC button in sticky bar */
+.sl-sticky-atc__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 46px;
+  padding: 0 24px;
+  border: none;
+  border-radius: 8px;
+  background: #7f9f6f;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s ease;
+}
+.sl-sticky-atc__btn:hover { background: #6d8d5d; }
+.sl-sticky-atc__btn[disabled] { opacity: .6; cursor: not-allowed; }
+{% endif %}
 
 /* =========================================================
    HIGHLIGHTS — pills (icon_text block)
@@ -1935,16 +2145,10 @@ button.slick-next.slick-arrow { display:none !important; }
 
 
                   {%- when 'buy_buttons' -%}
-                    <div {{ block.shopify_attributes }}>
+                    <div id="sl-native-atc-{{ section.id }}" style="{% if block.settings.margin_top > 0 %}margin-top: {{ block.settings.margin_top }}px;{% endif %}{% if block.settings.margin_bottom > 0 %}margin-bottom: {{ block.settings.margin_bottom }}px;{% endif %}" {{ block.shopify_attributes }}>
                       <product-form class="product-form">
                         <div class="product-form__error-message-wrapper" role="alert" hidden>
-                          <svg
-                            aria-hidden="true"
-                            focusable="false"
-                            role="presentation"
-                            class="icon icon-error"
-                            viewBox="0 0 13 13"
-                          >
+                          <svg aria-hidden="true" focusable="false" role="presentation" class="icon icon-error" viewBox="0 0 13 13">
                             <circle cx="6.5" cy="6.50049" r="5.5" stroke="white" stroke-width="2"/>
                             <circle cx="6.5" cy="6.5" r="5.5" fill="#EB001B" stroke="#EB001B" stroke-width="0.7"/>
                             <path d="M5.87413 3.52832L5.97439 7.57216H7.02713L7.12739 3.52832H5.87413ZM6.50076 9.66091C6.88091 9.66091 7.18169 9.37267 7.18169 9.00504C7.18169 8.63742 6.88091 8.34917 6.50076 8.34917C6.12061 8.34917 5.81982 8.63742 5.81982 9.00504C5.81982 9.37267 6.12061 9.66091 6.50076 9.66091Z" fill="white"/>
@@ -1952,7 +2156,6 @@ button.slick-next.slick-arrow { display:none !important; }
                           </svg>
                           <span class="product-form__error-message"></span>
                         </div>
-
                         {%- form 'product',
                           product,
                           id: product_form_id,
@@ -1966,52 +2169,76 @@ button.slick-next.slick-arrow { display:none !important; }
                             value="{{ product.selected_or_first_available_variant.id }}"
                             disabled
                           >
-                          <div class="product-form__buttons">
-                            <button type="submit" class="add-to-cart-btn product-form__submit product-form__s button button--full-width {% if block.settings.show_dynamic_checkout and product.selling_plan_groups == empty %}button--secondary{% else %}button--primary{% endif %}"
-                              {% if product.selected_or_first_available_variant.available == false %}
-                                disabled
-                              {% endif %}
-                          data-variant-id="{{ product.selected_or_first_available_variant.id }}"
-                          onclick="addToCart(this)">
-                    <span>{{ section.settings.add_to_cart_text }}</span>
-                            
+                          <!-- Quantity + ATC side-by-side row -->
+                          <div class="sl-qty-atc-row">
+                            <quantity-input class="quantity">
+                              <button class="quantity__button no-js-hidden" name="minus" type="button">
+                                <span class="visually-hidden">{{ 'products.product.quantity.decrease' | t: product: product.title | escape }}</span>
+                                {% render 'icon-minus' %}
+                              </button>
+                              <input
+                                class="quantity__input"
+                                type="number"
+                                name="quantity"
+                                id="Quantity-inline-{{ section.id }}"
+                                min="1"
+                                value="1"
+                                form="{{ product_form_id }}"
+                              >
+                              <button class="quantity__button no-js-hidden" name="plus" type="button">
+                                <span class="visually-hidden">{{ 'products.product.quantity.increase' | t: product: product.title | escape }}</span>
+                                {% render 'icon-plus' %}
+                              </button>
+                            </quantity-input>
+                            <button type="submit" class="add-to-cart-btn product-form__submit button button--full-width {% if block.settings.show_dynamic_checkout and product.selling_plan_groups == empty %}button--secondary{% else %}button--primary{% endif %}"
+                              style="{% if block.settings.button_color != blank %}color: {{ block.settings.button_color }};{% endif %}{% if block.settings.button_bg != blank %}background-color: {{ block.settings.button_bg }}; border-color: {{ block.settings.button_bg }};{% endif %}"
+                              {% if product.selected_or_first_available_variant.available == false %}disabled{% endif %}
+                              data-variant-id="{{ product.selected_or_first_available_variant.id }}"
+                              onclick="addToCart(this)">
                               <span>
                                 {%- if product.selected_or_first_available_variant.available -%}
-                                  {{ 'products.product.add_to_cart' | t }}
+                                  {{ 'products.product.add_to_cart' | t }} - {{ product.selected_or_first_available_variant.price | money }}
                                 {%- else -%}
                                   {{ 'products.product.sold_out' | t }}
                                 {%- endif -%}
                               </span>
                               <div class="loading-overlay__spinner hidden">
-                                <svg
-                                  aria-hidden="true"
-                                  focusable="false"
-                                  role="presentation"
-                                  class="spinner"
-                                  viewBox="0 0 66 66"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                >
+                                <svg aria-hidden="true" focusable="false" role="presentation" class="spinner" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg">
                                   <circle class="path" fill="none" stroke-width="6" cx="33" cy="33" r="30"></circle>
                                 </svg>
                               </div>
                             </button>
-                            {%- comment -%} SL: Wishlist moved to title row — hide old one {%- endcomment -%}
-                            <!--
-                              <div class="dT_VProdCompareList">
-                                {%- if product.handle != blank -%}
-                                   <div><dtx-compare><a href="javascript:void(0);" class="add-compare  button--secondary" data-product_handle="{{ product.handle }}">Compare</a></dtx-compare></div>
-                                {%- endif -%}
-                              </div>
-                            -->
-
-                            {%- if block.settings.show_dynamic_checkout -%}
-                              {{ form | payment_button }}
-                            {%- endif -%}
                           </div>
+                          {% if section.settings.show_wishlist %}
+                            <div class="dT_VProdWishList" style="margin-top: 10px;">
+                              {%- if product.handle != blank -%}
+                                <dtx-wishlist>
+                                  <a href="javascript:void(0);"
+                                     class="button add-wishlist button--full-width button--secondary"
+                                     data-product_handle="{{ product.handle }}">
+                                    <span class="wishlist-icon-empty">
+                                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                      </svg>
+                                    </span>
+                                    <span class="wishlist-icon-filled">
+                                      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                      </svg>
+                                    </span>
+                                  </a>
+                                </dtx-wishlist>
+                              {%- endif -%}
+                            </div>
+                          {% endif %}
+                          {%- if block.settings.show_dynamic_checkout -%}
+                            {{ form | payment_button }}
+                          {%- endif -%}
                         {%- endform -%}
                       </product-form>
-
                       {{ 'component-pickup-availability.css' | asset_url | stylesheet_tag }}
+                      <script src="{{ 'pickup-availability.js' | asset_url }}" defer="defer"></script>
+                    </div>
 
 {%- when 'delivery-options' -%}
 
@@ -2447,17 +2674,67 @@ button.slick-next.slick-arrow { display:none !important; }
           render 'enquiry-form'
         endif
       %}
-      {% render 'sticky-cart-bar' %}
+      {%- if section.settings.enable_sticky_bar -%}
+      <!-- Sticky Add-to-Cart Bar -->
+      <div class="sl-sticky-atc" id="sl-sticky-atc-{{ section.id }}">
+        <form action="/cart/add" method="post" class="sl-sticky-atc__inner">
+          <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}" id="sl-sticky-variant-{{ section.id }}">
+          <div class="sl-sticky-atc__info">
+            <span class="sl-sticky-atc__title">{{ product.title }}</span>
+            <span class="sl-sticky-atc__price">{{ product.selected_or_first_available_variant.price | money }}</span>
+          </div>
+          <quantity-input class="quantity">
+            <button class="quantity__button no-js-hidden" name="minus" type="button">
+              <span class="visually-hidden">Decrease quantity</span>
+              {% render 'icon-minus' %}
+            </button>
+            <input class="quantity__input" type="number" name="quantity" min="1" value="1">
+            <button class="quantity__button no-js-hidden" name="plus" type="button">
+              <span class="visually-hidden">Increase quantity</span>
+              {% render 'icon-plus' %}
+            </button>
+          </quantity-input>
+          <button type="submit" class="sl-sticky-atc__btn"
+            {% if product.selected_or_first_available_variant.available == false %}disabled{% endif %}>
+            {%- if product.selected_or_first_available_variant.available -%}
+              {{ 'products.product.add_to_cart' | t }} - {{ product.selected_or_first_available_variant.price | money }}
+            {%- else -%}
+              {{ 'products.product.sold_out' | t }}
+            {%- endif -%}
+          </button>
+        </form>
+      </div>
+      {%- endif -%}
+
       <script>
         document.addEventListener('DOMContentLoaded', function() {
+          /* — Sticky ATC bar: IntersectionObserver — */
+          {% if section.settings.enable_sticky_bar %}
+          (function() {
+            var nativeATC = document.getElementById('sl-native-atc-{{ section.id }}');
+            var stickyBar = document.getElementById('sl-sticky-atc-{{ section.id }}');
+            if (nativeATC && stickyBar) {
+              var observer = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                  if (entry.isIntersecting) {
+                    stickyBar.classList.remove('is-visible');
+                  } else {
+                    stickyBar.classList.add('is-visible');
+                  }
+                });
+              }, { threshold: 0, rootMargin: '0px' });
+              observer.observe(nativeATC);
+            }
+          })();
+          {% endif %}
+
+          /* — IE fallback — */
           function isIE() {
             const ua = window.navigator.userAgent;
             const msie = ua.indexOf('MSIE ');
             const trident = ua.indexOf('Trident/');
-
             return (msie > 0 || trident > 0);
           }
-
           if (!isIE()) return;
           const hiddenInput = document.querySelector('#{{ product_form_id }} input[name="id"]');
           const noScriptInputWrapper = document.createElement('div');
@@ -2465,8 +2742,8 @@ button.slick-next.slick-arrow { display:none !important; }
           noScriptInputWrapper.innerHTML = document.querySelector('.product-form__noscript-wrapper-{{ section.id }}').textContent;
           variantSwitcher.outerHTML = noScriptInputWrapper.outerHTML;
           document.querySelector('#Variants-{{ section.id }}').addEventListener('change', function(event) {
-          hiddenInput.value = event.currentTarget.value;
-        });
+            hiddenInput.value = event.currentTarget.value;
+          });
         });
 
         function openTab(evt, TabName) {
@@ -3673,10 +3950,15 @@ function updateDeliveryOption(input) {
   "label": "t:sections.main-product.settings.show_review_tab.label"
   },
   {
+    "type": "header",
+    "content": "Sticky add-to-cart bar"
+  },
+  {
     "type": "checkbox",
     "id": "enable_sticky_bar",
     "default": true,
-    "label": "Enable Sticky Bar"
+    "label": "Show sticky add-to-cart bar",
+    "info": "A floating bar at the bottom of the screen with quantity + add to cart. Slides away when the native button is visible."
   },
   {
   "type": "select",
