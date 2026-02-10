@@ -267,27 +267,36 @@
 
 {%- comment -%}
   Determine which products to show:
-  1. If a collection is explicitly selected, use that
-  2. Otherwise use Shopify product recommendations
-  3. If neither, fallback to a configurable collection handle
+  1. Related products metafield (shopify--discovery--product_recommendation.related_products)
+  2. If a collection is explicitly selected, use that
+  3. Otherwise use Shopify product recommendations
+  4. If neither, fallback to a configurable collection handle
 {%- endcomment -%}
 
 {%- assign rec_products = nil -%}
 {%- assign rec_source = 'none' -%}
 
-{%- if section.settings.collection != blank -%}
+{%- comment -%} Priority 1: Related products metafield {%- endcomment -%}
+{%- assign related_meta = product.metafields['shopify--discovery--product_recommendation'].related_products.value -%}
+{%- if related_meta != blank and related_meta.size > 0 -%}
+  {%- assign rec_products = related_meta -%}
+  {%- assign rec_source = 'metafield' -%}
+{%- endif -%}
+
+{%- comment -%} Priority 2: Manually selected collection {%- endcomment -%}
+{%- if rec_source == 'none' and section.settings.collection != blank -%}
   {%- assign rec_collection = section.settings.collection -%}
   {%- assign rec_products = rec_collection.products -%}
   {%- assign rec_source = 'collection' -%}
 {%- endif -%}
 
-{%- comment -%} Check recommendations (populated via JS fetch or prerendered) {%- endcomment -%}
+{%- comment -%} Priority 3: Shopify recommendations (populated via JS fetch or prerendered) {%- endcomment -%}
 {%- if rec_source == 'none' and recommendations.performed and recommendations.products_count > 0 -%}
   {%- assign rec_products = recommendations.products -%}
   {%- assign rec_source = 'recommendations' -%}
 {%- endif -%}
 
-{%- comment -%} Fallback: use a handle-based collection (e.g. "best-selling-skincare") {%- endcomment -%}
+{%- comment -%} Priority 4: Fallback handle-based collection (e.g. "best-selling-skincare") {%- endcomment -%}
 {%- if rec_source == 'none' and section.settings.fallback_collection_handle != blank -%}
   {%- assign fallback_col = collections[section.settings.fallback_collection_handle] -%}
   {%- if fallback_col and fallback_col.products.size > 0 -%}
@@ -301,7 +310,7 @@
 {%- if rec_products != nil and rec_products.size > 0 -%}
 <div class="sl-recs"
      id="SLRecs-{{ section.id }}"
-     {% if rec_source != 'collection' %}
+     {% if rec_source != 'collection' and rec_source != 'metafield' %}
        data-url="{{ routes.product_recommendations_url }}?section_id={{ section.id }}&product_id={{ product.id }}&limit={{ products_limit }}"
      {% endif %}>
   <div class="page-width">
