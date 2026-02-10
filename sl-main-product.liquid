@@ -322,24 +322,31 @@ padding:0px;
 }
 
 /* =========================================================
-   ADD TO CART + WISHLIST
+   ADD TO CART (wishlist moved to title row)
    ========================================================= */
-.main-product-template .product-form__buttons{
-  display:grid; gap:10px; grid-template-columns: 8fr 1fr;
+.main-product-template .product-form__buttons {
+  display: flex !important;
+  grid-template-columns: none !important;
+  gap: 0;
 }
-@media (min-width: 990px){
-  .main-product-template .product-form__buttons{
-    grid-template-columns: 1fr 46px; align-items:center;
-  }
+
+.main-product-template .product-form__submit {
+  border-radius: 8px;
+  min-height: 48px;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  background: #7f9f6f !important;
+  border-color: #7f9f6f !important;
+  color: #fff;
+  width: 100%;
 }
-.main-product-template .product-form__submit{
-  border-radius:999px; min-height:46px; min-width:46px; font-weight:600;
-  letter-spacing:.01em; background:#7f9f6f !important; border-color:#7f9f6f !important;
-}
-.main-product-template .product-form__submit[disabled]{ opacity:.6; }
-.main-product-template .product__info-wrapper .dT_VProdWishList a.add-wishlist{
-  border-radius:999px; height:46px; width:46px; display:grid; align-content:center;
-  background:#fff; border:1px solid rgba(0,0,0,.12);
+
+.main-product-template .product-form__submit[disabled] { opacity: 0.6; }
+
+/* Hide old wishlist in form buttons (moved to title row) */
+.main-product-template .product-form__buttons .dT_VProdWishList {
+  display: none !important;
 }
 
 
@@ -445,6 +452,252 @@ button.slick-next.slick-arrow { display:none !important; }
 {% if section.settings.enable_product_zoom != "default" %}
 #ex1 { overflow: hidden !important; z-index: 9; cursor: zoom-in; }
 {% endif %}
+
+/* =========================================================
+   SL PDP BREADCRUMBS
+   ========================================================= */
+.sl-pdp-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 8px;
+}
+
+.sl-pdp-breadcrumbs a {
+  color: #888;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.sl-pdp-breadcrumbs a:hover {
+  color: #555;
+}
+
+.sl-pdp-breadcrumbs__sep {
+  margin: 0 8px;
+  color: #bbb;
+}
+
+/* =========================================================
+   SL TITLE ROW — title left, heart + badge right
+   ========================================================= */
+.sl-pdp-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 4px;
+}
+
+.sl-pdp-title-row__left {
+  flex: 1;
+  min-width: 0;
+}
+
+.sl-pdp-title-row .product__title {
+  max-width: none;
+  margin: 0;
+}
+
+.sl-pdp-title-row .product__title h1 {
+  font-size: clamp(22px, 2.2vw + 6px, 32px);
+  font-weight: 600;
+  line-height: 1.15;
+  margin: 0 0 2px;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+}
+
+.sl-pdp-subtitle {
+  font-size: 13px;
+  color: #888;
+  margin: 0 0 4px;
+  font-weight: 400;
+}
+
+/* Hide old duplicate title link (we use h1 only) */
+.sl-pdp-title-row .product__title a.product__title {
+  display: none;
+}
+
+/* Hide old notable-tags div (moved to sl-pdp-notable-tags) */
+.main-product-template .notable-tags {
+  display: none !important;
+}
+
+.sl-pdp-title-row__right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  padding-top: 4px;
+}
+
+/* Heart icon in title row */
+.sl-pdp-heart__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #555;
+  transition: color 0.2s;
+  padding: 0;
+  text-decoration: none;
+}
+
+.sl-pdp-heart__btn:hover {
+  color: #c44;
+}
+
+.sl-pdp-heart .wishlist-icon-filled {
+  display: none;
+  color: #c44;
+}
+
+.sl-pdp-heart .add-wishlist.added .wishlist-icon-empty {
+  display: none;
+}
+
+.sl-pdp-heart .add-wishlist.added .wishlist-icon-filled {
+  display: inline;
+}
+
+/* Shannon's Pick badge */
+.sl-pdp-pick-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 14px;
+  border: 1.5px solid #8C9B6D;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #8C9B6D;
+  background: #fff;
+  white-space: nowrap;
+}
+
+/* =========================================================
+   SL NOTABLE TAGS — olive green checkmark badges
+   ========================================================= */
+.sl-pdp-notable-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 8px 0 12px;
+}
+
+.sl-pdp-notable-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #8C9B6D;
+}
+
+/* =========================================================
+   SL RATING STARS — olive green
+   ========================================================= */
+.main-product-template .rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.main-product-template .rating-star {
+  --star-foreground: #8C9B6D;
+  --star-background: #ddd;
+  color: #8C9B6D;
+}
+
+.main-product-template .rating-text {
+  color: #8C9B6D;
+}
+
+.main-product-template .rating-count {
+  font-size: 13px;
+  color: #888;
+}
+
+/* SL inline star rating */
+.sl-pdp-rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.sl-pdp-rating__stars {
+  font-size: 16px;
+  letter-spacing: 1px;
+  color: #8C9B6D;
+}
+
+.sl-pdp-rating__count {
+  font-size: 13px;
+  color: #888;
+}
+
+/* =========================================================
+   SL PRICE — bold, clean
+   ========================================================= */
+.main-product-template #price-{{ section.id }} .price--large {
+  font-size: clamp(22px, 2.2vw, 30px);
+  font-weight: 700;
+  line-height: 1.15;
+  margin-bottom: 4px;
+}
+
+/* =========================================================
+   SL QUANTITY + ATC — horizontal row matching design
+   ========================================================= */
+.main-product-template .product-form__input.product-form__quantity {
+  margin-bottom: 0;
+}
+
+.main-product-template .product-form__input.product-form__quantity .form__label {
+  display: none;
+}
+
+/* Quantity styling */
+.main-product-template quantity-input.quantity {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  height: 48px;
+}
+
+.main-product-template .quantity__button {
+  width: 40px;
+  height: 100%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0 !important;
+}
+
+.main-product-template .quantity__input {
+  width: 40px;
+  text-align: center;
+  border: none !important;
+  font-size: 15px;
+  font-weight: 600;
+}
 
 /* =========================================================
    SL ACCORDION REDESIGN — clean +/− toggle, olive headings
@@ -1006,30 +1259,72 @@ button.slick-next.slick-arrow { display:none !important; }
                       {{- block.settings.text -}}
                     </p>
                   {%- when 'title' -%}
-                    <div class="product__title" {{ block.shopify_attributes }}>
-                      <h1>{{ product.title | escape }}</h1>
-                      <a href="{{ product.url }}" class="product__title">
-                        <h2 class="h1">
-                          {{ product.title | escape }}
-                        </h2>
-                      </a>
+                    {%- comment -%} SL: Breadcrumbs above title {%- endcomment -%}
+                    {%- if collection -%}
+                      <nav class="sl-pdp-breadcrumbs" aria-label="Breadcrumb">
+                        {%- assign parent_col = collection.metafields.custom.parent_collection.value -%}
+                        {%- if parent_col -%}
+                          <a href="{{ parent_col.url }}">{{ parent_col.title }}</a>
+                          <span class="sl-pdp-breadcrumbs__sep">/</span>
+                        {%- endif -%}
+                        <a href="{{ collection.url }}">{{ collection.title }}</a>
+                      </nav>
+                    {%- endif -%}
+
+                    {%- comment -%} SL: Title row with wishlist + Shannon's Pick {%- endcomment -%}
+                    <div class="sl-pdp-title-row" {{ block.shopify_attributes }}>
+                      <div class="sl-pdp-title-row__left">
+                        <div class="product__title">
+                          <h1>{{ product.title | escape }}</h1>
+                        </div>
+                        {%- for block_inner in section.blocks -%}
+                          {%- if block_inner.type == 'text' and block_inner.settings.text_style == 'subtitle' -%}
+                            <p class="sl-pdp-subtitle">{{ block_inner.settings.text }}</p>
+                          {%- endif -%}
+                        {%- endfor -%}
+                      </div>
+                      <div class="sl-pdp-title-row__right">
+                        {%- if section.settings.show_wishlist -%}
+                          <div class="sl-pdp-heart">
+                            {%- if product.handle != blank -%}
+                              <dtx-wishlist>
+                                <a href="javascript:void(0);"
+                                   class="sl-pdp-heart__btn add-wishlist"
+                                   data-product_handle="{{ product.handle }}">
+                                  <span class="wishlist-icon-empty">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                    </svg>
+                                  </span>
+                                  <span class="wishlist-icon-filled">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                    </svg>
+                                  </span>
+                                </a>
+                              </dtx-wishlist>
+                            {%- endif -%}
+                          </div>
+                        {%- endif -%}
+                        {%- for tag in product.tags -%}
+                          {%- if tag == 'editors-pick' -%}
+                            <span class="sl-pdp-pick-badge">Shannon's Pick</span>
+                          {%- endif -%}
+                        {%- endfor -%}
+                      </div>
                     </div>
-  <div class="notable-tags" style="color:#8C9B6D; display:flex;gap: 20px;">
-                    {% for tag in product.tags %}
-  
 
-                     
-    {% if tag == 'ACNE SAFE'  %}
-    <p>✓ Acne Safe Skincare</p>
-  {% endif %}
-{% if tag == 'editors-pick' %}
-    <p>★ Shannon’s Pick</p>
-  {% endif %}
-
-
-
-{% endfor %}
-  </div>
+                    {%- comment -%} SL: Notable tags below rating area {%- endcomment -%}
+                    <div class="sl-pdp-notable-tags">
+                      {%- for tag in product.tags -%}
+                        {%- if tag == 'ACNE SAFE' -%}
+                          <span class="sl-pdp-notable-tag">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8C9B6D" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                            Acne Safe Skincare
+                          </span>
+                        {%- endif -%}
+                      {%- endfor -%}
+                    </div>
                   {%- when 'deal' -%}
                     
                     {% render 'deal-snippet', product: product %}
@@ -1220,10 +1515,12 @@ button.slick-next.slick-arrow { display:none !important; }
 }
 
 .delivery-options-title {
-  font-size: 16px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 600;
   margin-bottom: 12px;
   color: #1a1a1a;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .delivery-options-container {
@@ -1700,30 +1997,7 @@ button.slick-next.slick-arrow { display:none !important; }
                                 </svg>
                               </div>
                             </button>
-                            {% if section.settings.show_wishlist %}
-  <div class="dT_VProdWishList">
-    {%- if product.handle != blank -%}
-      <div>
-        <dtx-wishlist>
-          <a href="javascript:void(0);" 
-             class="button add-wishlist button--full-width button--secondary"
-             data-product_handle="{{ product.handle }}">
-            <span class="wishlist-icon-empty">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-              </svg>
-            </span>
-            <span class="wishlist-icon-filled">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-              </svg>
-            </span>
-          </a>
-        </dtx-wishlist>
-      </div>
-    {%- endif -%}
-  </div>
-{% endif %}
+                            {%- comment -%} SL: Wishlist moved to title row — hide old one {%- endcomment -%}
                             <!--
                               <div class="dT_VProdCompareList">
                                 {%- if product.handle != blank -%}
@@ -1845,30 +2119,16 @@ button.slick-next.slick-arrow { display:none !important; }
                           assign rating_decimal = 1
                         endif
                       %}
-                      <div
-                        class="rating"
-                        role="img"
-                        aria-label="{{ 'accessibility.star_reviews_info' | t: rating_value: product.metafields.reviews.rating.value, rating_max: product.metafields.reviews.rating.value.scale_max }}"
-                      >
-                        <span
-                          aria-hidden="true"
-                          class="rating-star color-icon-{{ settings.accent_icons }}"
-                          style="--rating: {{ product.metafields.reviews.rating.value.rating | floor }}; --rating-max: {{ product.metafields.reviews.rating.value.scale_max }}; --rating-decimal: {{ rating_decimal }};"
-                        ></span>
+                      {%- comment -%} SL: Inline star rating matching design {%- endcomment -%}
+                      <div class="sl-pdp-rating" role="img" aria-label="{{ 'accessibility.star_reviews_info' | t: rating_value: product.metafields.reviews.rating.value, rating_max: product.metafields.reviews.rating.value.scale_max }}">
+                        {%- assign star_rating = product.metafields.reviews.rating.value.rating | floor -%}
+                        <span class="sl-pdp-rating__stars" aria-hidden="true">
+                          {%- for i in (1..5) -%}
+                            {%- if i <= star_rating -%}★{%- else -%}☆{%- endif -%}
+                          {%- endfor -%}
+                        </span>
+                        <span class="sl-pdp-rating__count">({{ product.metafields.reviews.rating_count }}) reviews</span>
                       </div>
-                      <p class="rating-text caption">
-                        <span aria-hidden="true">
-                          {{- product.metafields.reviews.rating.value }} /
-                          {{ product.metafields.reviews.rating.value.scale_max -}}
-                        </span>
-                      </p>
-                      <p class="rating-count caption">
-                        <span aria-hidden="true">({{ product.metafields.reviews.rating_count }})</span>
-                        <span class="visually-hidden">
-                          {{- product.metafields.reviews.rating_count }}
-                          {{ 'accessibility.total_reviews' | t -}}
-                        </span>
-                      </p>
                     {%- endif -%}
                 {%- endcase -%}
 {%- endfor -%}
