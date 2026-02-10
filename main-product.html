@@ -79,7 +79,7 @@
 }
 
 .main-product-template .product__media-wrapper { grid-column: 1; max-width: 100%; overflow: hidden; }
-.main-product-template .product__info-wrapper  { grid-column: 1; max-width: 100%; position: relative; z-index: 0; }
+.main-product-template .product__info-wrapper  { grid-column: 1; max-width: 100%; position: relative; z-index: 0; padding-top: 0 !important; }
 @media (min-width: 990px) {
   .main-product-template .product__info-wrapper { grid-column: 2; }
   .main-product-template .product__media-wrapper { position: sticky; top: 110px; z-index: 1; }
@@ -94,12 +94,10 @@
   border-radius: {{ _br }}px;
   border: {{ _bw }}px solid {{ _bc }};
   overflow: hidden;
-  max-height: 70vh;
 }
 @media (min-width: 990px) {
   .main-product-template .product__media-item {
     aspect-ratio: 1 / 1;
-    max-height: none;
   }
 }
 /* Override theme external CSS (section-main-product.css) */
@@ -267,6 +265,7 @@
 .main-product-template .thumbnail-slider.slider-vertical {
   width: 90px !important;
   flex: 0 0 90px !important;
+  align-self: stretch !important;
   margin: 0;
   {% if _sp == 'right' %}order: 2;{% else %}order: 0;{% endif %}
 }
@@ -274,11 +273,12 @@
 .main-product-template .thumbnail-slider .thumbnail-list.slider {
   display: flex !important;
   flex-direction: column !important;
+  justify-content: flex-end !important;
   gap: 8px;
   overflow-y: auto !important;
   overflow-x: hidden !important;
   width: 100% !important;
-  height: auto !important;
+  height: 100% !important;
   max-height: 600px;
   padding: 0 !important;
 }
@@ -365,17 +365,40 @@
 .sl-pdp-breadcrumb a:hover { color: #555; }
 .sl-pdp-breadcrumb__sep { color: #bbb; }
 
-.sl-pdp-title-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-.sl-pdp-title-row .product__title { flex: 1; min-width: 0; }
-
-.sl-pdp-title-badges { flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding-top: 4px; }
-.sl-shannons-pick-badge {
-  display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px;
-  border: 1.5px solid #8C9B6D; border-radius: 999px;
-  font-size: 10px; font-weight: 600; letter-spacing: 0.06em;
-  color: #8C9B6D; white-space: nowrap; font-family: var(--font-body-family);
+/* Title row: [title] ........... [heart] [badge] */
+.sl-pdp-title-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px;
+  align-items: center;
 }
-.sl-shannons-pick-badge svg { width: 13px; height: 13px; stroke: #8C9B6D; }
+.sl-pdp-title-row .product__title { min-width: 0; }
+
+/* Heart icon next to title */
+.sl-pdp-heart-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px;
+  border: none; background: transparent;
+  cursor: pointer; color: #555; padding: 0;
+  transition: color 0.2s;
+}
+.sl-pdp-heart-btn:hover { color: #c44; }
+.sl-pdp-heart-btn svg { width: 22px; height: 22px; }
+.sl-pdp-heart-btn.is-wishlisted { color: #c44; }
+.sl-pdp-heart-btn.is-wishlisted svg { fill: #c44; }
+
+/* Priority badge (sale > new > editor's pick) */
+.sl-pdp-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12px; font-weight: 600; letter-spacing: 0.04em;
+  text-transform: lowercase;
+  white-space: nowrap; font-family: var(--font-body-family);
+}
+.sl-pdp-badge--sale  { background: #f8e4e4; color: #b44; }
+.sl-pdp-badge--new   { background: #f3eef8; color: #555; }
+.sl-pdp-badge--pick  { background: #eef3ea; color: #6b7f5a; }
 .sl-pdp-subtitle { font-size: 14px; color: #666; margin: 0 0 6px; font-family: var(--font-body-family); }
 .notable-tags { display: flex; gap: 16px; color: #8C9B6D; font-size: 14px; margin-bottom: 4px; }
 .notable-tags p { margin: 0; }
@@ -390,7 +413,7 @@
   writing-mode: horizontal-tb !important; word-break: normal; hyphens: auto;
 }
 .main-product-template .product__info-container { max-width: 520px; }
-.main-product-template #price-{{ section.id }} .price--large { font-size: clamp(20px, 2.2vw, 28px); line-height: 1.15; }
+.main-product-template #price-{{ section.id }} .price--large { line-height: 1.15; }
 .main-product-template .installment.caption-large { margin-top: 6px; opacity: .85; }
 .main-product-template .product-attributes .product-label,
 .main-product-template .product__text.subtitle { opacity: .8; }
@@ -472,9 +495,6 @@
 
 /* ====================  ADD TO CART + WISHLIST  ==================== */
 .main-product-template .product-form__buttons { display: grid; gap: 10px; grid-template-columns: 1fr; }
-{% if section.settings.show_wishlist %}
-.main-product-template .product-form__buttons { grid-template-columns: 1fr 52px; align-items: stretch; }
-{% endif %}
 .main-product-template .product-form__submit {
   border-radius: 8px; min-height: 52px; font-weight: 600; font-size: 15px;
   letter-spacing: .02em; background: #7f9f6f !important; border-color: #7f9f6f !important;
@@ -1146,17 +1166,37 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
                           </h2>
                         </a>
                       </div>
-                      {%- comment -%} Heart + Shannon's Pick badge {%- endcomment -%}
-                      <div class="sl-pdp-title-badges">
-                        {%- for tag in product.tags -%}
-                          {%- if tag == 'editors-pick' -%}
-                            <span class="sl-shannons-pick-badge" style="{% if block.settings.badge_color != blank %}color: {{ block.settings.badge_color }}; border-color: {{ block.settings.badge_color }};{% endif %}">
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-                              SHANNON'S PICK
-                            </span>
-                          {%- endif -%}
-                        {%- endfor -%}
-                      </div>
+
+                      {%- comment -%} Wishlist heart {%- endcomment -%}
+                      {%- if product.handle != blank -%}
+                        <dtx-wishlist>
+                          <a href="javascript:void(0);"
+                             class="sl-pdp-heart-btn add-wishlist"
+                             data-product_handle="{{ product.handle }}"
+                             aria-label="Add to wishlist">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                            </svg>
+                          </a>
+                        </dtx-wishlist>
+                      {%- endif -%}
+
+                      {%- comment -%} Priority badge: sale > new > editor's pick (show only one) {%- endcomment -%}
+                      {%- assign _badge_shown = false -%}
+                      {%- if product.compare_at_price > product.price and _badge_shown == false -%}
+                        <span class="sl-pdp-badge sl-pdp-badge--sale">sale</span>
+                        {%- assign _badge_shown = true -%}
+                      {%- endif -%}
+                      {%- for tag in product.tags -%}
+                        {%- if tag == 'new' and _badge_shown == false -%}
+                          <span class="sl-pdp-badge sl-pdp-badge--new">new</span>
+                          {%- assign _badge_shown = true -%}
+                        {%- endif -%}
+                        {%- if tag == 'editors-pick' and _badge_shown == false -%}
+                          <span class="sl-pdp-badge sl-pdp-badge--pick">editor's pick</span>
+                          {%- assign _badge_shown = true -%}
+                        {%- endif -%}
+                      {%- endfor -%}
                     </div>
 
                     {%- comment -%} Product size / subtitle from metafield {%- endcomment -%}
@@ -1615,28 +1655,6 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
                               </div>
                             </button>
                           </div>
-                          {% if section.settings.show_wishlist %}
-                            <div class="dT_VProdWishList" style="margin-top: 10px;">
-                              {%- if product.handle != blank -%}
-                                <dtx-wishlist>
-                                  <a href="javascript:void(0);"
-                                     class="button add-wishlist button--full-width button--secondary"
-                                     data-product_handle="{{ product.handle }}">
-                                    <span class="wishlist-icon-empty">
-                                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                                      </svg>
-                                    </span>
-                                    <span class="wishlist-icon-filled">
-                                      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                                      </svg>
-                                    </span>
-                                  </a>
-                                </dtx-wishlist>
-                              {%- endif -%}
-                            </div>
-                          {% endif %}
                           {%- if block.settings.show_dynamic_checkout -%}
                             {{ form | payment_button }}
                           {%- endif -%}
