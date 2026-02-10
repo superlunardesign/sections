@@ -101,11 +101,20 @@
     max-height: none;
   }
 }
-/* Kill theme's ::before pseudo-elements that add padding/borders */
+/* Override theme external CSS (section-main-product.css) */
 .main-product-template .product__media-item::before,
 .main-product-template .product__media-item::after {
   content: none !important;
   display: none !important;
+}
+.main-product-template .thumbnail.global-media-settings img {
+  padding: 0 !important;
+}
+.main-product-template .product__modal-opener,
+.main-product-template .product__media-item .modal-opener {
+  border: none !important;
+  border-radius: {{ _br }}px !important;
+  background: transparent !important;
 }
 .main-product-template .product__media-item img,
 .main-product-template .product__media-item .product-media-container {
@@ -116,7 +125,8 @@
 
 /* Contain slides without breaking swipe */
 .main-product-template .product__media-list.grid--peek { margin: 0 !important; padding: 0 !important; }
-.main-product-template .product__media-list .slider__slide { width: 100% !important; min-width: 100% !important; }
+.main-product-template .product__media-list .slider__slide { width: 100% !important; min-width: 100% !important; padding: 0 !important; }
+.main-product-template .grid--peek.slider--mobile .grid__item { box-sizing: border-box !important; }
 
 {% if _gl == 'stacked' %}
 /* Stacked: all images visible, no thumbnails */
@@ -212,6 +222,12 @@
 
 /* Thumbnail items */
 .main-product-template .thumbnail-list__item { flex: 0 0 auto !important; }
+/* Kill ::before spacer on thumbnail list items */
+.main-product-template .thumbnail-list__item::before {
+  content: none !important;
+  display: none !important;
+  padding: 0 !important;
+}
 .main-product-template .thumbnail-list__item .thumbnail {
   display: block !important;
   width: 90px !important;

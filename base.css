@@ -1424,7 +1424,7 @@ ul ul {
   }
 
   .grid--peek.slider--mobile .grid__item {
-    box-sizing: content-box;
+    box-sizing: border-box;
     margin: 0;
   }
 
