@@ -445,6 +445,233 @@ button.slick-next.slick-arrow { display:none !important; }
 {% if section.settings.enable_product_zoom != "default" %}
 #ex1 { overflow: hidden !important; z-index: 9; cursor: zoom-in; }
 {% endif %}
+
+/* =========================================================
+   SL ACCORDION REDESIGN — clean +/− toggle, olive headings
+   ========================================================= */
+.main-product-template .product__accordion {
+  margin-top: 0;
+}
+
+.main-product-template .product__accordion .dt-details > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 0;
+  border-top: none;
+  border-bottom: 1px solid rgba(0,0,0,.1);
+  padding: 16px 0;
+  background: transparent;
+  cursor: pointer;
+  list-style: none;
+}
+
+.main-product-template .product__accordion .dt-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.main-product-template .product__accordion .dt-details > summary .accordion__title {
+  font-size: 16px;
+  font-weight: 500;
+  color: #8C9B6D;
+  font-family: var(--font-body-family);
+  margin: 0;
+  letter-spacing: normal;
+}
+
+.main-product-template .product__accordion .dt-details > summary .icon-caret {
+  display: none;
+}
+
+.main-product-template .product__accordion .dt-details > summary .sl-accordion-icon {
+  font-size: 20px;
+  font-weight: 300;
+  color: #8C9B6D;
+  line-height: 1;
+  width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.main-product-template .product__accordion .dt-details[open] > summary .sl-accordion-icon .sl-icon-plus {
+  display: none;
+}
+
+.main-product-template .product__accordion .dt-details:not([open]) > summary .sl-accordion-icon .sl-icon-minus {
+  display: none;
+}
+
+.main-product-template .product__accordion .accordion__content {
+  background: transparent;
+  border-bottom: none;
+  padding: 12px 0 20px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+}
+
+/* =========================================================
+   HOW TO USE SECTION — image left, text right
+   ========================================================= */
+.sl-how-to-use {
+  margin-top: 60px;
+  margin-bottom: 40px;
+}
+
+.sl-how-to-use__inner {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  background: #f5f5f3;
+  border-radius: 12px;
+  overflow: hidden;
+  align-items: center;
+}
+
+@media (min-width: 750px) {
+  .sl-how-to-use__inner {
+    grid-template-columns: 280px 1fr;
+    gap: 0;
+  }
+}
+
+.sl-how-to-use__image {
+  width: 100%;
+  overflow: hidden;
+}
+
+.sl-how-to-use__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  aspect-ratio: 1 / 1;
+}
+
+@media (min-width: 750px) {
+  .sl-how-to-use__image img {
+    aspect-ratio: auto;
+    min-height: 200px;
+  }
+}
+
+.sl-how-to-use__text {
+  padding: 24px;
+}
+
+@media (min-width: 750px) {
+  .sl-how-to-use__text {
+    padding: 32px 40px;
+  }
+}
+
+.sl-how-to-use__heading {
+  font-family: var(--font-heading-family);
+  font-size: clamp(18px, 2vw, 22px);
+  font-weight: 600;
+  margin: 0 0 12px;
+  color: #1a1a1a;
+}
+
+.sl-how-to-use__body {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #444;
+  margin: 0;
+}
+
+.sl-how-to-use__body p { margin: 0 0 8px; }
+.sl-how-to-use__body p:last-child { margin-bottom: 0; }
+
+/* When no image, text goes full width */
+.sl-how-to-use__inner--no-image {
+  grid-template-columns: 1fr;
+}
+
+.sl-how-to-use__inner--no-image .sl-how-to-use__text {
+  padding: 32px 40px;
+}
+
+/* =========================================================
+   WHY WE LOVE IT / BENEFITS SECTION — text left, image right
+   ========================================================= */
+.sl-benefits {
+  margin-bottom: 60px;
+}
+
+.sl-benefits__inner {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  overflow: hidden;
+  align-items: center;
+}
+
+@media (min-width: 750px) {
+  .sl-benefits__inner {
+    grid-template-columns: 1fr 280px;
+    gap: 0;
+  }
+}
+
+.sl-benefits__text {
+  padding: 24px;
+  order: 1;
+}
+
+@media (min-width: 750px) {
+  .sl-benefits__text {
+    padding: 32px 40px;
+    order: 0;
+  }
+}
+
+.sl-benefits__heading {
+  font-family: var(--font-heading-family);
+  font-size: clamp(18px, 2vw, 22px);
+  font-weight: 600;
+  margin: 0 0 16px;
+  color: #1a1a1a;
+}
+
+.sl-benefits__body {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #444;
+  margin: 0;
+}
+
+.sl-benefits__body p { margin: 0 0 8px; }
+.sl-benefits__body p:last-child { margin-bottom: 0; }
+
+.sl-benefits__image {
+  width: 100%;
+  overflow: hidden;
+  order: 0;
+}
+
+@media (min-width: 750px) {
+  .sl-benefits__image {
+    order: 1;
+  }
+}
+
+.sl-benefits__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  aspect-ratio: 1 / 1;
+}
+
+@media (min-width: 750px) {
+  .sl-benefits__image img {
+    aspect-ratio: auto;
+    min-height: 200px;
+  }
+}
 {%- endstyle -%}
 
 
@@ -1654,15 +1881,18 @@ button.slick-next.slick-arrow { display:none !important; }
       {%- case block.type -%}
         {%- when 'description' -%}
           <div class="product__accordion accordion" {{ block.shopify_attributes }}>
-            <details class="dt-details">
+            <details class="dt-details"{% if section.settings.details_open_default %} open{% endif %}>
               <summary>
                 <div class="summary__title">
-                  
                   <h6 class="accordion__title">
-                    {{ 'products.product.description' | t }}
+                    {{ block.settings.heading | default: 'Details' }}
                   </h6>
                 </div>
                 {% render 'icon-caret' %}
+                <span class="sl-accordion-icon">
+                  <span class="sl-icon-plus">+</span>
+                  <span class="sl-icon-minus">&minus;</span>
+                </span>
               </summary>
               <div class="accordion__content rte">
                 {%- if product.description != blank -%}
@@ -1672,16 +1902,24 @@ button.slick-next.slick-arrow { display:none !important; }
             </details>
           </div>
         {%- when 'collapsible_tab' -%}
+          {%- assign tab_heading_lower = block.settings.heading | downcase -%}
+          {%- assign is_ingredients = false -%}
+          {%- if tab_heading_lower contains 'ingredient' -%}
+            {%- assign is_ingredients = true -%}
+          {%- endif -%}
           <div class="product__accordion accordion" {{ block.shopify_attributes }}>
-            <details class="dt-details">
+            <details class="dt-details"{% if is_ingredients and section.settings.ingredients_open_default %} open{% elsif is_ingredients == false and section.settings.details_open_default %} open{% endif %}>
               <summary>
                 <div class="summary__title">
-                  
                   <h6 class="accordion__title">
                     {{ block.settings.heading | default: block.settings.page.title }}
                   </h6>
                 </div>
                 {% render 'icon-caret' %}
+                <span class="sl-accordion-icon">
+                  <span class="sl-icon-plus">+</span>
+                  <span class="sl-icon-minus">&minus;</span>
+                </span>
               </summary>
               <div class="accordion__content rte">
                 {{ block.settings.content }}
@@ -1814,15 +2052,18 @@ button.slick-next.slick-arrow { display:none !important; }
             {%- case block.type -%}
               {%- when 'description' -%}
                 <div class="product__accordion accordion" {{ block.shopify_attributes }}>
-                  <details class="dt-details">
+                  <details class="dt-details"{% if section.settings.details_open_default %} open{% endif %}>
                     <summary>
-                      <div class="summary__title 1">
-                       
+                      <div class="summary__title">
                         <h6 class="accordion__title">
-                          {{ 'products.product.description' | t }}
+                          {{ block.settings.heading | default: 'Details' }}
                         </h6>
                       </div>
                       {% render 'icon-caret' %}
+                      <span class="sl-accordion-icon">
+                        <span class="sl-icon-plus">+</span>
+                        <span class="sl-icon-minus">&minus;</span>
+                      </span>
                     </summary>
                     <div class="accordion__content rte">
                       {%- if product.description != blank -%}
@@ -1832,8 +2073,13 @@ button.slick-next.slick-arrow { display:none !important; }
                   </details>
                 </div>
               {%- when 'collapsible_tab' -%}
+                {%- assign tab_heading_lower = block.settings.heading | downcase -%}
+                {%- assign is_ingredients = false -%}
+                {%- if tab_heading_lower contains 'ingredient' -%}
+                  {%- assign is_ingredients = true -%}
+                {%- endif -%}
                 <div class="product__accordion accordion" {{ block.shopify_attributes }}>
-                  <details class="dt-details">
+                  <details class="dt-details"{% if is_ingredients and section.settings.ingredients_open_default %} open{% elsif is_ingredients == false and section.settings.details_open_default %} open{% endif %}>
                     <summary>
                       <div class="summary__title">
                         <h6 class="accordion__title">
@@ -1841,9 +2087,14 @@ button.slick-next.slick-arrow { display:none !important; }
                         </h6>
                       </div>
                       {% render 'icon-caret' %}
+                      <span class="sl-accordion-icon">
+                        <span class="sl-icon-plus">+</span>
+                        <span class="sl-icon-minus">&minus;</span>
+                      </span>
                     </summary>
                     <div class="accordion__content rte">
                       {{ block.settings.content }}
+                      {{ block.settings.page.content }}
                     </div>
                   </details>
                 </div>
@@ -2196,6 +2447,82 @@ function updateDeliveryOption(input) {
     </div>
   </div>
 </section>
+
+{%- comment -%}
+  =========================================================
+  HOW TO USE + WHY WE LOVE IT (below product hero)
+  Images pulled from product.images; conditional on metafield content
+  =========================================================
+{%- endcomment -%}
+
+{%- assign sl_product_images = product.images -%}
+{%- assign sl_image_count = sl_product_images.size -%}
+
+{%- comment -%} Assign images for below-fold sections {%- endcomment -%}
+{%- if sl_image_count > 1 -%}
+  {%- assign sl_how_to_use_img = sl_product_images[1] -%}
+{%- else -%}
+  {%- assign sl_how_to_use_img = nil -%}
+{%- endif -%}
+
+{%- if sl_image_count > 2 -%}
+  {%- assign sl_benefits_img = sl_product_images[2] -%}
+{%- elsif sl_image_count >= 1 -%}
+  {%- assign sl_benefits_img = sl_product_images[0] -%}
+{%- else -%}
+  {%- assign sl_benefits_img = nil -%}
+{%- endif -%}
+
+{%- comment -%} HOW TO USE — only renders if content is populated {%- endcomment -%}
+{%- if section.settings.how_to_use_text != blank -%}
+  <div class="sl-how-to-use page-width">
+    <div class="sl-how-to-use__inner{% unless sl_how_to_use_img %} sl-how-to-use__inner--no-image{% endunless %}">
+      {%- if sl_how_to_use_img -%}
+        <div class="sl-how-to-use__image">
+          <img src="{{ sl_how_to_use_img | image_url: width: 600 }}"
+               alt="{{ sl_how_to_use_img.alt | escape | default: product.title }}"
+               width="600"
+               height="600"
+               loading="lazy">
+        </div>
+      {%- endif -%}
+      <div class="sl-how-to-use__text">
+        <h2 class="sl-how-to-use__heading">
+          {{ section.settings.how_to_use_heading | default: 'How To Use' }}{% if section.settings.how_to_use_append_title %} {{ product.title }}{% endif %}
+        </h2>
+        <div class="sl-how-to-use__body rte">
+          {{ section.settings.how_to_use_text }}
+        </div>
+      </div>
+    </div>
+  </div>
+{%- endif -%}
+
+{%- comment -%} WHY WE LOVE IT / BENEFITS — only renders if content is populated {%- endcomment -%}
+{%- if section.settings.benefits_text != blank -%}
+  <div class="sl-benefits page-width">
+    <div class="sl-benefits__inner">
+      <div class="sl-benefits__text">
+        <h2 class="sl-benefits__heading">
+          {{ section.settings.benefits_heading | default: 'Why We Love It' }}
+        </h2>
+        <div class="sl-benefits__body rte">
+          {{ section.settings.benefits_text }}
+        </div>
+      </div>
+      {%- if sl_benefits_img -%}
+        <div class="sl-benefits__image">
+          <img src="{{ sl_benefits_img | image_url: width: 600 }}"
+               alt="{{ sl_benefits_img.alt | escape | default: product.title }}"
+               width="600"
+               height="600"
+               loading="lazy">
+        </div>
+      {%- endif -%}
+    </div>
+  </div>
+{%- endif -%}
+
 <script>
   var variantStock = {};
   {% for variant in product.variants %}
@@ -3262,6 +3589,63 @@ function updateDeliveryOption(input) {
   "id": "choose_label",
   "label": "Choose style",
   "default":"Choose style"
+  },
+  {
+    "type": "header",
+    "content": "Accordion settings"
+  },
+  {
+    "type": "checkbox",
+    "id": "details_open_default",
+    "label": "Details open by default",
+    "default": true,
+    "info": "When enabled, the Details/Description accordion starts expanded."
+  },
+  {
+    "type": "checkbox",
+    "id": "ingredients_open_default",
+    "label": "Ingredients open by default",
+    "default": false,
+    "info": "When enabled, the Ingredients accordion starts expanded."
+  },
+  {
+    "type": "header",
+    "content": "How To Use section"
+  },
+  {
+    "type": "text",
+    "id": "how_to_use_heading",
+    "label": "Heading",
+    "default": "How To Use"
+  },
+  {
+    "type": "checkbox",
+    "id": "how_to_use_append_title",
+    "label": "Append product title to heading",
+    "default": true,
+    "info": "Shows 'How To Use [Product Name]'"
+  },
+  {
+    "type": "richtext",
+    "id": "how_to_use_text",
+    "label": "How to use content",
+    "info": "Connect to a product metafield via dynamic source. Section is hidden when blank."
+  },
+  {
+    "type": "header",
+    "content": "Why We Love It section"
+  },
+  {
+    "type": "text",
+    "id": "benefits_heading",
+    "label": "Heading",
+    "default": "Why We Love It"
+  },
+  {
+    "type": "richtext",
+    "id": "benefits_text",
+    "label": "Benefits content",
+    "info": "Connect to a product metafield via dynamic source. Section is hidden when blank."
   }
   ]
   }
