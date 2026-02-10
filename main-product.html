@@ -50,7 +50,7 @@
 
 /* Hard center the PDP and limit max width */
 .main-product-template .facets-vertical {
-  max-width: 1280px;   /* total canvas */
+  max-width: 1280px;
   margin: 0 auto;
   width: 100%;
 }
@@ -60,26 +60,32 @@
 }
 
 /* Kill any flex that might be wrapping weirdly from theme */
-.main-product-template .facets-vertical,
-.main-product-template .main-product_info.product { display: block; }
+.main-product-template .facets-vertical { display: block; }
 
 /* Our grid: stack on mobile, 2 columns on desktop */
 .main-product-template .main-product_info.product {
-  display: grid !important;
-  grid-template-columns: 1fr;   /* mobile */
+  display: grid;
+  grid-template-columns: 1fr;
   row-gap: 28px;
   column-gap: 0;
   align-items: start;
   width: 100%;
 }
 
-/* Desktop: fixed, readable columns so the title never gets squeezed */
+{%- comment -%} Dynamic grid columns based on media_size setting {%- endcomment -%}
+{%- assign ms = section.settings.media_size -%}
 @media (min-width: 990px){
   .main-product-template .main-product_info.product {
-    grid-template-columns: minmax(0, 640px) minmax(0, 520px);
-    column-gap: 56px;
+    {% if ms == 'small' %}
+      grid-template-columns: minmax(0, 460px) minmax(0, 580px);
+    {% elsif ms == 'medium' %}
+      grid-template-columns: minmax(0, 560px) minmax(0, 520px);
+    {% else %}
+      grid-template-columns: minmax(0, 640px) minmax(0, 480px);
+    {% endif %}
+    column-gap: 48px;
     row-gap: 0;
-    justify-content: center;    /* centers the pair within 1280 */
+    justify-content: center;
   }
 }
 
@@ -101,11 +107,11 @@
 @media (min-width: 990px){
   .main-product-template .product__media-wrapper {
     position: sticky;
-    top: 110px; /* adjust to your header height */
+    top: 110px;
   }
-
-      .grid--2-col-tablet .grid__item {
-        width: 100%;
+}
+.grid--2-col-tablet .grid__item {
+  width: 100%;
 }
 
 /* Make sure the info column forms its own stacking context */
@@ -132,58 +138,160 @@
 @media (max-width: 989px){ .main-product-template .product__media-item { padding: 18px; } }
 .main-product-template .product__media-gallery { width: 100%; }
 
+{% if section.settings.gallery_layout == 'stacked' %}
+/* STACKED LAYOUT: show all images vertically */
+.main-product-template .product__media-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.main-product-template .product__media-list .product__media-item {
+  width: 100%;
+}
+/* Stacked column alignment */
+{% if section.settings.stacked_column_alignment == 'two' %}
+@media (min-width: 750px) {
+  .main-product-template .product__media-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+}
+{% endif %}
+{% endif %}
+
 /* =========================================================
-   HORIZONTAL THUMB STRIP (force row; hide vertical arrows)
+   THUMBNAIL STRIP — responds to gallery_layout + slider_position
    ========================================================= */
+
+{%- comment -%}
+  Layout modes:
+  - stacked: images stack, NO thumbnails
+  - thumbnail / thumbnail_slider: thumbnails shown
+  Thumbnail position:
+  - bottom: horizontal row below main image
+  - side: vertical column beside main image
+{%- endcomment -%}
+
+{%- assign gl = section.settings.gallery_layout -%}
+{%- assign sp = section.settings.slider_position -%}
+
+{% if gl == 'stacked' %}
+/* STACKED: hide thumbnail strip entirely */
 .main-product-template .thumbnail-slider,
 .main-product-template .thumbnail-slider.slider-vertical {
-  width: 100% !important;
-  margin-top: 18px;
-  order: 2;
-  display: block !important;
-  height: auto !important;
-  position: relative !important;
+  display: none;
 }
-.main-product-template .thumbnail-slider .slider-button { display: none !important; }
+{% elsif sp == 'side' %}
+/* SIDE THUMBNAILS: vertical strip beside the main image */
+.main-product-template .product__media-gallery {
+  display: flex;
+  flex-direction: row-reverse;
+  gap: 12px;
+}
+.main-product-template .thumbnail-slider,
+.main-product-template .thumbnail-slider.slider-vertical {
+  width: 90px;
+  order: 0;
+  display: block;
+  height: auto;
+  position: relative;
+  flex-shrink: 0;
+  margin-top: 0;
+}
+.main-product-template .thumbnail-slider .slider-button { display: none; }
 
 .main-product-template .thumbnail-slider .thumbnail-list,
 .main-product-template .thumbnail-slider .thumbnail-list.slider {
-  display: flex !important;
-  flex-direction: row !important;
-  flex-wrap: nowrap !important;
-  gap: 12px;
-  overflow-x: auto;
-  overflow-y: hidden !important;
-  scroll-snap-type: x proximity;
-  padding-bottom: 4px;
-  width: 100% !important;
-  height: auto !important;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  gap: 10px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  width: 100%;
+  height: auto;
+  max-height: 600px;
+  padding-right: 2px;
 }
 
+{%- if section.settings.thumb_carousel_layout == 'thumbnail_slider_right' -%}
+/* Thumbnails on the right side */
+.main-product-template .product__media-gallery {
+  flex-direction: row;
+}
+{%- endif -%}
+
+/* On mobile, side thumbnails collapse to horizontal row below */
+@media (max-width: 989px){
+  .main-product-template .product__media-gallery {
+    flex-direction: column;
+  }
+  .main-product-template .thumbnail-slider,
+  .main-product-template .thumbnail-slider.slider-vertical {
+    width: 100%;
+    margin-top: 12px;
+  }
+  .main-product-template .thumbnail-slider .thumbnail-list,
+  .main-product-template .thumbnail-slider .thumbnail-list.slider {
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    max-height: none;
+  }
+}
+{% else %}
+/* BOTTOM THUMBNAILS: horizontal row below main image */
+.main-product-template .thumbnail-slider,
+.main-product-template .thumbnail-slider.slider-vertical {
+  width: 100%;
+  margin-top: 14px;
+  order: 2;
+  display: block;
+  height: auto;
+  position: relative;
+}
+.main-product-template .thumbnail-slider .slider-button { display: none; }
+
+.main-product-template .thumbnail-slider .thumbnail-list,
+.main-product-template .thumbnail-slider .thumbnail-list.slider {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x proximity;
+  padding-bottom: 4px;
+  width: 100%;
+  height: auto;
+}
+{% endif %}
+
+/* --- Shared thumbnail item styling --- */
 .main-product-template .thumbnail-list__item {
-  flex: 0 0 auto !important;
-  width: auto !important;
+  flex: 0 0 auto;
 }
 
 .main-product-template .thumbnail-list__item .thumbnail {
-  width: 90px !important;
-  height: 90px !important;
+  width: 90px;
+  height: 90px;
   border-radius: {{ section.settings.image_border_radius | default: 12 }}px;
   overflow: hidden;
   background: #efefef;
   border: {{ section.settings.image_border_width | default: 1 }}px solid {{ section.settings.image_border_color | default: 'rgba(0,0,0,.06)' }};
   scroll-snap-align: start;
   aspect-ratio: 1 / 1;
-  padding: 0 !important;
+  padding: 0;
 }
 .main-product-template .thumbnail-list__item .thumbnail img {
-  width: 100% !important;
-  height: 100% !important;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   border-radius: {{ section.settings.image_border_radius | default: 12 }}px;
 }
 @media (max-width: 989px){
-  .main-product-template .thumbnail-list__item .thumbnail { width: 80px !important; height: 80px !important; }
+  .main-product-template .thumbnail-list__item .thumbnail { width: 80px; height: 80px; }
 }
 .main-product-template .thumbnail-list__item[aria-current="true"] .thumbnail,
 .main-product-template .thumbnail-list__item.is-active .thumbnail{
@@ -412,7 +520,6 @@
 .main-product-template .product__info-wrapper .dT_VProdWishList a.add-wishlist{
   border-radius:999px; height:46px; width:46px; display:grid; place-items:center;
   background:#fff; border:1px solid rgba(0,0,0,.12);
-}
 }
 
 .add-wishlist{
