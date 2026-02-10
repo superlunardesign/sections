@@ -207,13 +207,19 @@
 }
 {% else %}
 /* ====================  MOBILE THUMBNAILS  ==================== */
-/* Full-width slides, no peek, no arrows */
-.main-product-template .product__media-list { padding: 0 !important; margin: 0 !important; }
+/* Full-width slides, no peek, no arrows — still swipeable */
+.main-product-template .product__media-list {
+  padding: 0 !important; margin: 0 !important;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
 .main-product-template .product__media-list .slider__slide {
   width: 100% !important; min-width: 100% !important;
   padding: 0 !important; margin: 0 !important;
+  scroll-snap-align: start;
 }
 @media (max-width: 989px) {
+  /* No arrows, no peek on mobile when thumbnails active */
   .main-product-template .slider-buttons { display: none !important; }
   .main-product-template .grid--peek .grid__item { min-width: 100% !important; }
   .main-product-template .grid--peek.slider .grid__item:first-of-type { margin-left: 0 !important; }
@@ -290,7 +296,8 @@
   .main-product-template .thumbnail-slider.slider-vertical { width: 100% !important; flex: 0 0 auto !important; margin-top: 8px; order: 1; }
   .main-product-template .thumbnail-slider .thumbnail-list,
   .main-product-template .thumbnail-slider .thumbnail-list.slider {
-    flex-direction: row !important; gap: 8px; overflow-x: auto !important; overflow-y: hidden !important; max-height: none; padding: 0 !important;
+    flex-direction: row !important; justify-content: flex-start !important;
+    gap: 8px; overflow-x: auto !important; overflow-y: hidden !important; max-height: none; padding: 0 !important;
   }
 }
 {% else %}
@@ -304,6 +311,7 @@
 .main-product-template .thumbnail-slider .thumbnail-list.slider {
   display: flex !important;
   flex-direction: row !important;
+  justify-content: flex-start !important;
   gap: 8px;
   overflow-x: auto !important;
   overflow-y: hidden !important;
@@ -497,6 +505,7 @@
 .main-product-template .product-form__buttons { display: grid; gap: 10px; grid-template-columns: 1fr; }
 .main-product-template .product-form__submit {
   border-radius: 8px; min-height: 52px; font-weight: 600; font-size: 15px;
+  font-family: var(--font-body-family);
   letter-spacing: .02em; background: #7f9f6f !important; border-color: #7f9f6f !important;
   text-transform: lowercase;
 }
@@ -516,100 +525,77 @@
 @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
 
 {% if section.settings.enable_sticky_bar %}
-/* ====================  STICKY ADD-TO-CART BAR  ==================== */
-.sl-sticky-atc {
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  z-index: 999;
-  background: #fff;
-  border-top: 1px solid rgba(0,0,0,.08);
-  box-shadow: 0 -2px 12px rgba(0,0,0,.06);
-  transform: translateY(100%);
-  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  padding: 10px 16px;
-  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-}
-.sl-sticky-atc.is-visible { transform: translateY(0); }
-
-.sl-sticky-atc__inner {
-  max-width: 1280px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 10px;
-  align-items: center;
-}
-@media (min-width: 750px) {
-  .sl-sticky-atc__inner {
-    grid-template-columns: 1fr auto auto;
-    gap: 16px;
+/* ====================  STICKY ADD-TO-CART BAR (mobile only)  ==================== */
+.sl-sticky-atc { display: none; }
+@media (max-width: 989px) {
+  .sl-sticky-atc {
+    display: block;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 999;
+    background: #fff;
+    border-top: 1px solid rgba(0,0,0,.08);
+    box-shadow: 0 -2px 12px rgba(0,0,0,.06);
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 10px 16px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
   }
-}
+  .sl-sticky-atc.is-visible { transform: translateY(0); }
 
-/* Product info (title + price) — hidden on mobile for clean look */
-.sl-sticky-atc__info { display: none; }
-@media (min-width: 750px) {
-  .sl-sticky-atc__info {
+  .sl-sticky-atc__inner {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 10px;
+    align-items: center;
+  }
+
+  /* Quantity in sticky bar */
+  .sl-sticky-atc .quantity {
     display: flex;
     align-items: center;
-    gap: 12px;
-    min-width: 0;
+    border: 1.5px solid #d4d4d4;
+    border-radius: 8px;
+    height: 46px;
   }
-  .sl-sticky-atc__title {
-    font-size: 14px; font-weight: 600;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    color: #1a1a1a;
+  .sl-sticky-atc .quantity__button {
+    width: 38px; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    background: transparent; border: none; cursor: pointer;
+    font-size: 16px; color: #333;
   }
-  .sl-sticky-atc__price {
-    font-size: 14px; font-weight: 600;
-    color: #7f9f6f;
+  .sl-sticky-atc .quantity__input {
+    width: 32px; text-align: center;
+    border: none; background: transparent;
+    font-size: 15px; font-weight: 600;
+    -moz-appearance: textfield;
+  }
+  .sl-sticky-atc .quantity__input::-webkit-outer-spin-button,
+  .sl-sticky-atc .quantity__input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+  /* ATC button in sticky bar */
+  .sl-sticky-atc__btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 46px;
+    padding: 0 24px;
+    border: none;
+    border-radius: 8px;
+    background: #7f9f6f;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: var(--font-body-family);
+    letter-spacing: 0.02em;
+    text-transform: lowercase;
+    cursor: pointer;
     white-space: nowrap;
+    transition: background 0.2s ease;
   }
+  .sl-sticky-atc__btn:hover { background: #6d8d5d; }
+  .sl-sticky-atc__btn[disabled] { opacity: .6; cursor: not-allowed; }
 }
-
-/* Quantity in sticky bar */
-.sl-sticky-atc .quantity {
-  display: flex;
-  align-items: center;
-  border: 1.5px solid #d4d4d4;
-  border-radius: 8px;
-  height: 46px;
-}
-.sl-sticky-atc .quantity__button {
-  width: 38px; height: 100%;
-  display: flex; align-items: center; justify-content: center;
-  background: transparent; border: none; cursor: pointer;
-  font-size: 16px; color: #333;
-}
-.sl-sticky-atc .quantity__input {
-  width: 32px; text-align: center;
-  border: none; background: transparent;
-  font-size: 15px; font-weight: 600;
-  -moz-appearance: textfield;
-}
-.sl-sticky-atc .quantity__input::-webkit-outer-spin-button,
-.sl-sticky-atc .quantity__input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-
-/* ATC button in sticky bar */
-.sl-sticky-atc__btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 46px;
-  padding: 0 24px;
-  border: none;
-  border-radius: 8px;
-  background: #7f9f6f;
-  color: #fff;
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.2s ease;
-}
-.sl-sticky-atc__btn:hover { background: #6d8d5d; }
-.sl-sticky-atc__btn[disabled] { opacity: .6; cursor: not-allowed; }
 {% endif %}
 
 /* ====================  HIGHLIGHTS  ==================== */
@@ -875,6 +861,7 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
 @media (min-width: 750px) {
   .sl-benefits__image img { aspect-ratio: auto; min-height: 200px; }
 }
+
 {%- endstyle -%}
 
 
@@ -1395,37 +1382,8 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
                     </div>
 
                   {%- when 'quantity_selector' -%}
-                    <div
-                      class="product-form__input product-form__quantity{% if settings.inputs_shadow_vertical_offset != 0 and settings.inputs_shadow_vertical_offset < 0 %} product-form__quantity-top{% endif %}"
-                      {{ block.shopify_attributes }}
-                    >
-                      <label class="form__label" for="Quantity-{{ section.id }}">
-                        {{ 'products.product.quantity.label' | t }}
-                      </label>
-                      <quantity-input class="quantity">
-                        <button class="quantity__button no-js-hidden" name="minus" type="button">
-                          <span class="visually-hidden">
-                            {{- 'products.product.quantity.decrease' | t: product: product.title | escape -}}
-                          </span>
-                          {% render 'icon-minus' %}
-                        </button>
-                        <input
-                          class="quantity__input"
-                          type="number"
-                          name="quantity"
-                          id="Quantity-{{ section.id }}"
-                          min="1"
-                          value="1"
-                          form="{{ product_form_id }}"
-                        >
-                        <button class="quantity__button no-js-hidden" name="plus" type="button">
-                          <span class="visually-hidden">
-                            {{- 'products.product.quantity.increase' | t: product: product.title | escape -}}
-                          </span>
-                          {% render 'icon-plus' %}
-                        </button>
-                      </quantity-input>
-                    </div>
+                    {%- comment -%}Quantity is now embedded inside the buy_buttons block (sl-qty-atc-row).
+                       This block is intentionally empty to prevent duplicate quantity selectors.{%- endcomment -%}
 
                   {%- when 'inventory_status' -%}
                     {% assign current_variant = product.selected_or_first_available_variant %}
@@ -1750,7 +1708,7 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
                               onclick="addToCart(this)">
                               <span>
                                 {%- if product.selected_or_first_available_variant.available -%}
-                                  {{ 'products.product.add_to_cart' | t }} - {{ product.selected_or_first_available_variant.price | money }}
+                                  {{ 'products.product.add_to_cart' | t }} | {{ product.selected_or_first_available_variant.price | money }}
                                 {%- else -%}
                                   {{ 'products.product.sold_out' | t }}
                                 {%- endif -%}
@@ -1871,10 +1829,10 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
                   </h6>
                 </div>
                 {% render 'icon-caret' %}
-                <span class="sl-accordion-icon">
-                  <span class="sl-icon-plus">+</span>
-                  <span class="sl-icon-minus">&minus;</span>
-                </span>
+                    <span class="sl-accordion-icon">
+                      <span class="sl-icon-plus">+</span>
+                      <span class="sl-icon-minus">&minus;</span>
+                    </span>
               </summary>
               <div class="accordion__content rte" style="{% if block.settings.content_color != blank %}color: {{ block.settings.content_color }};{% endif %}{% if block.settings.content_size != blank %}font-size: {{ block.settings.content_size }}px;{% endif %}">
                 {%- if product.description != blank -%}
@@ -1898,10 +1856,10 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
                   </h6>
                 </div>
                 {% render 'icon-caret' %}
-                <span class="sl-accordion-icon">
-                  <span class="sl-icon-plus">+</span>
-                  <span class="sl-icon-minus">&minus;</span>
-                </span>
+                    <span class="sl-accordion-icon">
+                      <span class="sl-icon-plus">+</span>
+                      <span class="sl-icon-minus">&minus;</span>
+                    </span>
               </summary>
               <div class="accordion__content rte" style="{% if block.settings.content_color != blank %}color: {{ block.settings.content_color }};{% endif %}{% if block.settings.content_size != blank %}font-size: {{ block.settings.content_size }}px;{% endif %}">
                 {{ block.settings.content }}
@@ -2042,10 +2000,10 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
                         </h6>
                       </div>
                       {% render 'icon-caret' %}
-                      <span class="sl-accordion-icon">
-                        <span class="sl-icon-plus">+</span>
-                        <span class="sl-icon-minus">&minus;</span>
-                      </span>
+                    <span class="sl-accordion-icon">
+                      <span class="sl-icon-plus">+</span>
+                      <span class="sl-icon-minus">&minus;</span>
+                    </span>
                     </summary>
                     <div class="accordion__content rte" style="{% if block.settings.content_color != blank %}color: {{ block.settings.content_color }};{% endif %}{% if block.settings.content_size != blank %}font-size: {{ block.settings.content_size }}px;{% endif %}">
                       {%- if product.description != blank -%}
@@ -2069,10 +2027,10 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
                         </h6>
                       </div>
                       {% render 'icon-caret' %}
-                      <span class="sl-accordion-icon">
-                        <span class="sl-icon-plus">+</span>
-                        <span class="sl-icon-minus">&minus;</span>
-                      </span>
+                    <span class="sl-accordion-icon">
+                      <span class="sl-icon-plus">+</span>
+                      <span class="sl-icon-minus">&minus;</span>
+                    </span>
                     </summary>
                     <div class="accordion__content rte" style="{% if block.settings.content_color != blank %}color: {{ block.settings.content_color }};{% endif %}{% if block.settings.content_size != blank %}font-size: {{ block.settings.content_size }}px;{% endif %}">
                       {{ block.settings.content }}
@@ -2170,38 +2128,6 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
           render 'enquiry-form'
         endif
       %}
-      {%- if section.settings.enable_sticky_bar -%}
-      <!-- Sticky Add-to-Cart Bar -->
-      <div class="sl-sticky-atc" id="sl-sticky-atc-{{ section.id }}">
-        <form action="/cart/add" method="post" class="sl-sticky-atc__inner">
-          <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}" id="sl-sticky-variant-{{ section.id }}">
-          <div class="sl-sticky-atc__info">
-            <span class="sl-sticky-atc__title">{{ product.title }}</span>
-            <span class="sl-sticky-atc__price">{{ product.selected_or_first_available_variant.price | money }}</span>
-          </div>
-          <quantity-input class="quantity">
-            <button class="quantity__button no-js-hidden" name="minus" type="button">
-              <span class="visually-hidden">Decrease quantity</span>
-              {% render 'icon-minus' %}
-            </button>
-            <input class="quantity__input" type="number" name="quantity" min="1" value="1">
-            <button class="quantity__button no-js-hidden" name="plus" type="button">
-              <span class="visually-hidden">Increase quantity</span>
-              {% render 'icon-plus' %}
-            </button>
-          </quantity-input>
-          <button type="submit" class="sl-sticky-atc__btn"
-            {% if product.selected_or_first_available_variant.available == false %}disabled{% endif %}>
-            {%- if product.selected_or_first_available_variant.available -%}
-              {{ 'products.product.add_to_cart' | t }} - {{ product.selected_or_first_available_variant.price | money }}
-            {%- else -%}
-              {{ 'products.product.sold_out' | t }}
-            {%- endif -%}
-          </button>
-        </form>
-      </div>
-      {%- endif -%}
-
       <script>
         document.addEventListener('DOMContentLoaded', function() {
           /* — Sticky ATC bar: IntersectionObserver — */
@@ -2479,12 +2405,33 @@ function updateDeliveryOption(input) {
   </div>
 </section>
 
-{%- comment -%}
-  =========================================================
-  HOW TO USE + WHY WE LOVE IT (below product hero)
-  Images pulled from product.images; conditional on metafield content
-  =========================================================
-{%- endcomment -%}
+{%- if section.settings.enable_sticky_bar -%}
+<!-- Sticky Add-to-Cart Bar (mobile only, outside section) -->
+<div class="sl-sticky-atc" id="sl-sticky-atc-{{ section.id }}">
+  <form action="/cart/add" method="post" class="sl-sticky-atc__inner">
+    <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}" id="sl-sticky-variant-{{ section.id }}">
+    <quantity-input class="quantity">
+      <button class="quantity__button no-js-hidden" name="minus" type="button">
+        <span class="visually-hidden">Decrease quantity</span>
+        {% render 'icon-minus' %}
+      </button>
+      <input class="quantity__input" type="number" name="quantity" min="1" value="1">
+      <button class="quantity__button no-js-hidden" name="plus" type="button">
+        <span class="visually-hidden">Increase quantity</span>
+        {% render 'icon-plus' %}
+      </button>
+    </quantity-input>
+    <button type="submit" class="sl-sticky-atc__btn"
+      {% if product.selected_or_first_available_variant.available == false %}disabled{% endif %}>
+      {%- if product.selected_or_first_available_variant.available -%}
+        {{ 'products.product.add_to_cart' | t }} | {{ product.selected_or_first_available_variant.price | money }}
+      {%- else -%}
+        {{ 'products.product.sold_out' | t }}
+      {%- endif -%}
+    </button>
+  </form>
+</div>
+{%- endif -%}
 
 {%- assign sl_product_images = product.images -%}
 {%- assign sl_image_count = sl_product_images.size -%}
