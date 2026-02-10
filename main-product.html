@@ -115,7 +115,7 @@
    HERO IMAGE CARD + GALLERY
    ========================================================= */
 .main-product-template .product__media-item {
-  background: #f6f6f6;
+  background: #d6dce8;
   border-radius: 12px;
 }
 @media (max-width: 989px){ .main-product-template .product__media-item { padding: 18px; } }
@@ -158,6 +158,76 @@
 }
 
 
+
+/* =========================================================
+   PDP BREADCRUMB + TITLE ROW + BADGES
+   ========================================================= */
+.sl-pdp-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-family: var(--font-body-family);
+  margin-bottom: 8px;
+}
+.sl-pdp-breadcrumb a {
+  color: #888;
+  text-decoration: none;
+}
+.sl-pdp-breadcrumb a:hover { color: #555; }
+.sl-pdp-breadcrumb__sep { color: #bbb; }
+
+.sl-pdp-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+.sl-pdp-title-row .product__title { flex: 1; min-width: 0; }
+
+.sl-pdp-title-badges {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.sl-shannons-pick-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border: 1.5px solid #8C9B6D;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #8C9B6D;
+  white-space: nowrap;
+  font-family: var(--font-body-family);
+}
+.sl-shannons-pick-badge svg {
+  width: 13px;
+  height: 13px;
+  stroke: #8C9B6D;
+}
+
+.sl-pdp-subtitle {
+  font-size: 14px;
+  color: #666;
+  margin: 0 0 6px;
+  font-family: var(--font-body-family);
+}
+
+.notable-tags {
+  display: flex;
+  gap: 16px;
+  color: #8C9B6D;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+.notable-tags p { margin: 0; }
 
 /* =========================================================
    TYPOGRAPHY / RIGHT COLUMN (fix stacked mega title)
@@ -390,17 +460,41 @@
 /* =========================================================
    SUMMARY & ACCORDIONS
    ========================================================= */
-.main-product-template .product__accordion { margin-top: 12px; }
-.main-product-template .product__accordion .dt-details > summary{
-  border-radius:0; border-bottom:1px solid rgba(0,0,0,.1);
-  padding:14px 16px; background:#fff; cursor:pointer;
+.main-product-template .product__accordion { margin-top: 0; }
+.main-product-template .product__accordion .dt-details > summary {
+  border-radius: 0;
+  border-bottom: 1px solid rgba(0,0,0,.1);
+  padding: 14px 0;
+  background: #fff;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  list-style: none;
 }
-.main-product-template .product__accordion .dt-details[open] > summary{
-  border-bottom-left-radius:0; border-bottom-right-radius:0;
+.main-product-template .product__accordion .dt-details > summary::-webkit-details-marker { display: none; }
+.main-product-template .product__accordion .dt-details > summary .accordion__title {
+  color: #8C9B6D;
+  font-size: 16px;
+  font-weight: 500;
+  font-family: var(--font-body-family);
+  margin: 0;
 }
-.main-product-template .product__accordion .accordion__content{
-  background:#fff; border-bottom:1px solid rgba(0,0,0,.08);
-  border-top:0; padding:16px;
+.main-product-template .product__accordion .dt-details > summary .icon-caret {
+  color: #8C9B6D;
+}
+.main-product-template .product__accordion .dt-details[open] > summary {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.main-product-template .product__accordion .accordion__content {
+  background: #fff;
+  border-bottom: 1px solid rgba(0,0,0,.08);
+  border-top: 0;
+  padding: 12px 0 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #444;
 }
 
 /* Hide any slick arrows on thumbnail rail (we scroll horizontally) */
@@ -922,21 +1016,48 @@ button.slick-next.slick-arrow { display:none !important; }
                     </p>
 
                   {%- when 'title' -%}
-                    <div class="product__title" {{ block.shopify_attributes }}>
-                      <h1>{{ product.title | escape }}</h1>
-                      <a href="{{ product.url }}" class="product__title">
-                        <h2 class="h1">
-                          {{ product.title | escape }}
-                        </h2>
-                      </a>
+                    {%- comment -%} Breadcrumb category path {%- endcomment -%}
+                    {%- if product.collections.size > 0 -%}
+                      <div class="sl-pdp-breadcrumb" {{ block.shopify_attributes }}>
+                        {%- for col in product.collections limit: 2 -%}
+                          <a href="{{ col.url }}">{{ col.title }}</a>
+                          {%- unless forloop.last %}<span class="sl-pdp-breadcrumb__sep">/</span>{% endunless -%}
+                        {%- endfor -%}
+                      </div>
+                    {%- endif -%}
+
+                    <div class="sl-pdp-title-row">
+                      <div class="product__title" {{ block.shopify_attributes }}>
+                        <h1>{{ product.title | escape }}</h1>
+                        <a href="{{ product.url }}" class="product__title">
+                          <h2 class="h1">
+                            {{ product.title | escape }}
+                          </h2>
+                        </a>
+                      </div>
+                      {%- comment -%} Heart + Shannon's Pick badge {%- endcomment -%}
+                      <div class="sl-pdp-title-badges">
+                        {%- for tag in product.tags -%}
+                          {%- if tag == 'editors-pick' -%}
+                            <span class="sl-shannons-pick-badge">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                              SHANNON'S PICK
+                            </span>
+                          {%- endif -%}
+                        {%- endfor -%}
+                      </div>
                     </div>
-                    <div class="notable-tags" style="color:#8C9B6D; display:flex;gap: 20px;">
+
+                    {%- comment -%} Product size / subtitle from metafield {%- endcomment -%}
+                    {%- if product.metafields.custom.subtitle != blank -%}
+                      <p class="sl-pdp-subtitle">{{ product.metafields.custom.subtitle.value }}</p>
+                    {%- endif -%}
+
+                    {%- comment -%} Notable tags (Acne Safe etc.) {%- endcomment -%}
+                    <div class="notable-tags">
                       {% for tag in product.tags %}
                         {% if tag == 'ACNE SAFE' %}
                           <p>✓ Acne Safe Skincare</p>
-                        {% endif %}
-                        {% if tag == 'editors-pick' %}
-                          <p>★ Shannon's Pick</p>
                         {% endif %}
                       {% endfor %}
                     </div>
@@ -1512,12 +1633,12 @@ button.slick-next.slick-arrow { display:none !important; }
       {%- case block.type -%}
         {%- when 'description' -%}
           <div class="product__accordion accordion" {{ block.shopify_attributes }}>
-            <details class="dt-details">
+            <details class="dt-details" open>
               <summary>
                 <div class="summary__title">
-                  
+
                   <h6 class="accordion__title">
-                    {{ 'products.product.description' | t }}
+                    Details
                   </h6>
                 </div>
                 {% render 'icon-caret' %}
@@ -1672,12 +1793,12 @@ button.slick-next.slick-arrow { display:none !important; }
             {%- case block.type -%}
               {%- when 'description' -%}
                 <div class="product__accordion accordion" {{ block.shopify_attributes }}>
-                  <details class="dt-details">
+                  <details class="dt-details" open>
                     <summary>
-                      <div class="summary__title 1">
-                       
+                      <div class="summary__title">
+
                         <h6 class="accordion__title">
-                          {{ 'products.product.description' | t }}
+                          Details
                         </h6>
                       </div>
                       {% render 'icon-caret' %}

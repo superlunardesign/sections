@@ -1,0 +1,341 @@
+{%- comment -%}
+  SL How To Use — full-width product feature row.
+  Pulls content from product metafields or manual overrides.
+  Layout: image left, text right.
+{%- endcomment -%}
+
+{%- style -%}
+#SLHowToUse-{{ section.id }} {
+  padding: {{ section.settings.padding_top_mobile }}px 0 {{ section.settings.padding_bottom_mobile }}px;
+}
+@media (min-width: 750px) {
+  #SLHowToUse-{{ section.id }} {
+    padding: {{ section.settings.padding_top }}px 0 {{ section.settings.padding_bottom }}px;
+  }
+}
+
+#SLHowToUse-{{ section.id }} .sl-htu__card {
+  background: {{ section.settings.card_bg }};
+  border-radius: {{ section.settings.border_radius }}px;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  min-height: 220px;
+}
+@media (min-width: 750px) {
+  #SLHowToUse-{{ section.id }} .sl-htu__card {
+    grid-template-columns: {{ section.settings.image_width }}% 1fr;
+    min-height: 260px;
+  }
+}
+
+#SLHowToUse-{{ section.id }} .sl-htu__image-wrap {
+  position: relative;
+  overflow: hidden;
+  min-height: 200px;
+}
+@media (min-width: 750px) {
+  #SLHowToUse-{{ section.id }} .sl-htu__image-wrap {
+    min-height: 100%;
+  }
+}
+
+#SLHowToUse-{{ section.id }} .sl-htu__image-wrap img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: {{ section.settings.image_fit }};
+}
+
+#SLHowToUse-{{ section.id }} .sl-htu__text {
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+@media (min-width: 750px) {
+  #SLHowToUse-{{ section.id }} .sl-htu__text {
+    padding: {{ section.settings.text_padding }}px;
+  }
+}
+
+#SLHowToUse-{{ section.id }} .sl-htu__heading {
+  font-family: var(--font-heading-family);
+  font-size: {{ section.settings.heading_size_mobile }}px;
+  font-weight: {{ section.settings.heading_weight }};
+  color: {{ section.settings.heading_color }};
+  margin: 0 0 12px 0;
+  line-height: 1.3;
+}
+@media (min-width: 750px) {
+  #SLHowToUse-{{ section.id }} .sl-htu__heading {
+    font-size: {{ section.settings.heading_size }}px;
+  }
+}
+
+#SLHowToUse-{{ section.id }} .sl-htu__body {
+  font-family: var(--font-body-family);
+  font-size: {{ section.settings.body_size_mobile }}px;
+  color: {{ section.settings.body_color }};
+  line-height: 1.6;
+  margin: 0;
+}
+@media (min-width: 750px) {
+  #SLHowToUse-{{ section.id }} .sl-htu__body {
+    font-size: {{ section.settings.body_size }}px;
+  }
+}
+#SLHowToUse-{{ section.id }} .sl-htu__body p { margin: 0 0 0.5em; }
+#SLHowToUse-{{ section.id }} .sl-htu__body p:last-child { margin-bottom: 0; }
+{%- endstyle -%}
+
+{%- assign htu_heading = section.settings.heading -%}
+{%- assign htu_body = section.settings.body -%}
+{%- assign htu_image = section.settings.image -%}
+
+{%- comment -%} Pull from product metafields if manual fields are blank {%- endcomment -%}
+{%- if htu_heading == blank and product != blank -%}
+  {%- assign htu_heading = product.metafields.custom.how_to_use_heading.value | default: 'How To Use ' | append: product.title -%}
+{%- endif -%}
+{%- if htu_body == blank and product != blank -%}
+  {%- assign htu_body = product.metafields.custom.how_to_use.value -%}
+{%- endif -%}
+
+{%- if htu_heading != blank or htu_body != blank -%}
+<div id="SLHowToUse-{{ section.id }}" class="page-width">
+  <div class="sl-htu__card">
+    <div class="sl-htu__image-wrap">
+      {%- if htu_image != blank -%}
+        <img
+          src="{{ htu_image | image_url: width: 800 }}"
+          srcset="{{ htu_image | image_url: width: 400 }} 400w,
+                  {{ htu_image | image_url: width: 600 }} 600w,
+                  {{ htu_image | image_url: width: 800 }} 800w"
+          sizes="(min-width: 750px) 35vw, 100vw"
+          alt="{{ htu_image.alt | escape | default: htu_heading }}"
+          width="{{ htu_image.width }}"
+          height="{{ htu_image.height }}"
+          loading="lazy"
+        >
+      {%- elsif product.featured_image != blank -%}
+        <img
+          src="{{ product.featured_image | image_url: width: 800 }}"
+          alt="{{ product.title | escape }}"
+          width="{{ product.featured_image.width }}"
+          height="{{ product.featured_image.height }}"
+          loading="lazy"
+          style="object-fit: contain; padding: 20px;"
+        >
+      {%- endif -%}
+    </div>
+    <div class="sl-htu__text">
+      {%- if htu_heading != blank -%}
+        <h2 class="sl-htu__heading">{{ htu_heading }}</h2>
+      {%- endif -%}
+      {%- if htu_body != blank -%}
+        <div class="sl-htu__body">{{ htu_body }}</div>
+      {%- endif -%}
+    </div>
+  </div>
+</div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "How To Use",
+  "class": "section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Content"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "info": "Leave blank to auto-generate from product title"
+    },
+    {
+      "type": "richtext",
+      "id": "body",
+      "label": "Body text",
+      "info": "Leave blank to pull from product metafield (custom.how_to_use)"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Image",
+      "info": "Leave blank to use product featured image"
+    },
+    {
+      "type": "header",
+      "content": "Card style"
+    },
+    {
+      "type": "color",
+      "id": "card_bg",
+      "label": "Card background",
+      "default": "#f2ede7"
+    },
+    {
+      "type": "range",
+      "id": "border_radius",
+      "min": 0,
+      "max": 24,
+      "step": 2,
+      "default": 12,
+      "unit": "px",
+      "label": "Border radius"
+    },
+    {
+      "type": "range",
+      "id": "image_width",
+      "min": 25,
+      "max": 50,
+      "step": 5,
+      "default": 35,
+      "unit": "%",
+      "label": "Image width (desktop)"
+    },
+    {
+      "type": "select",
+      "id": "image_fit",
+      "label": "Image fit",
+      "options": [
+        { "value": "cover", "label": "Cover" },
+        { "value": "contain", "label": "Contain" }
+      ],
+      "default": "cover"
+    },
+    {
+      "type": "header",
+      "content": "Typography"
+    },
+    {
+      "type": "range",
+      "id": "heading_size",
+      "min": 16,
+      "max": 36,
+      "step": 1,
+      "default": 22,
+      "unit": "px",
+      "label": "Heading size (desktop)"
+    },
+    {
+      "type": "range",
+      "id": "heading_size_mobile",
+      "min": 16,
+      "max": 28,
+      "step": 1,
+      "default": 20,
+      "unit": "px",
+      "label": "Heading size (mobile)"
+    },
+    {
+      "type": "select",
+      "id": "heading_weight",
+      "label": "Heading weight",
+      "options": [
+        { "value": "400", "label": "Normal" },
+        { "value": "500", "label": "Medium" },
+        { "value": "600", "label": "Semi-bold" }
+      ],
+      "default": "500"
+    },
+    {
+      "type": "color",
+      "id": "heading_color",
+      "label": "Heading color",
+      "default": "#1a1a1a"
+    },
+    {
+      "type": "range",
+      "id": "body_size",
+      "min": 13,
+      "max": 18,
+      "step": 1,
+      "default": 15,
+      "unit": "px",
+      "label": "Body size (desktop)"
+    },
+    {
+      "type": "range",
+      "id": "body_size_mobile",
+      "min": 13,
+      "max": 16,
+      "step": 1,
+      "default": 14,
+      "unit": "px",
+      "label": "Body size (mobile)"
+    },
+    {
+      "type": "color",
+      "id": "body_color",
+      "label": "Body text color",
+      "default": "#444444"
+    },
+    {
+      "type": "range",
+      "id": "text_padding",
+      "min": 24,
+      "max": 60,
+      "step": 4,
+      "default": 40,
+      "unit": "px",
+      "label": "Text padding (desktop)"
+    },
+    {
+      "type": "header",
+      "content": "Section padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "default": 40,
+      "unit": "px",
+      "label": "Padding top (desktop)"
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "default": 40,
+      "unit": "px",
+      "label": "Padding bottom (desktop)"
+    },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "min": 0,
+      "max": 60,
+      "step": 4,
+      "default": 28,
+      "unit": "px",
+      "label": "Padding top (mobile)"
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "min": 0,
+      "max": 60,
+      "step": 4,
+      "default": 28,
+      "unit": "px",
+      "label": "Padding bottom (mobile)"
+    }
+  ],
+  "presets": [
+    {
+      "name": "How To Use"
+    }
+  ]
+}
+{% endschema %}
