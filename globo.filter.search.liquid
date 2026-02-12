@@ -422,4 +422,58 @@
     </div>
   {% endif %}
 {% endif %}
+
+{# Custom CSS and JS to move search bar between gf-summary and gf-filter-selection #}
+<style>
+  /* Make gf-actions a flex container for proper ordering */
+  .gf-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* Style the search form when it's moved inline */
+  .gf-controls-search-form.gf-inline-search {
+    order: 2; /* Between gf-summary (order 1) and gf-filter-selection (order 3) */
+    flex: 1;
+    max-width: 300px;
+    min-width: 150px;
+    margin: 0;
+  }
+
+  .gf-filter-trigger {
+    order: 0;
+  }
+
+  .gf-summary {
+    order: 1;
+  }
+
+  .gf-filter-selection {
+    order: 3;
+    margin-left: auto;
+  }
+
+  /* Hide original position search form container styling */
+  #gf-controls-container > .gf-controls-search-form:not(.gf-inline-search) {
+    display: none;
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Move search bar from above filter row to within it
+    var searchForm = document.querySelector('.gf-controls-search-form');
+    var gfActions = document.querySelector('.gf-actions');
+    var gfSummary = document.querySelector('.gf-summary');
+
+    if (searchForm && gfActions && gfSummary) {
+      // Add class to identify the moved form
+      searchForm.classList.add('gf-inline-search');
+      // Insert search form after gf-summary
+      gfSummary.after(searchForm);
+    }
+  });
+</script>
 {% endraw %}
