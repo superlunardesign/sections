@@ -370,12 +370,7 @@
                       <p class="sl-recs__mini-desc">{{ rec_product.metafields.custom.mini_description }}</p>
                     {%- endif -%}
                   </div>
-                  <span class="sl-recs__price">
-                    {{ rec_product.price | money }}
-                    {%- if rec_product.compare_at_price > rec_product.price -%}
-                      <span class="sl-recs__price-compare">{{ rec_product.compare_at_price | money }}</span>
-                    {%- endif -%}
-                  </span>
+                  
                 </div>
               </div>
 
