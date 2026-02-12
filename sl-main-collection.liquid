@@ -974,8 +974,8 @@ min-height:40px;
 
 {%- comment -%} Move Globo search bar inline with filter/sort controls {%- endcomment -%}
 <style>
-  /* Make gf-actions a flex container for proper ordering */
-  .gf-actions {
+  /* Make gf-actions a flex container for proper ordering - scoped to Globo controls only */
+  #gf-controls-container .gf-actions {
     display: flex !important;
     flex-wrap: wrap;
     align-items: center;
@@ -983,7 +983,7 @@ min-height:40px;
   }
 
   /* Style the search form when it's moved inline */
-  .gf-controls-search-form.gf-inline-search {
+  #gf-controls-container .gf-controls-search-form.gf-inline-search {
     order: 2;
     flex: 1;
     max-width: 300px;
@@ -991,15 +991,15 @@ min-height:40px;
     margin: 0;
   }
 
-  .gf-filter-trigger {
+  #gf-controls-container .gf-filter-trigger {
     order: 0;
   }
 
-  .gf-summary {
+  #gf-controls-container .gf-summary {
     order: 1;
   }
 
-  .gf-filter-selection {
+  #gf-controls-container .gf-filter-selection {
     order: 3;
     margin-left: auto;
   }
