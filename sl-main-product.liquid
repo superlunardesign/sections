@@ -504,10 +504,16 @@
 /* ====================  ADD TO CART + WISHLIST  ==================== */
 .main-product-template .product-form__buttons { display: grid; gap: 10px; grid-template-columns: 1fr; }
 .main-product-template .product-form__submit {
-  border-radius: 8px; min-height: 52px; font-weight: 600; font-size: 15px;
+
+  color: {{ block.settings.button_color }} ;
+  min-height: 52px; 
+  font-size: 15px;
   font-family: var(--font-body-family);
-  letter-spacing: .02em; background: #7f9f6f !important; border-color: #7f9f6f !important;
-  text-transform: lowercase;
+  letter-spacing: .02em; 
+  background:{{ block.settings.button_bg }}; 
+  border-color: {{ block.settings.button_border_color }};
+  border: {{ block.settings.button_border_width }} solid;
+
 }
 .main-product-template .product-form__submit[disabled] { opacity: .6; }
 .dT_VProdWishList .add-wishlist {
@@ -1702,7 +1708,7 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
                               </button>
                             </quantity-input>
                             <button type="submit" class="add-to-cart-btn product-form__submit button button--full-width {% if block.settings.show_dynamic_checkout and product.selling_plan_groups == empty %}button--secondary{% else %}button--primary{% endif %}"
-                              style="{% if block.settings.button_color != blank %}color: {{ block.settings.button_color }};{% endif %}{% if block.settings.button_bg != blank %}background-color: {{ block.settings.button_bg }}; border-color: {{ block.settings.button_bg }};{% endif %}"
+                              style="{% if block.settings.button_color != blank %}color: {{ block.settings.button_color }};{% endif %}{% if block.settings.button_bg != blank %}background-color: {{ block.settings.button_bg }}; border-radius: {{ block.settings.button_border_radius }}; border-color: {{ block.settings.button_bg }}; {% endif %}"
                               {% if product.selected_or_first_available_variant.available == false %}disabled{% endif %}
                               data-variant-id="{{ product.selected_or_first_available_variant.id }}"
                               onclick="addToCart(this)">
@@ -3101,6 +3107,30 @@ function updateDeliveryOption(input) {
   "type": "color",
   "id": "button_bg",
   "label": "Button background"
+  },
+    {
+  "type": "range",
+  "id": "button_border_width",
+  "label": "Button Border Width",
+  "min":0,
+  "max":4,
+  "unit": "px",
+  "default": 0
+  },
+      {
+  "type": "range",
+  "id": "button_border_radius",
+  "label": "Button Border Radius",
+  "min":0,
+  "max":400,
+  "step": 4,
+  "unit": "px",
+  "default": 0
+  },
+   {
+  "type": "color",
+  "id": "button_border_color",
+  "label": "Button Border Color"
   },
   {
   "type": "range",
