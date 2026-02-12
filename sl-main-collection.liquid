@@ -972,9 +972,13 @@ min-height:40px;
 })();
 </script>
 
-{%- comment -%} Move Globo search bar inline after the summary span {%- endcomment -%}
+{%- comment -%} Move Globo search bar inline after the summary span (desktop only) {%- endcomment -%}
 <script>
 (function() {
+  var isDesktop = window.matchMedia('(min-width: 990px)').matches;
+
+  if (!isDesktop) return;
+
   function moveSearchBar() {
     var searchForm = document.querySelector('#gf-controls-container > .gf-controls-search-form');
     var gfSummary = document.querySelector('#gf-controls-container .gf-summary');
