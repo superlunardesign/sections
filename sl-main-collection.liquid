@@ -972,6 +972,93 @@ min-height:40px;
 })();
 </script>
 
+{%- comment -%} Move Globo search bar inline with filter/sort controls {%- endcomment -%}
+<style>
+  /* Make gf-actions a flex container for proper ordering */
+  .gf-actions {
+    display: flex !important;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* Style the search form when it's moved inline */
+  .gf-controls-search-form.gf-inline-search {
+    order: 2;
+    flex: 1;
+    max-width: 300px;
+    min-width: 150px;
+    margin: 0;
+  }
+
+  .gf-filter-trigger {
+    order: 0;
+  }
+
+  .gf-summary {
+    order: 1;
+  }
+
+  .gf-filter-selection {
+    order: 3;
+    margin-left: auto;
+  }
+
+  /* Hide the search form in its original location before it moves */
+  #gf-controls-container > .gf-controls-search-form:not(.gf-inline-search) {
+    display: none;
+  }
+</style>
+
+<script>
+(function() {
+  function moveSearchBar() {
+    var searchForm = document.querySelector('.gf-controls-search-form');
+    var gfActions = document.querySelector('.gf-actions');
+    var gfSummary = document.querySelector('.gf-summary');
+
+    if (searchForm && gfActions && gfSummary && !searchForm.classList.contains('gf-inline-search')) {
+      searchForm.classList.add('gf-inline-search');
+      gfSummary.after(searchForm);
+      return true;
+    }
+    return false;
+  }
+
+  // Try immediately
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+      if (!moveSearchBar()) {
+        // If elements aren't ready, use MutationObserver
+        observeForGloboElements();
+      }
+    });
+  } else {
+    if (!moveSearchBar()) {
+      observeForGloboElements();
+    }
+  }
+
+  function observeForGloboElements() {
+    var observer = new MutationObserver(function(mutations, obs) {
+      if (moveSearchBar()) {
+        obs.disconnect();
+      }
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+
+    // Timeout fallback - stop observing after 10 seconds
+    setTimeout(function() {
+      observer.disconnect();
+    }, 10000);
+  }
+})();
+</script>
+
 {% schema %}
 {
   "name": "SL Collection Grid",
