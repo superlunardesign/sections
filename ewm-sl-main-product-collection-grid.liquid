@@ -763,7 +763,7 @@ min-height:40px;
     opacity: 0.7;
   }
 
-  #SLCollection-{{ section.id }} .sl-page-current {
+  #SLCollection-{{ section.id }} .sl-pagination span.sl-page-current {
     width: 36px;
     height: 36px;
     border-radius: 50%;
@@ -1046,7 +1046,7 @@ min-height:40px;
                           <button type="button"
                                   class="sl-add-to-cart-btn"
                                   data-variant-id="{{ product.selected_or_first_available_variant.id }}">
-                            <span style="float:left">{{ section.settings.add_to_cart_text }}</span> <span style="float:right">{{ product.price | money }}</span>
+                            <span style="float:left">{{ section.settings.add_to_cart_text }}</span> <span style="float:right" data-product-price>{{ product.price | money }}</span>
                           </button>
                         {%- else -%}
                           <button type="button" class="sl-add-to-cart-btn" disabled>
@@ -1215,7 +1215,7 @@ min-height:40px;
                             <button type="button"
                                     class="sl-add-to-cart-btn"
                                     data-variant-id="{{ product.selected_or_first_available_variant.id }}">
-                              <span style="float:left">{{ section.settings.add_to_cart_text }}</span> <span style="float:right">{{ product.price | money }}</span>
+                              <span style="float:left">{{ section.settings.add_to_cart_text }}</span> <span style="float:right" data-product-price>{{ product.price | money }}</span>
                             </button>
                           {%- else -%}
                             <button type="button" class="sl-add-to-cart-btn" disabled>

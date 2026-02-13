@@ -226,9 +226,7 @@
             <path d="M3 6h18"/>
             <path d="M16 10a4 4 0 0 1-8 0"/>
           </svg>
-          {%- if cart != empty -%}
-            <span class="sl-preheader__cart-count">{{ cart.item_count }}</span>
-          {%- endif -%}
+          <span class="sl-preheader__cart-count" data-sl-cart-count {% if cart.item_count == 0 %}style="display:none"{% endif %}>{{ cart.item_count }}</span>
         </button>
       </div>
     </div>
@@ -307,6 +305,37 @@
         searchOverlay.setAttribute('aria-hidden', 'true');
       }
     });
+
+    /* Keep cart-count bubble in sync after AJAX add-to-cart */
+    function updateCartBubble() {
+      fetch('/cart.js', { credentials: 'same-origin' })
+        .then(function(r) { return r.json(); })
+        .then(function(cart) {
+          document.querySelectorAll('[data-sl-cart-count]').forEach(function(el) {
+            el.textContent = cart.item_count;
+            el.style.display = cart.item_count > 0 ? '' : 'none';
+          });
+        })
+        .catch(function() {});
+    }
+
+    /* Listen for Dawn's cart update events */
+    ['cart:refresh', 'cart:updated'].forEach(function(evt) {
+      document.documentElement.addEventListener(evt, updateCartBubble);
+    });
+
+    /* Intercept fetch to /cart/add.js and /cart/change.js to update bubble */
+    var _origFetch = window.fetch;
+    window.fetch = function() {
+      var url = arguments[0];
+      if (typeof url === 'string' && (url.indexOf('/cart/add') !== -1 || url.indexOf('/cart/change') !== -1 || url.indexOf('/cart/update') !== -1 || url.indexOf('/cart/clear') !== -1)) {
+        return _origFetch.apply(this, arguments).then(function(response) {
+          setTimeout(updateCartBubble, 300);
+          return response;
+        });
+      }
+      return _origFetch.apply(this, arguments);
+    };
 
     /* Cart: click the theme's original cart icon to trigger its cart drawer/notification */
     document.querySelectorAll('[data-sl-cart-open]').forEach(function(btn) {

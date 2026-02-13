@@ -2356,13 +2356,13 @@ function selectVariantUpdated(element) {
     if (matchingVariant) {
       // Update the button's variant ID
       addToCartBtn.setAttribute('data-variant-id', matchingVariant.id);
-      
+
       // Update the hidden input too
       const hiddenInput = productInfoWrapper.querySelector('input[name="id"]');
       if (hiddenInput) {
         hiddenInput.value = matchingVariant.id;
       }
-      
+
       // Update button text based on availability
       const buttonText = addToCartBtn.querySelector('span:nth-child(2)');
       if (buttonText) {
@@ -2374,7 +2374,55 @@ function selectVariantUpdated(element) {
           addToCartBtn.disabled = true;
         }
       }
-      
+
+      // --- Update displayed prices for the selected variant ---
+      var formatMoney = function(cents) {
+        return Shopify.formatMoney ? Shopify.formatMoney(cents) : ('$' + (cents / 100).toFixed(2));
+      };
+
+      // Main price block (rendered by 'price' snippet)
+      var priceContainer = document.getElementById('price-{{ section.id }}');
+      if (priceContainer) {
+        // Update regular / sale prices
+        var regularItems = priceContainer.querySelectorAll('.price-item--regular');
+        var saleItems    = priceContainer.querySelectorAll('.price-item--sale, .price-item--last');
+        var priceDiv     = priceContainer.querySelector('.price');
+
+        if (matchingVariant.compare_at_price && matchingVariant.compare_at_price > matchingVariant.price) {
+          // On sale
+          if (priceDiv) priceDiv.classList.add('price--on-sale');
+          regularItems.forEach(function(el) { el.innerHTML = formatMoney(matchingVariant.compare_at_price); });
+          saleItems.forEach(function(el)    { el.innerHTML = formatMoney(matchingVariant.price); });
+        } else {
+          // Regular price
+          if (priceDiv) priceDiv.classList.remove('price--on-sale');
+          regularItems.forEach(function(el) { el.innerHTML = formatMoney(matchingVariant.price); });
+          saleItems.forEach(function(el)    { el.innerHTML = formatMoney(matchingVariant.price); });
+        }
+      }
+
+      // Subtotal value
+      var subtotalEl = document.getElementById('subtotal-value');
+      if (subtotalEl) {
+        var qtyInput = productInfoWrapper.querySelector('.quantity__input');
+        var qty = qtyInput ? (parseInt(qtyInput.value, 10) || 1) : 1;
+        subtotalEl.innerHTML = formatMoney(matchingVariant.price * qty);
+      }
+
+      // Sticky ATC button price
+      var stickyBtn = document.getElementById('sl-sticky-btn-{{ section.id }}');
+      if (stickyBtn) {
+        if (matchingVariant.available) {
+          stickyBtn.disabled = false;
+          var stickyLabel = '{{ section.settings.sticky_btn_text | escape }}' || '{{ "products.product.add_to_cart" | t | escape }}';
+          stickyBtn.textContent = stickyLabel + ' | ' + formatMoney(matchingVariant.price);
+        } else {
+          stickyBtn.disabled = true;
+          stickyBtn.textContent = '{{ "products.product.sold_out" | t | default: "Sold out" }}';
+        }
+        stickyBtn.setAttribute('data-variant-id', matchingVariant.id);
+      }
+
       console.log('Selected variant:', matchingVariant.id);
     }
   } catch (error) {
