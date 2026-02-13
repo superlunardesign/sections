@@ -1525,11 +1525,11 @@ img {
   left: 0;
   height: 100%;
   width: 100%;
+  object-fit: cover;
+  object-position: center center;
 }
 
 .media > img {
-  object-fit: cover;
-  object-position: center center;
   transition: opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
