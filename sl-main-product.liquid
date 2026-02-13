@@ -68,9 +68,9 @@
 }
 @media (min-width: 990px) {
   .main-product-template .main-product_info.product {
-    {% if _ms == 'small' %}grid-template-columns: minmax(0,460px) minmax(0,580px);
-    {% elsif _ms == 'medium' %}grid-template-columns: minmax(0,560px) minmax(0,520px);
-    {% else %}grid-template-columns: minmax(0,640px) minmax(0,480px);
+    {% if _ms == 'small' %}grid-template-columns: minmax(0,460px) minmax(0,580px) !important;
+    {% elsif _ms == 'medium' %}grid-template-columns: minmax(0,560px) minmax(0,520px) !important;
+    {% else %}grid-template-columns: minmax(0,640px) minmax(0,480px) !important;
     {% endif %}
     column-gap: 48px;
     row-gap: 0;
@@ -95,10 +95,8 @@
   border: {{ _bw }}px solid {{ _bc }};
   overflow: hidden;
 }
-@media (min-width: 990px) {
-  .main-product-template .product__media-item {
-    {% if section.settings.image_aspect_ratio == 'natural' %}aspect-ratio: auto;{% else %}aspect-ratio: {{ section.settings.image_aspect_ratio | default: '1 / 1' }};{% endif %}
-  }
+.main-product-template .product__media-item {
+  {% if section.settings.image_aspect_ratio == 'natural' %}aspect-ratio: auto;{% else %}aspect-ratio: {{ section.settings.image_aspect_ratio | default: '1 / 1' }};{% endif %}
 }
 /* Override theme external CSS (section-main-product.css) */
 .main-product-template .product__media-item::before,
@@ -114,12 +112,16 @@
   border: none !important;
   border-radius: {{ _br }}px !important;
   background: transparent !important;
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 .main-product-template .product__media-item img,
 .main-product-template .product__media-item .product-media-container {
   width: 100%;
   height: 100%;
   object-fit: {{ section.settings.image_fit | default: 'contain' }};
+  object-position: center center;
 }
 
 /* Contain slides */
@@ -379,6 +381,14 @@
   outline: 2px solid var(--color-foreground, #222);
   outline-offset: 0;
 }
+
+{% if _ml == 'carousel' %}
+/* Carousel mode: ensure thumbnails stay hidden on mobile (overrides display:block above) */
+@media (max-width: 989px) {
+  .main-product-template .thumbnail-slider,
+  .main-product-template .thumbnail-slider.slider-vertical { display: none !important; }
+}
+{% endif %}
 
 {% endunless %}
 
@@ -889,58 +899,6 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
   font-size: 15px; font-weight: 200;
 }
 
-/* =========================================================
-   HOW TO USE SECTION — image left, text right
-   ========================================================= */
-.sl-how-to-use { margin-top: 60px; margin-bottom: 40px; }
-.sl-how-to-use__inner {
-  display: grid; grid-template-columns: 1fr; gap: 24px;
-  background: #f5f5f3; border-radius: 12px; overflow: hidden; align-items: center;
-}
-@media (min-width: 750px) {
-  .sl-how-to-use__inner { grid-template-columns: 280px 1fr; gap: 0; }
-}
-.sl-how-to-use__image { width: 100%; overflow: hidden; }
-.sl-how-to-use__image img { width: 100%; height: 100%; object-fit: cover; display: block; aspect-ratio: 1 / 1; }
-@media (min-width: 750px) {
-  .sl-how-to-use__image img { aspect-ratio: auto; min-height: 200px; }
-}
-.sl-how-to-use__text { padding: 24px; }
-@media (min-width: 750px) { .sl-how-to-use__text { padding: 32px 40px; } }
-.sl-how-to-use__heading {
-  font-family: var(--font-heading-family); font-size: clamp(18px, 2vw, 22px);
-  font-weight: 600; margin: 0 0 12px; color: #1a1a1a;
-}
-.sl-how-to-use__body { font-size: 14px; line-height: 1.6; color: #444; margin: 0; }
-.sl-how-to-use__body p { margin: 0 0 8px; }
-.sl-how-to-use__body p:last-child { margin-bottom: 0; }
-.sl-how-to-use__inner--no-image { grid-template-columns: 1fr; }
-.sl-how-to-use__inner--no-image .sl-how-to-use__text { padding: 32px 40px; }
-
-/* =========================================================
-   WHY WE LOVE IT / BENEFITS SECTION — text left, image right
-   ========================================================= */
-.sl-benefits { margin-bottom: 60px; }
-.sl-benefits__inner {
-  display: grid; grid-template-columns: 1fr; gap: 24px;
-  border: 1px solid #e5e5e5; border-radius: 12px; overflow: hidden; align-items: center;
-}
-@media (min-width: 750px) { .sl-benefits__inner { grid-template-columns: 1fr 280px; gap: 0; } }
-.sl-benefits__text { padding: 24px; order: 1; }
-@media (min-width: 750px) { .sl-benefits__text { padding: 32px 40px; order: 0; } }
-.sl-benefits__heading {
-  font-family: var(--font-heading-family); font-size: clamp(18px, 2vw, 22px);
-  font-weight: 600; margin: 0 0 16px; color: #1a1a1a;
-}
-.sl-benefits__body { font-size: 14px; line-height: 1.6; color: #444; margin: 0; }
-.sl-benefits__body p { margin: 0 0 8px; }
-.sl-benefits__body p:last-child { margin-bottom: 0; }
-.sl-benefits__image { width: 100%; overflow: hidden; order: 0; }
-@media (min-width: 750px) { .sl-benefits__image { order: 1; } }
-.sl-benefits__image img { width: 100%; height: 100%; object-fit: cover; display: block; aspect-ratio: 1 / 1; }
-@media (min-width: 750px) {
-  .sl-benefits__image img { aspect-ratio: auto; min-height: 200px; }
-}
 
 {%- endstyle -%}
 
@@ -1884,124 +1842,134 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
                       </div>
                     {%- endif -%}
 
+                  {%- when 'description' -%}
+                    {% if section.settings.tab_position == 'right' %}
+                      {% if section.settings.tab_style == 'toggle' %}
+                        <div class="product__accordion accordion" style="{% if block.settings.margin_top > 0 %}margin-top: {{ block.settings.margin_top }}px;{% endif %}{% if block.settings.margin_bottom > 0 %}margin-bottom: {{ block.settings.margin_bottom }}px;{% endif %}" {{ block.shopify_attributes }}>
+                          <details class="dt-details"{% if section.settings.details_open_default %} open{% endif %}>
+                            <summary>
+                              <div class="summary__title">
+                                <h6 class="accordion__title" style="{% if block.settings.heading_color != blank %}color: {{ block.settings.heading_color }};{% endif %}">
+                                  Details
+                                </h6>
+                              </div>
+                              {% render 'icon-caret' %}
+                              <span class="sl-accordion-icon">
+                                <span class="sl-icon-plus">+</span>
+                                <span class="sl-icon-minus">&minus;</span>
+                              </span>
+                            </summary>
+                            <div class="accordion__content rte" style="{% if block.settings.content_color != blank %}color: {{ block.settings.content_color }};{% endif %}{% if block.settings.content_size != blank %}font-size: {{ block.settings.content_size }}px;{% endif %}">
+                              {%- if product.description != blank -%}
+                                {{ product.description }}
+                              {%- endif -%}
+                            </div>
+                          </details>
+                        </div>
+                      {% elsif section.settings.tab_style == 'tab' %}
+                        {%- unless sl_right_tabs_rendered -%}
+                          {%- assign sl_right_tabs_rendered = true -%}
+                          <div class="product__info-as-bottom-tabs">
+                            <div class="product__info-bottom tabs">
+                              {%- if product.description != blank -%}
+                                <div class="summary__title tablinks" onclick="openTab(event, 'tab-description')" data-id="tab-description">
+                                  <h6 class="accordion__title">{{ 'products.product.description' | t }}</h6>
+                                </div>
+                              {%- endif -%}
+                              {%- for tab_block in section.blocks -%}
+                                {%- if tab_block.type == 'collapsible_tab' -%}
+                                  <div class="summary__title tablinks" onclick="openTab(event, '{{ tab_block.settings.heading | handle }}')" data-id="{{ tab_block.settings.heading | handle }}">
+                                    <h6 class="accordion__title">{{ tab_block.settings.heading | default: tab_block.settings.page.title }}</h6>
+                                  </div>
+                                {%- endif -%}
+                              {%- endfor -%}
+                              {%- if section.settings.show_review_tab -%}
+                                <a class="summary__title tablinks" href="#shopify-product-reviews" data-id="">{{ 'products.product.reviews' | t }}</a>
+                              {%- endif -%}
+                            </div>
+                            {%- if product.description != blank -%}
+                              <div class="dt-sc-tabs-content rte" id="tab-description" style="display:block;">{{ product.description }}</div>
+                            {%- endif -%}
+                            {%- for tab_block in section.blocks -%}
+                              {%- if tab_block.type == 'collapsible_tab' -%}
+                                <div class="dt-sc-tabs-content rte" id="{{ tab_block.settings.heading | handle }}">
+                                  {{ tab_block.settings.content }}
+                                  {{ tab_block.settings.page.content }}
+                                </div>
+                              {%- endif -%}
+                            {%- endfor -%}
+                          </div>
+                        {%- endunless -%}
+                      {% endif %}
+                    {% endif %}
+
+                  {%- when 'collapsible_tab' -%}
+                    {% if section.settings.tab_position == 'right' %}
+                      {% if section.settings.tab_style == 'toggle' %}
+                        <div class="product__accordion accordion" style="{% if block.settings.margin_top > 0 %}margin-top: {{ block.settings.margin_top }}px;{% endif %}{% if block.settings.margin_bottom > 0 %}margin-bottom: {{ block.settings.margin_bottom }}px;{% endif %}" {{ block.shopify_attributes }}>
+                          {%- assign tab_heading_lower = block.settings.heading | downcase -%}
+                          {%- assign is_ingredients = false -%}
+                          {%- if tab_heading_lower contains 'ingredient' -%}
+                            {%- assign is_ingredients = true -%}
+                          {%- endif -%}
+                          <details class="dt-details"{% if is_ingredients and section.settings.ingredients_open_default %} open{% elsif is_ingredients == false and section.settings.details_open_default %} open{% endif %}>
+                            <summary>
+                              <div class="summary__title">
+                                <h6 class="accordion__title" style="{% if block.settings.heading_color != blank %}color: {{ block.settings.heading_color }};{% endif %}">
+                                  {{ block.settings.heading | default: block.settings.page.title }}
+                                </h6>
+                              </div>
+                              {% render 'icon-caret' %}
+                              <span class="sl-accordion-icon">
+                                <span class="sl-icon-plus">+</span>
+                                <span class="sl-icon-minus">&minus;</span>
+                              </span>
+                            </summary>
+                            <div class="accordion__content rte" style="{% if block.settings.content_color != blank %}color: {{ block.settings.content_color }};{% endif %}{% if block.settings.content_size != blank %}font-size: {{ block.settings.content_size }}px;{% endif %}">
+                              {{ block.settings.content }}
+                              {{ block.settings.page.content }}
+                            </div>
+                          </details>
+                        </div>
+                      {% elsif section.settings.tab_style == 'tab' %}
+                        {%- unless sl_right_tabs_rendered -%}
+                          {%- assign sl_right_tabs_rendered = true -%}
+                          <div class="product__info-as-bottom-tabs">
+                            <div class="product__info-bottom tabs">
+                              {%- if product.description != blank -%}
+                                <div class="summary__title tablinks" onclick="openTab(event, 'tab-description')" data-id="tab-description">
+                                  <h6 class="accordion__title">{{ 'products.product.description' | t }}</h6>
+                                </div>
+                              {%- endif -%}
+                              {%- for tab_block in section.blocks -%}
+                                {%- if tab_block.type == 'collapsible_tab' -%}
+                                  <div class="summary__title tablinks" onclick="openTab(event, '{{ tab_block.settings.heading | handle }}')" data-id="{{ tab_block.settings.heading | handle }}">
+                                    <h6 class="accordion__title">{{ tab_block.settings.heading | default: tab_block.settings.page.title }}</h6>
+                                  </div>
+                                {%- endif -%}
+                              {%- endfor -%}
+                              {%- if section.settings.show_review_tab -%}
+                                <a class="summary__title tablinks" href="#shopify-product-reviews" data-id="">{{ 'products.product.reviews' | t }}</a>
+                              {%- endif -%}
+                            </div>
+                            {%- if product.description != blank -%}
+                              <div class="dt-sc-tabs-content rte" id="tab-description" style="display:block;">{{ product.description }}</div>
+                            {%- endif -%}
+                            {%- for tab_block in section.blocks -%}
+                              {%- if tab_block.type == 'collapsible_tab' -%}
+                                <div class="dt-sc-tabs-content rte" id="{{ tab_block.settings.heading | handle }}">
+                                  {{ tab_block.settings.content }}
+                                  {{ tab_block.settings.page.content }}
+                                </div>
+                              {%- endif -%}
+                            {%- endfor -%}
+                          </div>
+                        {%- endunless -%}
+                      {% endif %}
+                    {% endif %}
+
                 {%- endcase -%}
               {%- endfor -%}
-
-<!-- TAB POSITION RIGHT - Place tabs/accordions here when position is right -->
-{% if section.settings.tab_position == 'right' %}
-  {% if section.settings.tab_style == 'toggle' %}
-    <!-- TOGGLE/ACCORDION STYLE for RIGHT position -->
-    {%- for block in section.blocks -%}
-      {%- case block.type -%}
-        {%- when 'description' -%}
-          <div class="product__accordion accordion" style="{% if block.settings.margin_top > 0 %}margin-top: {{ block.settings.margin_top }}px;{% endif %}{% if block.settings.margin_bottom > 0 %}margin-bottom: {{ block.settings.margin_bottom }}px;{% endif %}" {{ block.shopify_attributes }}>
-            <details class="dt-details"{% if section.settings.details_open_default %} open{% endif %}>
-              <summary>
-                <div class="summary__title">
-                  <h6 class="accordion__title" style="{% if block.settings.heading_color != blank %}color: {{ block.settings.heading_color }};{% endif %}">
-                    Details
-                  </h6>
-                </div>
-                {% render 'icon-caret' %}
-                    <span class="sl-accordion-icon">
-                      <span class="sl-icon-plus">+</span>
-                      <span class="sl-icon-minus">&minus;</span>
-                    </span>
-              </summary>
-              <div class="accordion__content rte" style="{% if block.settings.content_color != blank %}color: {{ block.settings.content_color }};{% endif %}{% if block.settings.content_size != blank %}font-size: {{ block.settings.content_size }}px;{% endif %}">
-                {%- if product.description != blank -%}
-                  {{ product.description }}
-                {%- endif -%}
-              </div>
-            </details>
-          </div>
-        {%- when 'collapsible_tab' -%}
-          <div class="product__accordion accordion" style="{% if block.settings.margin_top > 0 %}margin-top: {{ block.settings.margin_top }}px;{% endif %}{% if block.settings.margin_bottom > 0 %}margin-bottom: {{ block.settings.margin_bottom }}px;{% endif %}" {{ block.shopify_attributes }}>
-            {%- assign tab_heading_lower = block.settings.heading | downcase -%}
-            {%- assign is_ingredients = false -%}
-            {%- if tab_heading_lower contains 'ingredient' -%}
-              {%- assign is_ingredients = true -%}
-            {%- endif -%}
-            <details class="dt-details"{% if is_ingredients and section.settings.ingredients_open_default %} open{% elsif is_ingredients == false and section.settings.details_open_default %} open{% endif %}>
-              <summary>
-                <div class="summary__title">
-                  <h6 class="accordion__title" style="{% if block.settings.heading_color != blank %}color: {{ block.settings.heading_color }};{% endif %}">
-                    {{ block.settings.heading | default: block.settings.page.title }}
-                  </h6>
-                </div>
-                {% render 'icon-caret' %}
-                    <span class="sl-accordion-icon">
-                      <span class="sl-icon-plus">+</span>
-                      <span class="sl-icon-minus">&minus;</span>
-                    </span>
-              </summary>
-              <div class="accordion__content rte" style="{% if block.settings.content_color != blank %}color: {{ block.settings.content_color }};{% endif %}{% if block.settings.content_size != blank %}font-size: {{ block.settings.content_size }}px;{% endif %}">
-                {{ block.settings.content }}
-                {{ block.settings.page.content }}
-              </div>
-            </details>
-          </div>
-      {%- endcase -%}
-    {%- endfor -%}
-  {% endif %}
-  
-  {% if section.settings.tab_style == 'tab' %}
-    <!-- TAB STYLE for RIGHT position -->
-    <div class="product__info-as-bottom-tabs">
-      <div class="product__info-bottom tabs">
-        {%- if product.description != blank -%}
-          <div
-            class="summary__title tablinks"
-            onclick="openTab(event, 'tab-description')"
-            data-id="tab-description"
-          >
-            <h6 class="accordion__title">
-              {{ 'products.product.description' | t }}
-            </h6>
-          </div>
-        {%- endif -%}
-
-        {%- for block in section.blocks -%}
-          {%- case block.type -%}
-            {%- when 'collapsible_tab' -%}
-              <div
-                class="summary__title tablinks"
-                onclick="openTab(event, '{{block.settings.heading | handle }}')"
-                data-id="{{block.settings.heading | handle }}"
-              >
-                <h6 class="accordion__title">
-                  {{ block.settings.heading | default: block.settings.page.title }}
-                </h6>
-              </div>
-          {%- endcase -%}
-        {%- endfor -%}
-        
-        {%- if section.settings.show_review_tab -%}
-          <a class="summary__title tablinks" href="#shopify-product-reviews" data-id="">
-            {{ 'products.product.reviews' | t }}
-          </a>
-        {%- endif -%}
-      </div>
-
-      <!-- Tab Contents -->
-      {%- if product.description != blank -%}
-        <div class="dt-sc-tabs-content rte" id="tab-description" style="display:block;">
-          {{ product.description }}
-        </div>
-      {%- endif -%}
-
-      {%- for block in section.blocks -%}
-        {%- case block.type -%}
-          {%- when 'collapsible_tab' -%}
-            <div class="dt-sc-tabs-content rte" id="{{ block.settings.heading | handle }}">
-              {{ block.settings.content }}
-              {{ block.settings.page.content }}
-            </div>
-        {%- endcase -%}
-      {%- endfor -%}
-    </div>
-  {% endif %}
-{% endif %}
 
 <a href="{{ product.url }}" class="link product__view-details animate-arrow">
                 {{ 'products.product.view_full_details' | t }}
@@ -2511,66 +2479,6 @@ function updateDeliveryOption(input) {
 </div>
 {%- endif -%}
 
-{%- assign sl_product_images = product.images -%}
-{%- assign sl_image_count = sl_product_images.size -%}
-
-{%- if sl_image_count > 1 -%}
-  {%- assign sl_how_to_use_img = sl_product_images[1] -%}
-{%- else -%}
-  {%- assign sl_how_to_use_img = nil -%}
-{%- endif -%}
-
-{%- if sl_image_count > 2 -%}
-  {%- assign sl_benefits_img = sl_product_images[2] -%}
-{%- elsif sl_image_count >= 1 -%}
-  {%- assign sl_benefits_img = sl_product_images[0] -%}
-{%- else -%}
-  {%- assign sl_benefits_img = nil -%}
-{%- endif -%}
-
-{%- if section.settings.how_to_use_text != blank -%}
-  <div class="sl-how-to-use page-width">
-    <div class="sl-how-to-use__inner{% unless sl_how_to_use_img %} sl-how-to-use__inner--no-image{% endunless %}">
-      {%- if sl_how_to_use_img -%}
-        <div class="sl-how-to-use__image">
-          <img src="{{ sl_how_to_use_img | image_url: width: 600 }}"
-               alt="{{ sl_how_to_use_img.alt | escape | default: product.title }}"
-               width="600" height="600" loading="lazy">
-        </div>
-      {%- endif -%}
-      <div class="sl-how-to-use__text">
-        <h2 class="sl-how-to-use__heading">
-          {{ section.settings.how_to_use_heading | default: 'How To Use' }}{% if section.settings.how_to_use_append_title %} {{ product.title }}{% endif %}
-        </h2>
-        <div class="sl-how-to-use__body rte">
-          {{ section.settings.how_to_use_text }}
-        </div>
-      </div>
-    </div>
-  </div>
-{%- endif -%}
-
-{%- if section.settings.benefits_text != blank -%}
-  <div class="sl-benefits page-width">
-    <div class="sl-benefits__inner">
-      <div class="sl-benefits__text">
-        <h2 class="sl-benefits__heading">
-          {{ section.settings.benefits_heading | default: 'Why We Love It' }}
-        </h2>
-        <div class="sl-benefits__body rte">
-          {{ section.settings.benefits_text }}
-        </div>
-      </div>
-      {%- if sl_benefits_img -%}
-        <div class="sl-benefits__image">
-          <img src="{{ sl_benefits_img | image_url: width: 600 }}"
-               alt="{{ sl_benefits_img.alt | escape | default: product.title }}"
-               width="600" height="600" loading="lazy">
-        </div>
-      {%- endif -%}
-    </div>
-  </div>
-{%- endif -%}
 
 <script>
   var variantStock = {};
@@ -4132,45 +4040,6 @@ function updateDeliveryOption(input) {
   "label": "Ingredients open by default",
   "default": false,
   "info": "When enabled, the Ingredients accordion starts expanded."
-  },
-  {
-  "type": "header",
-  "content": "How To Use section"
-  },
-  {
-  "type": "text",
-  "id": "how_to_use_heading",
-  "label": "Heading",
-  "default": "How To Use"
-  },
-  {
-  "type": "checkbox",
-  "id": "how_to_use_append_title",
-  "label": "Append product title to heading",
-  "default": true,
-  "info": "Shows 'How To Use [Product Name]'"
-  },
-  {
-  "type": "richtext",
-  "id": "how_to_use_text",
-  "label": "How to use content",
-  "info": "Connect to a product metafield via dynamic source. Section is hidden when blank."
-  },
-  {
-  "type": "header",
-  "content": "Why We Love It section"
-  },
-  {
-  "type": "text",
-  "id": "benefits_heading",
-  "label": "Heading",
-  "default": "Why We Love It"
-  },
-  {
-  "type": "richtext",
-  "id": "benefits_text",
-  "label": "Benefits content",
-  "info": "Connect to a product metafield via dynamic source. Section is hidden when blank."
   }
   ]
   }
