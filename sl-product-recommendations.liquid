@@ -244,8 +244,8 @@
   padding: 10px 16px;
   background: {{ section.settings.atc_bg | default: '#7f9f6f' }};
   color: {{ section.settings.atc_text | default: '#fff' }};
-  border: none;
-  border-radius: 999px;
+  border: {{ section.settings.atc_border_width }}px solid {{ section.settings.atc_border_color }};
+  border-radius: {{ section.settings.atc_radius }}px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -596,7 +596,7 @@
     },
     {
       "type": "header",
-      "content": "Button colors"
+      "content": "Button Styling"
     },
     {
       "type": "color",
@@ -609,6 +609,30 @@
       "id": "atc_text",
       "label": "Button text",
       "default": "#ffffff"
+    },
+           {
+      "type": "range",
+      "id": "atc_border_width",
+      "label": "Button Border Width",
+      "min": 0,
+      "max": 8,
+      "step": 1,
+      "default": 0
+    },
+        {
+      "type": "color",
+      "id": "atc_border_color",
+      "label": "Button Border Color",
+      "default": "#ffffff"
+    },
+       {
+      "type": "range",
+      "id": "atc_radius",
+      "label": "Button Border Radius",
+      "min": 0,
+      "max": 400,
+      "step": 4,
+      "default": 0
     },
     {
       "type": "header",
