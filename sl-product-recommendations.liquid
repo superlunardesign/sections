@@ -21,10 +21,10 @@
 
 .sl-recs__heading {
   text-align: left;
-  font-family: var(--font-heading-family);
-  font-size: clamp(18px, 2vw, 24px);
-  font-weight: 500;
-  text-transform: uppercase;
+  font-family: {% if section.settings.heading_font == 'body' %}var(--font-body-family){% else %}var(--font-heading-family){% endif %};
+  font-size: {{ section.settings.heading_size | default: 24 }}px;
+  font-weight: {{ section.settings.heading_weight | default: '500' }};
+  text-transform: {{ section.settings.heading_transform | default: 'uppercase' }};
   letter-spacing: 0.08em;
   color: {{ section.settings.heading_color | default: '#8C9B6D' }};
   margin: 0 0 24px;
@@ -370,7 +370,14 @@
                       <p class="sl-recs__mini-desc">{{ rec_product.metafields.custom.mini_description }}</p>
                     {%- endif -%}
                   </div>
-                  
+                  {%- unless section.settings.price_placement == 'button' -%}
+                  <span class="sl-recs__price">
+                    {{ rec_product.price | money }}
+                    {%- if rec_product.compare_at_price > rec_product.price -%}
+                      <span class="sl-recs__price-compare">{{ rec_product.compare_at_price | money }}</span>
+                    {%- endif -%}
+                  </span>
+                  {%- endunless -%}
                 </div>
               </div>
 
@@ -381,7 +388,9 @@
                         {% unless rec_product.available %}disabled{% endunless %}
                         onclick="slRecsAddToCart(this)">
                   <span>{% if rec_product.available %}{{ section.settings.atc_label | default: 'Add To Cart' }}{% else %}Sold Out{% endif %}</span>
+                  {%- unless section.settings.price_placement == 'title_row' -%}
                   <span>{{ rec_product.price | money }}</span>
+                  {%- endunless -%}
                 </button>
               {%- endif -%}
             </div>
@@ -519,6 +528,65 @@
       "id": "heading_color",
       "label": "Heading color",
       "default": "#8C9B6D"
+    },
+    {
+      "type": "select",
+      "id": "heading_font",
+      "label": "Heading font",
+      "options": [
+        { "value": "heading", "label": "Site heading font" },
+        { "value": "body", "label": "Site body font" }
+      ],
+      "default": "heading"
+    },
+    {
+      "type": "range",
+      "id": "heading_size",
+      "label": "Heading size",
+      "min": 14,
+      "max": 36,
+      "step": 1,
+      "unit": "px",
+      "default": 24
+    },
+    {
+      "type": "select",
+      "id": "heading_weight",
+      "label": "Heading weight",
+      "options": [
+        { "value": "400", "label": "Regular (400)" },
+        { "value": "500", "label": "Medium (500)" },
+        { "value": "600", "label": "Semi-bold (600)" },
+        { "value": "700", "label": "Bold (700)" }
+      ],
+      "default": "500"
+    },
+    {
+      "type": "select",
+      "id": "heading_transform",
+      "label": "Heading text transform",
+      "options": [
+        { "value": "uppercase", "label": "Uppercase" },
+        { "value": "none", "label": "None" },
+        { "value": "capitalize", "label": "Capitalize" }
+      ],
+      "default": "uppercase"
+    },
+    {
+      "type": "header",
+      "content": "Price placement"
+    },
+    {
+      "type": "select",
+      "id": "price_placement",
+      "label": "Show price",
+      "options": [
+        { "value": "both", "label": "Next to title & in button" },
+        { "value": "title_row", "label": "Next to title only" },
+        { "value": "button", "label": "In button only" }
+      ],
+      "default": "both",
+      "info": "Controls where the product price appears on each card."
     },
     {
       "type": "collection",
