@@ -204,6 +204,20 @@
     color: #333;
     display: block !important;
   }
+
+  /* Single image: stretch to full width, hide arrows */
+  .main-product-template .product__media-list .slider__slide:only-child {
+    flex: 0 0 100% !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  .main-product-template .product__media-list .slider__slide:only-child ~ .slider-buttons,
+  .main-product-template .product__media-list:has(.slider__slide:only-child) + .slider-buttons {
+    display: none !important;
+  }
 }
 /* Desktop: full-width slides, no carousel peek */
 @media (min-width: 990px) {
