@@ -94,6 +94,7 @@
   border-radius: {{ _br }}px;
   border: {{ _bw }}px solid {{ _bc }};
   overflow: hidden;
+  position: relative;
 }
 .main-product-template .product__media-item {
   {% if section.settings.image_aspect_ratio == 'natural' %}aspect-ratio: auto;{% else %}aspect-ratio: {{ section.settings.image_aspect_ratio | default: '1 / 1' }};{% endif %}
@@ -120,6 +121,8 @@
 .main-product-template .product__media-item .product-media-container {
   width: 100%;
   height: 100%;
+  object-fit: {{ section.settings.image_fit | default: 'cover' }};
+  object-position: center center;
 }
 /* Ensure all containers between media-item and img fill the space for cover to work */
 .main-product-template .product__media-item modal-opener,
@@ -129,6 +132,13 @@
   width: 100%;
   height: 100%;
 }
+/* Kill .media's own padding-bottom aspect ratio so it fills the parent container instead */
+{% if section.settings.image_aspect_ratio != 'natural' %}
+.main-product-template .product__media-item .media {
+  padding-bottom: 0 !important;
+  height: 100%;
+}
+{% endif %}
 
 /* Contain slides */
 .main-product-template .product__media-list.grid--peek { margin: 0 !important; }
