@@ -68,9 +68,9 @@
 }
 @media (min-width: 990px) {
   .main-product-template .main-product_info.product {
-    {% if _ms == 'small' %}grid-template-columns: minmax(0,460px) minmax(0,580px) !important;
-    {% elsif _ms == 'medium' %}grid-template-columns: minmax(0,560px) minmax(0,520px) !important;
-    {% else %}grid-template-columns: minmax(0,640px) minmax(0,480px) !important;
+    {% if _ms == 'small' %}grid-template-columns: 40% 1fr !important;
+    {% elsif _ms == 'medium' %}grid-template-columns: 52% 1fr !important;
+    {% else %}grid-template-columns: 60% 1fr !important;  /* large */
     {% endif %}
     column-gap: 48px;
     row-gap: 0;
@@ -122,6 +122,14 @@
   height: 100%;
   object-fit: {{ section.settings.image_fit | default: 'contain' }};
   object-position: center center;
+}
+/* Ensure all containers between media-item and img fill the space for cover to work */
+.main-product-template .product__media-item modal-opener,
+.main-product-template .product__media-item .product__modal-opener,
+.main-product-template .product__media-item .product__media-toggle {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 /* Contain slides */
@@ -418,7 +426,10 @@
 .sl-pdp-heart-btn:hover { color: #c44; }
 .sl-pdp-heart-btn svg { width: 22px; height: 22px; }
 .sl-pdp-heart-btn.is-wishlisted { color: #c44; }
-.sl-pdp-heart-btn.is-wishlisted svg { fill: #c44; }
+.sl-pdp-heart-btn.is-wishlisted svg { fill: #c44; stroke: #c44; }
+/* Also handle when dtx-wishlist wrapper receives the active class */
+dtx-wishlist.is-wishlisted .sl-pdp-heart-btn { color: #c44; }
+dtx-wishlist.is-wishlisted .sl-pdp-heart-btn svg { fill: #c44; stroke: #c44; }
 
 /* Priority badge (sale > new > editor's pick) */
 .sl-pdp-badge {
@@ -635,7 +646,7 @@
     font-weight: 100;
     font-family: var(--font-body-family);
     letter-spacing: 0.02em;
-    text-transform: lowercase;
+    text-transform: none;
     cursor: pointer;
     white-space: nowrap;
     transition: background 0.2s ease;
@@ -722,6 +733,9 @@
 
 /* Hide slick arrows */
 button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !important; }
+
+/* --- Hide Mangomint chat --- */
+.mangomint-chat-container { display: none !important; }
 
 /* ====================  DELIVERY OPTIONS  ==================== */
 .delivery-options-section { margin: 20px 0; font-family: inherit; }
@@ -1913,14 +1927,14 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
                             {%- assign is_ingredients = true -%}
                           {%- endif -%}
                           <details class="dt-details"{% if is_ingredients and section.settings.ingredients_open_default %} open{% elsif is_ingredients == false and section.settings.details_open_default %} open{% endif %}>
-                            <summary>
+                            <summary style="{% if block.settings.border_color != blank %}border-bottom-color: {{ block.settings.border_color }};{% endif %}">
                               <div class="summary__title">
-                                <h6 class="accordion__title" style="{% if block.settings.heading_color != blank %}color: {{ block.settings.heading_color }};{% endif %}">
+                                <h6 class="accordion__title" style="{% if block.settings.heading_color != blank %}color: {{ block.settings.heading_color }};{% endif %}{% if block.settings.heading_size != blank and block.settings.heading_size != 16 %}font-size: {{ block.settings.heading_size }}px;{% endif %}">
                                   {{ block.settings.heading | default: block.settings.page.title }}
                                 </h6>
                               </div>
                               {% render 'icon-caret' %}
-                              <span class="sl-accordion-icon">
+                              <span class="sl-accordion-icon" style="{% if block.settings.icon_color != blank %}color: {{ block.settings.icon_color }};{% endif %}">
                                 <span class="sl-icon-plus">+</span>
                                 <span class="sl-icon-minus">&minus;</span>
                               </span>
@@ -2062,14 +2076,14 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
                     {%- assign is_ingredients = true -%}
                   {%- endif -%}
                   <details class="dt-details"{% if is_ingredients and section.settings.ingredients_open_default %} open{% elsif is_ingredients == false and section.settings.details_open_default %} open{% endif %}>
-                    <summary>
+                    <summary style="{% if block.settings.border_color != blank %}border-bottom-color: {{ block.settings.border_color }};{% endif %}">
                       <div class="summary__title">
-                        <h6 class="accordion__title" style="{% if block.settings.heading_color != blank %}color: {{ block.settings.heading_color }};{% endif %}">
+                        <h6 class="accordion__title" style="{% if block.settings.heading_color != blank %}color: {{ block.settings.heading_color }};{% endif %}{% if block.settings.heading_size != blank and block.settings.heading_size != 16 %}font-size: {{ block.settings.heading_size }}px;{% endif %}">
                           {{ block.settings.heading | default: block.settings.page.title }}
                         </h6>
                       </div>
                       {% render 'icon-caret' %}
-                    <span class="sl-accordion-icon">
+                    <span class="sl-accordion-icon" style="{% if block.settings.icon_color != blank %}color: {{ block.settings.icon_color }};{% endif %}">
                       <span class="sl-icon-plus">+</span>
                       <span class="sl-icon-minus">&minus;</span>
                     </span>
@@ -2172,6 +2186,19 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
       %}
       <script>
         document.addEventListener('DOMContentLoaded', function() {
+          /* — Wishlist heart toggle — */
+          (function() {
+            var heartBtns = document.querySelectorAll('.sl-pdp-heart-btn');
+            heartBtns.forEach(function(btn) {
+              btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                btn.classList.toggle('is-wishlisted');
+                var wrapper = btn.closest('dtx-wishlist');
+                if (wrapper) wrapper.classList.toggle('is-wishlisted');
+              });
+            });
+          })();
+
           /* — Sticky ATC bar: IntersectionObserver — */
           {% if section.settings.enable_sticky_bar %}
           (function() {
@@ -2189,6 +2216,59 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
               }, { threshold: 0, rootMargin: '0px' });
               observer.observe(nativeATC);
             }
+          })();
+
+          /* — Sticky ATC: AJAX add + open cart drawer — */
+          (function() {
+            var stickyBtn = document.getElementById('sl-sticky-btn-{{ section.id }}');
+            if (!stickyBtn) return;
+            stickyBtn.addEventListener('click', function() {
+              if (stickyBtn.disabled) return;
+              var variantId = stickyBtn.getAttribute('data-variant-id');
+              var qtyInput = document.getElementById('sl-sticky-qty-{{ section.id }}');
+              var qty = qtyInput ? parseInt(qtyInput.value, 10) || 1 : 1;
+
+              stickyBtn.disabled = true;
+              stickyBtn.textContent = '{{ "products.product.adding" | t | default: "Adding..." }}';
+
+              fetch('/cart/add.js', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ id: parseInt(variantId, 10), quantity: qty })
+              })
+              .then(function(res) { return res.json(); })
+              .then(function() {
+                /* Try to open the cart drawer */
+                var cartDrawer = document.querySelector('cart-drawer');
+                if (cartDrawer && typeof cartDrawer.open === 'function') {
+                  /* Refresh cart drawer contents first */
+                  fetch('/cart.js').then(function(r) { return r.json(); }).then(function() {
+                    /* Dispatch cart update event so Dawn refreshes the drawer */
+                    document.documentElement.dispatchEvent(new CustomEvent('cart:refresh'));
+                    cartDrawer.open();
+                  });
+                } else {
+                  /* Fallback: dispatch events that Dawn/theme listens for */
+                  document.documentElement.dispatchEvent(new CustomEvent('cart:refresh'));
+                  /* Try clicking the cart icon to open drawer */
+                  var cartToggle = document.querySelector('[data-cart-toggle]') ||
+                                   document.querySelector('.header__icon--cart') ||
+                                   document.querySelector('a[href="/cart"]');
+                  if (cartToggle) cartToggle.click();
+                }
+              })
+              .catch(function(err) { console.error('Sticky ATC error:', err); })
+              .finally(function() {
+                stickyBtn.disabled = false;
+                {%- if product.selected_or_first_available_variant.available -%}
+                  {%- if section.settings.sticky_btn_text != blank -%}
+                    stickyBtn.textContent = '{{ section.settings.sticky_btn_text | escape }} | {{ product.selected_or_first_available_variant.price | money }}';
+                  {%- else -%}
+                    stickyBtn.textContent = '{{ "products.product.add_to_cart" | t | escape }} | {{ product.selected_or_first_available_variant.price | money }}';
+                  {%- endif -%}
+                {%- endif -%}
+              });
+            });
           })();
           {% endif %}
 
@@ -2450,20 +2530,20 @@ function updateDeliveryOption(input) {
 {%- if section.settings.enable_sticky_bar -%}
 <!-- Sticky Add-to-Cart Bar (mobile only, outside section) -->
 <div class="sl-sticky-atc" id="sl-sticky-atc-{{ section.id }}">
-  <form action="/cart/add" method="post" class="sl-sticky-atc__inner">
-    <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}" id="sl-sticky-variant-{{ section.id }}">
+  <div class="sl-sticky-atc__inner">
     <quantity-input class="quantity">
       <button class="quantity__button no-js-hidden" name="minus" type="button">
         <span class="visually-hidden">Decrease quantity</span>
         {% render 'icon-minus' %}
       </button>
-      <input class="quantity__input" type="number" name="quantity" min="1" value="1">
+      <input class="quantity__input" id="sl-sticky-qty-{{ section.id }}" type="number" name="quantity" min="1" value="1">
       <button class="quantity__button no-js-hidden" name="plus" type="button">
         <span class="visually-hidden">Increase quantity</span>
         {% render 'icon-plus' %}
       </button>
     </quantity-input>
-    <button type="submit" class="sl-sticky-atc__btn"
+    <button type="button" class="sl-sticky-atc__btn" id="sl-sticky-btn-{{ section.id }}"
+      data-variant-id="{{ product.selected_or_first_available_variant.id }}"
       {% if product.selected_or_first_available_variant.available == false %}disabled{% endif %}>
       {%- if product.selected_or_first_available_variant.available -%}
         {%- if section.settings.sticky_btn_text != blank -%}
@@ -2475,7 +2555,7 @@ function updateDeliveryOption(input) {
         {{ 'products.product.sold_out' | t }}
       {%- endif -%}
     </button>
-  </form>
+  </div>
 </div>
 {%- endif -%}
 
@@ -3648,6 +3728,27 @@ function updateDeliveryOption(input) {
   "type": "color",
   "id": "heading_color",
   "label": "Heading color"
+  },
+  {
+  "type": "range",
+  "id": "heading_size",
+  "min": 12,
+  "max": 24,
+  "step": 1,
+  "unit": "px",
+  "label": "Heading font size",
+  "default": 16
+  },
+  {
+  "type": "color",
+  "id": "icon_color",
+  "label": "Icon color",
+  "info": "Color of the +/− toggle icon"
+  },
+  {
+  "type": "color",
+  "id": "border_color",
+  "label": "Border color"
   },
   {
   "type": "color",
