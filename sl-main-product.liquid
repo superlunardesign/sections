@@ -2252,7 +2252,7 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
               var qty = qtyInput ? parseInt(qtyInput.value, 10) || 1 : 1;
 
               stickyBtn.disabled = true;
-              stickyBtn.textContent = '{{ "products.product.adding" | t | default: "Adding..." }}';
+              stickyBtn.textContent = 'Adding...';
 
               fetch('/cart/add.js', {
                 method: 'POST',
