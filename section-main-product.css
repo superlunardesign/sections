@@ -1288,7 +1288,7 @@ button.product-form__submit.button.button--full-width.button--secondary {
 .product__info-container .product-form form {
   margin-bottom: 0;
   flex-direction: inherit;
-  max-width: 400px;
+  
 }
 .product-form__buttons .shopify-payment-button {
   width: calc(100% + 50px);
