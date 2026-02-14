@@ -263,7 +263,7 @@
   cursor: pointer;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: {% if section.settings.price_placement == 'button' %}space-between{% else %}center{% endif %};
   transition: opacity 0.2s ease;
 }
 
