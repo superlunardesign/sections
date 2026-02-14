@@ -1915,9 +1915,12 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
                               {%- endif -%}
                               {%- for tab_block in section.blocks -%}
                                 {%- if tab_block.type == 'collapsible_tab' -%}
+                                  {%- assign tab_block_heading_lower = tab_block.settings.heading | downcase -%}
+                                  {%- unless tab_block_heading_lower contains 'ingredient' and product.metafields.custom.ingredients == blank -%}
                                   <div class="summary__title tablinks" onclick="openTab(event, '{{ tab_block.settings.heading | handle }}')" data-id="{{ tab_block.settings.heading | handle }}">
                                     <h6 class="accordion__title">{{ tab_block.settings.heading | default: tab_block.settings.page.title }}</h6>
                                   </div>
+                                  {%- endunless -%}
                                 {%- endif -%}
                               {%- endfor -%}
                               {%- if section.settings.show_review_tab -%}
@@ -1929,10 +1932,13 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
                             {%- endif -%}
                             {%- for tab_block in section.blocks -%}
                               {%- if tab_block.type == 'collapsible_tab' -%}
+                                {%- assign tab_block_heading_lower = tab_block.settings.heading | downcase -%}
+                                {%- unless tab_block_heading_lower contains 'ingredient' and product.metafields.custom.ingredients == blank -%}
                                 <div class="dt-sc-tabs-content rte" id="{{ tab_block.settings.heading | handle }}">
                                   {{ tab_block.settings.content }}
                                   {{ tab_block.settings.page.content }}
                                 </div>
+                                {%- endunless -%}
                               {%- endif -%}
                             {%- endfor -%}
                           </div>
@@ -1943,12 +1949,13 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
                   {%- when 'collapsible_tab' -%}
                     {% if section.settings.tab_position == 'right' %}
                       {% if section.settings.tab_style == 'toggle' %}
+                        {%- assign tab_heading_lower = block.settings.heading | downcase -%}
+                        {%- assign is_ingredients = false -%}
+                        {%- if tab_heading_lower contains 'ingredient' -%}
+                          {%- assign is_ingredients = true -%}
+                        {%- endif -%}
+                        {%- unless is_ingredients and product.metafields.custom.ingredients == blank -%}
                         <div class="product__accordion accordion" style="{% if block.settings.margin_top > 0 %}margin-top: {{ block.settings.margin_top }}px;{% endif %}{% if block.settings.margin_bottom > 0 %}margin-bottom: {{ block.settings.margin_bottom }}px;{% endif %}" {{ block.shopify_attributes }}>
-                          {%- assign tab_heading_lower = block.settings.heading | downcase -%}
-                          {%- assign is_ingredients = false -%}
-                          {%- if tab_heading_lower contains 'ingredient' -%}
-                            {%- assign is_ingredients = true -%}
-                          {%- endif -%}
                           <details class="dt-details"{% if is_ingredients and section.settings.ingredients_open_default %} open{% elsif is_ingredients == false and section.settings.details_open_default %} open{% endif %}>
                             <summary style="{% if block.settings.border_color != blank %}border-bottom-color: {{ block.settings.border_color }};{% endif %}">
                               <div class="summary__title">
@@ -1968,6 +1975,7 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
                             </div>
                           </details>
                         </div>
+                        {%- endunless -%}
                       {% elsif section.settings.tab_style == 'tab' %}
                         {%- unless sl_right_tabs_rendered -%}
                           {%- assign sl_right_tabs_rendered = true -%}
@@ -1980,9 +1988,12 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
                               {%- endif -%}
                               {%- for tab_block in section.blocks -%}
                                 {%- if tab_block.type == 'collapsible_tab' -%}
+                                  {%- assign tab_block_heading_lower = tab_block.settings.heading | downcase -%}
+                                  {%- unless tab_block_heading_lower contains 'ingredient' and product.metafields.custom.ingredients == blank -%}
                                   <div class="summary__title tablinks" onclick="openTab(event, '{{ tab_block.settings.heading | handle }}')" data-id="{{ tab_block.settings.heading | handle }}">
                                     <h6 class="accordion__title">{{ tab_block.settings.heading | default: tab_block.settings.page.title }}</h6>
                                   </div>
+                                  {%- endunless -%}
                                 {%- endif -%}
                               {%- endfor -%}
                               {%- if section.settings.show_review_tab -%}
@@ -1994,10 +2005,13 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
                             {%- endif -%}
                             {%- for tab_block in section.blocks -%}
                               {%- if tab_block.type == 'collapsible_tab' -%}
+                                {%- assign tab_block_heading_lower = tab_block.settings.heading | downcase -%}
+                                {%- unless tab_block_heading_lower contains 'ingredient' and product.metafields.custom.ingredients == blank -%}
                                 <div class="dt-sc-tabs-content rte" id="{{ tab_block.settings.heading | handle }}">
                                   {{ tab_block.settings.content }}
                                   {{ tab_block.settings.page.content }}
                                 </div>
+                                {%- endunless -%}
                               {%- endif -%}
                             {%- endfor -%}
                           </div>
@@ -2092,12 +2106,13 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
                   </details>
                 </div>
               {%- when 'collapsible_tab' -%}
+                {%- assign tab_heading_lower = block.settings.heading | downcase -%}
+                {%- assign is_ingredients = false -%}
+                {%- if tab_heading_lower contains 'ingredient' -%}
+                  {%- assign is_ingredients = true -%}
+                {%- endif -%}
+                {%- unless is_ingredients and product.metafields.custom.ingredients == blank -%}
                 <div class="product__accordion accordion" style="{% if block.settings.margin_top > 0 %}margin-top: {{ block.settings.margin_top }}px;{% endif %}{% if block.settings.margin_bottom > 0 %}margin-bottom: {{ block.settings.margin_bottom }}px;{% endif %}" {{ block.shopify_attributes }}>
-                  {%- assign tab_heading_lower = block.settings.heading | downcase -%}
-                  {%- assign is_ingredients = false -%}
-                  {%- if tab_heading_lower contains 'ingredient' -%}
-                    {%- assign is_ingredients = true -%}
-                  {%- endif -%}
                   <details class="dt-details"{% if is_ingredients and section.settings.ingredients_open_default %} open{% elsif is_ingredients == false and section.settings.details_open_default %} open{% endif %}>
                     <summary style="{% if block.settings.border_color != blank %}border-bottom-color: {{ block.settings.border_color }};{% endif %}">
                       <div class="summary__title">
@@ -2116,6 +2131,7 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
                     </div>
                   </details>
                 </div>
+                {%- endunless -%}
             {%- endcase -%}
           {%- endfor -%}
         {% endif %}
