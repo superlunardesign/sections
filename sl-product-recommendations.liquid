@@ -19,6 +19,18 @@
   }
 }
 
+.sl-recs__inner {
+  margin-left: var(--page-full-width-spacing, 2rem);
+  margin-right: var(--page-full-width-spacing, 2rem);
+}
+
+@media (max-width: 989px) {
+  .sl-recs__inner {
+    margin-left: calc(var(--page-full-width-spacing, 2rem) / 2);
+    margin-right: calc(var(--page-full-width-spacing, 2rem) / 2);
+  }
+}
+
 .sl-recs__heading {
   text-align: left;
   font-family: {% if section.settings.heading_font == 'body' %}var(--font-body-family){% else %}var(--font-heading-family){% endif %};
@@ -313,7 +325,7 @@
      {% if rec_source != 'collection' and rec_source != 'metafield' %}
        data-url="{{ routes.product_recommendations_url }}?section_id={{ section.id }}&product_id={{ product.id }}&limit={{ products_limit }}"
      {% endif %}>
-  <div class="page-width">
+  <div class="sl-recs__inner">
     {%- if section.settings.heading != blank -%}
       <h2 class="sl-recs__heading">{{ section.settings.heading }}</h2>
     {%- endif -%}
@@ -579,14 +591,13 @@
     {
       "type": "select",
       "id": "price_placement",
-      "label": "Show price",
+      "label": "Price location",
       "options": [
-        { "value": "both", "label": "Next to title & in button" },
-        { "value": "title_row", "label": "Next to title only" },
-        { "value": "button", "label": "In button only" }
+        { "value": "title_row", "label": "Next to title" },
+        { "value": "button", "label": "In button" }
       ],
-      "default": "both",
-      "info": "Controls where the product price appears on each card."
+      "default": "title_row",
+      "info": "Show price either next to the title or inside the Add to Cart button."
     },
     {
       "type": "collection",

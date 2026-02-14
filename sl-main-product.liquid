@@ -2270,30 +2270,34 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
               stickyBtn.disabled = true;
               stickyBtn.textContent = 'Adding...';
 
+              var cart = document.querySelector('cart-notification') || document.querySelector('cart-drawer');
+              var formData = new FormData();
+              formData.append('id', variantId);
+              formData.append('quantity', qty);
+
+              if (cart) {
+                try {
+                  var sectionsToRender = cart.getSectionsToRender().map(function(s) { return s.id; });
+                  formData.append('sections', sectionsToRender);
+                  formData.append('sections_url', window.location.pathname);
+                  cart.setActiveElement(document.activeElement);
+                } catch(e) {}
+              }
+
               fetch('/cart/add.js', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                body: JSON.stringify({ id: parseInt(variantId, 10), quantity: qty })
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: formData
               })
               .then(function(res) { return res.json(); })
-              .then(function() {
-                /* Try to open the cart drawer */
-                var cartDrawer = document.querySelector('cart-drawer');
-                if (cartDrawer && typeof cartDrawer.open === 'function') {
-                  /* Refresh cart drawer contents first */
-                  fetch('/cart.js').then(function(r) { return r.json(); }).then(function() {
-                    /* Dispatch cart update event so Dawn refreshes the drawer */
-                    document.documentElement.dispatchEvent(new CustomEvent('cart:refresh'));
-                    cartDrawer.open();
-                  });
+              .then(function(response) {
+                if (response.status) throw new Error(response.description);
+
+                if (cart) {
+                  if (cart.classList.contains('is-empty')) cart.classList.remove('is-empty');
+                  cart.renderContents(response);
                 } else {
-                  /* Fallback: dispatch events that Dawn/theme listens for */
-                  document.documentElement.dispatchEvent(new CustomEvent('cart:refresh'));
-                  /* Try clicking the cart icon to open drawer */
-                  var cartToggle = document.querySelector('[data-cart-toggle]') ||
-                                   document.querySelector('.header__icon--cart') ||
-                                   document.querySelector('a[href="/cart"]');
-                  if (cartToggle) cartToggle.click();
+                  window.location = '/cart';
                 }
               })
               .catch(function(err) { console.error('Sticky ATC error:', err); })

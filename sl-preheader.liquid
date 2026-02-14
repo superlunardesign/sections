@@ -311,9 +311,21 @@
       fetch('/cart.js', { credentials: 'same-origin' })
         .then(function(r) { return r.json(); })
         .then(function(cart) {
+          /* Update preheader cart count elements */
           document.querySelectorAll('[data-sl-cart-count]').forEach(function(el) {
-            el.textContent = cart.item_count;
             el.style.display = cart.item_count > 0 ? '' : 'none';
+            var countSpan = el.querySelector('span[aria-hidden]');
+            if (countSpan) {
+              countSpan.textContent = cart.item_count;
+            } else if (!el.classList.contains('cart-count-bubble')) {
+              el.textContent = cart.item_count;
+            }
+          });
+          /* Update header cart-count-bubble elements */
+          document.querySelectorAll('.cart-count-bubble').forEach(function(el) {
+            el.style.display = cart.item_count > 0 ? '' : 'none';
+            var countSpan = el.querySelector('span[aria-hidden]');
+            if (countSpan) countSpan.textContent = cart.item_count;
           });
         })
         .catch(function() {});

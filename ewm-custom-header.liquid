@@ -1865,14 +1865,12 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
           endif
         -%}
         <span class="icon__fallback-text">{{ 'templates.cart.cart' | t }}</span>
-        {%- if cart != empty -%}
-          <div class="cart-count-bubble">
+          <div class="cart-count-bubble" data-sl-cart-count="{{ cart.item_count }}" {% if cart == empty %}style="display:none"{% endif %}>
             {%- if cart.item_count < 100 -%}
               <span aria-hidden="true">{{ cart.item_count }}</span>
             {%- endif -%}
             <span class="visually-hidden">{{ 'sections.header.cart_count' | t: count: cart.item_count }}</span>
           </div>
-        {%- endif -%}
       </a>
  {%- endif -%}
         {%- if section.settings.enable_country_selector and localization.available_countries.size > 1 -%}
