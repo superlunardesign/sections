@@ -317,7 +317,7 @@
 /* Thumbnail strip fixed width on the side */
 .main-product-template .thumbnail-slider,
 .main-product-template .thumbnail-slider.slider-vertical {
-  width: 90px !important;
+  width: 89px !important;
   flex: 0 0 90px !important;
   align-self: stretch !important;
   margin: 0;
@@ -974,7 +974,7 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
           {%- if block.type == 'breadcrumbs' -%}
             {%- if block.settings.show_breadcrumbs and product.collections.size > 0 -%}
               <div class="sl-pdp-breadcrumb" style="{% if block.settings.breadcrumb_color != blank %}color: {{ block.settings.breadcrumb_color }};{% endif %}{% if block.settings.font_size > 0 %}font-size: {{ block.settings.font_size }}px;{% endif %}{% if block.settings.margin_bottom > 0 %}margin-bottom: {{ block.settings.margin_bottom }}px;{% endif %}" {{ block.shopify_attributes }}>
-                {%- for col in product.collections limit: 2 -%}
+                {%- for col in product.collections limit: 3 -%}
                   <a href="{{ col.url }}" style="{% if block.settings.breadcrumb_color != blank %}color: {{ block.settings.breadcrumb_color }};{% endif %}">{{ col.title }}</a>
                   {%- unless forloop.last %}<span class="sl-pdp-breadcrumb__sep">/</span>{% endunless -%}
                 {%- endfor -%}
