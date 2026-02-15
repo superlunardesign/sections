@@ -1,7 +1,7 @@
 
 /**
- * @fileoverview The file mananage dT Theme cookie based wishList 
- * dT_General.js, axios, vue libs are dependencies. 
+ * @fileoverview The file mananage dT Theme cookie based wishList
+ * dT_General.js, axios, vue libs are dependencies.
  * @package
  */
 class dT_WhistList {
@@ -9,7 +9,11 @@ class dT_WhistList {
     constructor() {
         this.wishListData = [];
 
-        this.LOCAL_STORAGE_WISHLIST_KEY = 'shopify-wishlist';
+        /* Account-based: namespace localStorage key by customer ID */
+        var customerId = window.__wishlistCustomerId || null;
+        this.LOCAL_STORAGE_WISHLIST_KEY = customerId
+            ? 'shopify-wishlist-' + customerId
+            : 'shopify-wishlist';
         this.LOCAL_STORAGE_DELIMITER = ',';
     }
 
@@ -178,6 +182,7 @@ class dTXWhishList extends HTMLElement {
     constructor() {
       super();
 
+      this.requiresLogin = this.getAttribute('data-requires-login') === 'true';
       this.dTWhistList = new dT_WhistList();
 
       this.debouncedOnSubmit = debounce((event) => {
@@ -186,8 +191,8 @@ class dTXWhishList extends HTMLElement {
 
 
       this.addWishList = this.querySelector('.add-wishlist');
-     
-      this.productHandle = this.addWishList.getAttribute('data-product_handle'); 
+
+      this.productHandle = this.addWishList.getAttribute('data-product_handle');
       this.addWishList.addEventListener('click', this.debouncedOnSubmit.bind(this));
 
       this.initLoad();
@@ -195,6 +200,12 @@ class dTXWhishList extends HTMLElement {
 
 onSubmitHandler(event) {
     event.preventDefault();
+
+    /* Redirect to login if customer is not signed in */
+    if (this.requiresLogin || !window.__wishlistLoggedIn) {
+        window.location.href = '/account/login';
+        return;
+    }
 
     if (this.dTWhistList.isAddedIntoList(this.productHandle)) {
         // Remove from wishlist instead of redirecting
@@ -247,11 +258,11 @@ postRemove() {
     }
 
     initLoad() {
-        if (this.dTWhistList.isAddedIntoList(this.productHandle)) {
+        if (!this.requiresLogin && window.__wishlistLoggedIn && this.dTWhistList.isAddedIntoList(this.productHandle)) {
             this.addWishList.classList.add("added");
-        }    
+        }
     }
-}    
+}
 
 customElements.define('dtx-wishlist', dTXWhishList);
 

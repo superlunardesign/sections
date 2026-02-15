@@ -939,9 +939,10 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
 
 /* ====================  WISHLIST TOAST  ==================== */
 .sl-wishlist-toast {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+  position: fixed; top: 0; left: 0; right: 0; z-index: 999999;
   transform: translateY(-100%);
   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  isolation: isolate;
 }
 .sl-wishlist-toast.is-visible { transform: translateY(0); }
 .sl-wishlist-toast__inner {
@@ -1382,7 +1383,7 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
 
                       {%- comment -%} Wishlist heart {%- endcomment -%}
                       {%- if product.handle != blank -%}
-                        <dtx-wishlist>
+                        <dtx-wishlist{% unless customer %} data-requires-login="true"{% endunless %}>
                           <a href="javascript:void(0);"
                              class="sl-pdp-heart-btn add-wishlist"
                              data-product_handle="{{ product.handle }}"
@@ -2292,6 +2293,8 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
           /* — Wishlist heart toggle + toast — */
           (function() {
             var toast = document.getElementById('sl-wishlist-toast');
+            /* Move toast to body so it escapes any section stacking context */
+            if (toast) document.body.appendChild(toast);
             var toastText = document.getElementById('sl-wishlist-toast-text');
             var undoBtn = document.getElementById('sl-wishlist-undo');
             var hideTimer = null;
@@ -2315,6 +2318,11 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
             heartBtns.forEach(function(btn) {
               btn.addEventListener('click', function(e) {
                 e.preventDefault();
+                /* Redirect to login if not signed in */
+                if (!window.__wishlistLoggedIn) {
+                  window.location.href = '/account/login';
+                  return;
+                }
                 btn.classList.toggle('is-wishlisted');
                 var wrapper = btn.closest('dtx-wishlist');
                 if (wrapper) wrapper.classList.toggle('is-wishlisted');

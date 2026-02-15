@@ -1,3 +1,9 @@
+<!-- Wishlist: expose customer ID for account-based storage -->
+<script>
+  window.__wishlistCustomerId = {% if customer %}{{ customer.id }}{% else %}null{% endif %};
+  window.__wishlistLoggedIn = {% if customer %}true{% else %}false{% endif %};
+</script>
+
 <link rel="stylesheet" href="{{ 'component-list-menu.css' | asset_url }}" media="print" onload="this.media='all'">
 <link rel="stylesheet" href="{{ 'component-search.css' | asset_url }}" media="print" onload="this.media='all'">
 <link rel="stylesheet" href="{{ 'component-menu-drawer.css' | asset_url }}" media="print" onload="this.media='all'">
@@ -1816,15 +1822,17 @@ a, button, summary, [role="button"], .sl-nav__link, .sl-dropdown__list a,
         </details>
       </details-modal>
         {%- endif -%}
-              {%- if section.settings.show_header_wishlist -%}        
-              <a href="/pages/wishlist" class="header__icon header__icon--wishlist link">
+              {%- if section.settings.show_header_wishlist -%}
+              <a href="{% if customer %}/pages/wishlist{% else %}/account/login{% endif %}" class="header__icon header__icon--wishlist link">
                 {% render 'icon-wishlist' %}
                 <span class="icon__fallback-text">{{ 'products.product.wishlist' | t }}</span>
+                {% if customer %}
                 <dtx-wish-count class="dtxc-wishlist-count cart-count-bubble" grid_type="wishList" count="0">
                   <div class="grid-count-bubble">
                     <span aria-hidden="true"></span>
                   </div>
                 </dtx-wish-count>
+                {% endif %}
               </a>
               {%- endif -%}
 

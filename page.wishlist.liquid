@@ -1,52 +1,70 @@
 {{ 'page-wishlist.css' | asset_url | stylesheet_tag }}
 
-<div class="page-width wishlist">
-  <dtx-wishlist-grid grid_type="wishList">
-    <div class="dtx-grid-empty">
-      <h2>{{ 'products.wishlist.no_records' | t }}</h2>
-    <img src="{{ "empty-cart.png" | asset_url }}" alt="{{ 'products.wishlist.no_records' | t }}" height="150" width="150" loading="lazy" />
-      <a href="{{ routes.all_products_collection_url }}" class="link button button--primary">
-        {{ 'general.continue_shopping' | t }}
-      </a>
-    </div>
+{% if customer %}
+  <div class="page-width wishlist">
+    <dtx-wishlist-grid grid_type="wishList">
+      <div class="dtx-grid-empty">
+        <h2>{{ 'products.wishlist.no_records' | t }}</h2>
+      <img src="{{ "empty-cart.png" | asset_url }}" alt="{{ 'products.wishlist.no_records' | t }}" height="150" width="150" loading="lazy" />
+        <a href="{{ routes.all_products_collection_url }}" class="link button button--primary">
+          {{ 'general.continue_shopping' | t }}
+        </a>
+      </div>
 
-    <table class="dtx-table">
-      <thead>
-        <tr>
-          <th>Image</th>
-          <th>Product</th>
-          <th>Price</th>
-          <th>Purchase</th>
-          <th>Remove</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr id="row_{item.product_handle}" class="grid_template" style="display: none;">
-          <td class="product-thumbnail">
-            <a href="{item.product_url}">
-              <img loading="lazy" src="{item.product_image}" alt="{item.product_title}" width="" height="">
-            </a>
-          </td>
-          <td class="product-name">
-            <a href="{item.product_url}">{item.product_title}</a>
-          </td>
-          <td class="product-price-cart">
-            {item.money_price}
-          </td>
-          <td class="product-wishlist-cart">
-            <a href="{item.product_url}" data-product-variant-id="{item.variant_id}" class="dt-sc-btn button product-cart">
-              Select Options
-            </a>
-          </td>
-          <td>
-            <dtx-remove-wish-item grid_type="wishList">
-              <a href="javascript:void(0);" data-product_handle="{item.product_handle}" class="remove-item  product-cart">
-                {% render 'icon-remove' %}
+      <table class="dtx-table">
+        <thead>
+          <tr>
+            <th>Image</th>
+            <th>Product</th>
+            <th>Price</th>
+            <th>Purchase</th>
+            <th>Remove</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr id="row_{item.product_handle}" class="grid_template" style="display: none;">
+            <td class="product-thumbnail">
+              <a href="{item.product_url}">
+                <img loading="lazy" src="{item.product_image}" alt="{item.product_title}" width="" height="">
               </a>
-            </dtx-remove-wish-item>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </dtx-wishlist-grid>
-</div>
+            </td>
+            <td class="product-name">
+              <a href="{item.product_url}">{item.product_title}</a>
+            </td>
+            <td class="product-price-cart">
+              {item.money_price}
+            </td>
+            <td class="product-wishlist-cart">
+              <a href="{item.product_url}" data-product-variant-id="{item.variant_id}" class="dt-sc-btn button product-cart">
+                Select Options
+              </a>
+            </td>
+            <td>
+              <dtx-remove-wish-item grid_type="wishList">
+                <a href="javascript:void(0);" data-product_handle="{item.product_handle}" class="remove-item  product-cart">
+                  {% render 'icon-remove' %}
+                </a>
+              </dtx-remove-wish-item>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </dtx-wishlist-grid>
+  </div>
+{% else %}
+  <div class="page-width wishlist">
+    <div class="wishlist-login-required" style="text-align: center; padding: 60px 20px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width: 48px; height: 48px; margin: 0 auto 16px; display: block; color: #999;">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+      </svg>
+      <h2 style="margin: 0 0 12px; font-size: 22px;">Sign in to view your wishlist</h2>
+      <p style="color: #666; margin: 0 0 24px; font-size: 15px;">Log in to your account to save and view your favorite products.</p>
+      <a href="/account/login" class="link button button--primary" style="min-width: 200px;">
+        Sign In
+      </a>
+      <p style="margin-top: 16px; font-size: 14px; color: #888;">
+        Don't have an account? <a href="/account/register" style="color: inherit; text-decoration: underline;">Create one</a>
+      </p>
+    </div>
+  </div>
+{% endif %}
