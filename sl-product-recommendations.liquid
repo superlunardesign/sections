@@ -19,8 +19,8 @@
   }
 }
 
-.sl-recs__inner {
-  margin-left: var(--page-full-width-spacing, 2rem);
+/*.sl-recs__inner {
+  margin-left: var(--page-width, 2rem);
   margin-right: var(--page-full-width-spacing, 2rem);
 }
 
@@ -29,7 +29,7 @@
     margin-left: calc(var(--page-full-width-spacing, 2rem) / 2);
     margin-right: calc(var(--page-full-width-spacing, 2rem) / 2);
   }
-}
+}*/
 
 .sl-recs__heading {
   text-align: left;
@@ -320,12 +320,12 @@
 {%- assign products_limit = section.settings.products_limit | default: 8 -%}
 
 {%- if rec_products != nil and rec_products.size > 0 -%}
-<div class="sl-recs"
+<div class="sl-recs "
      id="SLRecs-{{ section.id }}"
      {% if rec_source != 'collection' and rec_source != 'metafield' %}
        data-url="{{ routes.product_recommendations_url }}?section_id={{ section.id }}&product_id={{ product.id }}&limit={{ products_limit }}"
      {% endif %}>
-  <div class="sl-recs__inner">
+  <div class="sl-recs__inner page-width">
     {%- if section.settings.heading != blank -%}
       <h2 class="sl-recs__heading">{{ section.settings.heading }}</h2>
     {%- endif -%}
