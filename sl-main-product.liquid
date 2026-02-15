@@ -937,6 +937,40 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
 }
 
 
+/* ====================  WISHLIST TOAST  ==================== */
+.sl-wishlist-toast {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+  transform: translateY(-100%);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.sl-wishlist-toast.is-visible { transform: translateY(0); }
+.sl-wishlist-toast__inner {
+  display: flex; align-items: center; justify-content: center; gap: 16px;
+  padding: 14px 24px;
+  background: #2c2c2c; color: #fff;
+  font-family: var(--font-body-family); font-size: 14px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+}
+.sl-wishlist-toast__msg {
+  display: flex; align-items: center; gap: 8px;
+}
+.sl-wishlist-toast__msg svg { width: 18px; height: 18px; flex-shrink: 0; }
+.sl-wishlist-toast__actions { display: flex; gap: 10px; }
+.sl-wishlist-toast__btn {
+  padding: 6px 16px; border-radius: 999px; font-size: 13px;
+  font-weight: 600; cursor: pointer; border: none;
+  font-family: var(--font-body-family);
+  transition: opacity 0.2s;
+}
+.sl-wishlist-toast__btn:hover { opacity: 0.85; }
+.sl-wishlist-toast__btn--undo {
+  background: transparent; color: #fff;
+  border: 1px solid rgba(255,255,255,0.35);
+}
+.sl-wishlist-toast__btn--view {
+  background: #fff; color: #2c2c2c;
+}
+
 {%- endstyle -%}
 
 
@@ -974,10 +1008,26 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
           {%- if block.type == 'breadcrumbs' -%}
             {%- if block.settings.show_breadcrumbs and product.collections.size > 0 -%}
               <div class="sl-pdp-breadcrumb" style="{% if block.settings.breadcrumb_color != blank %}color: {{ block.settings.breadcrumb_color }};{% endif %}{% if block.settings.font_size > 0 %}font-size: {{ block.settings.font_size }}px;{% endif %}{% if block.settings.margin_bottom > 0 %}margin-bottom: {{ block.settings.margin_bottom }}px;{% endif %}" {{ block.shopify_attributes }}>
-                {%- for col in product.collections limit: 3 -%}
-                  <a href="{{ col.url }}" style="{% if block.settings.breadcrumb_color != blank %}color: {{ block.settings.breadcrumb_color }};{% endif %}">{{ col.title }}</a>
-                  {%- unless forloop.last %}<span class="sl-pdp-breadcrumb__sep">/</span>{% endunless -%}
+                {%- assign _bc_child = nil -%}
+                {%- assign _bc_parent = nil -%}
+                {%- for col in product.collections -%}
+                  {%- assign _p = col.metafields.custom.parent_collection.value -%}
+                  {%- if _p != blank -%}
+                    {%- assign _bc_child = col -%}
+                    {%- assign _bc_parent = _p -%}
+                    {%- break -%}
+                  {%- endif -%}
                 {%- endfor -%}
+                {%- if _bc_parent != blank and _bc_child != blank -%}
+                  <a href="{{ _bc_parent.url }}" style="{% if block.settings.breadcrumb_color != blank %}color: {{ block.settings.breadcrumb_color }};{% endif %}">{{ _bc_parent.title }}</a>
+                  <span class="sl-pdp-breadcrumb__sep">/</span>
+                  <a href="{{ _bc_child.url }}" style="{% if block.settings.breadcrumb_color != blank %}color: {{ block.settings.breadcrumb_color }};{% endif %}">{{ _bc_child.title }}</a>
+                {%- else -%}
+                  {%- for col in product.collections limit: 2 -%}
+                    <a href="{{ col.url }}" style="{% if block.settings.breadcrumb_color != blank %}color: {{ block.settings.breadcrumb_color }};{% endif %}">{{ col.title }}</a>
+                    {%- unless forloop.last %}<span class="sl-pdp-breadcrumb__sep">/</span>{% endunless -%}
+                  {%- endfor -%}
+                {%- endif -%}
               </div>
             {%- endif -%}
           {%- endif -%}
@@ -2223,10 +2273,44 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
           render 'enquiry-form'
         endif
       %}
+      <!-- Wishlist toast notification -->
+      <div class="sl-wishlist-toast" id="sl-wishlist-toast">
+        <div class="sl-wishlist-toast__inner">
+          <span class="sl-wishlist-toast__msg">
+            <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            <span id="sl-wishlist-toast-text">Added to wishlist</span>
+          </span>
+          <span class="sl-wishlist-toast__actions">
+            <button class="sl-wishlist-toast__btn sl-wishlist-toast__btn--undo" id="sl-wishlist-undo">Undo</button>
+            <a href="/pages/wishlist" class="sl-wishlist-toast__btn sl-wishlist-toast__btn--view">View Wishlist</a>
+          </span>
+        </div>
+      </div>
+
       <script>
         document.addEventListener('DOMContentLoaded', function() {
-          /* — Wishlist heart toggle — */
+          /* — Wishlist heart toggle + toast — */
           (function() {
+            var toast = document.getElementById('sl-wishlist-toast');
+            var toastText = document.getElementById('sl-wishlist-toast-text');
+            var undoBtn = document.getElementById('sl-wishlist-undo');
+            var hideTimer = null;
+            var lastBtn = null;
+
+            function showToast(added) {
+              toastText.textContent = added ? 'Added to wishlist' : 'Removed from wishlist';
+              clearTimeout(hideTimer);
+              toast.classList.add('is-visible');
+              hideTimer = setTimeout(function() {
+                toast.classList.remove('is-visible');
+              }, 4000);
+            }
+
+            function hideToast() {
+              clearTimeout(hideTimer);
+              toast.classList.remove('is-visible');
+            }
+
             var heartBtns = document.querySelectorAll('.sl-pdp-heart-btn');
             heartBtns.forEach(function(btn) {
               btn.addEventListener('click', function(e) {
@@ -2234,8 +2318,22 @@ button.slick-prev.slick-arrow, button.slick-next.slick-arrow { display: none !im
                 btn.classList.toggle('is-wishlisted');
                 var wrapper = btn.closest('dtx-wishlist');
                 if (wrapper) wrapper.classList.toggle('is-wishlisted');
+                var isAdded = btn.classList.contains('is-wishlisted');
+                lastBtn = btn;
+                showToast(isAdded);
               });
             });
+
+            if (undoBtn) {
+              undoBtn.addEventListener('click', function() {
+                if (lastBtn) {
+                  lastBtn.classList.toggle('is-wishlisted');
+                  var wrapper = lastBtn.closest('dtx-wishlist');
+                  if (wrapper) wrapper.classList.toggle('is-wishlisted');
+                }
+                hideToast();
+              });
+            }
           })();
 
           /* — Sticky ATC bar: IntersectionObserver — */
