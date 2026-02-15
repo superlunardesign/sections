@@ -6,22 +6,18 @@
 {%- endcomment -%}
 
 {%- style -%}
+
 #SLWhyWeLove-{{ section.id }} {
-  padding: {{ section.settings.padding_top_mobile }}px 0 {{ section.settings.padding_bottom_mobile }}px;
-  margin-left: var(--page-full-width-spacing, 2rem);
-  margin-right: var(--page-full-width-spacing, 2rem);
+  padding: {{ section.settings.padding_top_mobile }}px 0 {{ section.settings.padding_bottom_mobile }}px ;
+
 }
 @media (min-width: 750px) {
   #SLWhyWeLove-{{ section.id }} {
-    padding: {{ section.settings.padding_top }}px 0 {{ section.settings.padding_bottom }}px;
+    padding: {{ section.settings.padding_top }}px 80px {{ section.settings.padding_bottom }}px 80px;
   }
 }
-@media (max-width: 989px) {
-  #SLWhyWeLove-{{ section.id }} {
-    margin-left: calc(var(--page-full-width-spacing, 2rem) / 2);
-    margin-right: calc(var(--page-full-width-spacing, 2rem) / 2);
-  }
-}
+
+
 
 #SLWhyWeLove-{{ section.id }} .sl-wwl__card {
   background: {{ section.settings.card_bg }};
