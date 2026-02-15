@@ -239,6 +239,36 @@
     transform: scale(1.05);
   }
 
+  /* Star Rating */
+  #SLCollection-{{ section.id }} .sl-star-rating {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin: 0 0 4px 0;
+    font-size: 13px;
+    line-height: 1;
+  }
+
+  #SLCollection-{{ section.id }} .sl-star-rating .jdgm-prev-badge {
+    display: flex !important;
+    align-items: center;
+    gap: 4px;
+  }
+
+  #SLCollection-{{ section.id }} .sl-star-rating .jdgm-prev-badge[data-average-rating="0.00"] {
+    display: none !important;
+  }
+
+  #SLCollection-{{ section.id }} .sl-star-rating .jdgm-star {
+    color: {{ section.settings.star_rating_color }};
+  }
+
+  #SLCollection-{{ section.id }} .sl-star-rating .jdgm-prev-badge__text {
+    color: {{ section.settings.title_color }};
+    font-size: 12px;
+    opacity: 0.8;
+  }
+
   /* Product Info */
   #SLCollection-{{ section.id }} .sl-product-info {
     padding: 15px;
@@ -1035,8 +1065,13 @@ min-height:40px;
                         <h3 class="sl-product-title">
                           <a href="{{ product.url }}">{{ product.title }}</a>
                         </h3>
-                       
-                        
+                        {%- if section.settings.show_star_rating -%}
+                          <div class="sl-star-rating">
+                            <span class="jdgm-widget jdgm-preview-badge" data-id="{{ product.id }}">
+                              {{ product.metafields.judgeme.badge }}
+                            </span>
+                          </div>
+                        {%- endif -%}
                       </div>
                     </div>
 
@@ -1152,6 +1187,13 @@ min-height:40px;
                         <h3 class="sl-product-title">
                           <a href="{{ product.url }}">{{ product.title }}</a>
                         </h3>
+                        {%- if section.settings.show_star_rating -%}
+                          <div class="sl-star-rating">
+                            <span class="jdgm-widget jdgm-preview-badge" data-id="{{ product.id }}">
+                              {{ product.metafields.judgeme.badge }}
+                            </span>
+                          </div>
+                        {%- endif -%}
                       </div>
 
                       {%- comment -%} Variants (inside card) {%- endcomment -%}
@@ -1719,6 +1761,19 @@ min-height:40px;
     {
       "type": "header",
       "content": "Product Info"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_star_rating",
+      "label": "Show Judge.me star ratings",
+      "info": "Displays star ratings on product cards (requires Judge.me app)",
+      "default": false
+    },
+    {
+      "type": "color",
+      "id": "star_rating_color",
+      "label": "Star rating color",
+      "default": "#FFD700"
     },
     {
       "type": "range",
