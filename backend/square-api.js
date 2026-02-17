@@ -42,8 +42,19 @@ export async function listSquareCatalogItems() {
   if (SYNC_CATEGORY_IDS && SYNC_CATEGORY_IDS.length > 0) {
     allItems = allItems.filter(item => {
       const itemData = item.item_data;
-      if (!itemData || !itemData.category_id) return false;
-      return SYNC_CATEGORY_IDS.includes(itemData.category_id);
+      if (!itemData) return false;
+
+      // Square uses a "categories" array of objects: [{id: "...", ordinal: ...}]
+      if (itemData.categories && Array.isArray(itemData.categories)) {
+        return itemData.categories.some(cat => SYNC_CATEGORY_IDS.includes(cat.id));
+      }
+
+      // Fallback: older Square items may use a single category_id string
+      if (itemData.category_id) {
+        return SYNC_CATEGORY_IDS.includes(itemData.category_id);
+      }
+
+      return false;
     });
   }
 
