@@ -465,16 +465,13 @@ async function importImagesToWixProduct(wixProductId, imageUrls, productName) {
     }
   }
 
-  // Set the first imported image as the product's main media via CMS
+  // Set the first imported image as the product's main media via Stores API
+  // (wixData.get/update won't work here — Stores/Products _id is the numericId, not the product UUID)
   if (importedUrls.length > 0) {
     try {
-      const product = await wixData.get("Stores/Products", wixProductId);
-      if (product) {
-        product.mainMedia = importedUrls[0];
-        await wixData.update("Stores/Products", product);
-      } else {
-        console.error(`Product ${wixProductId} not found in Stores/Products — cannot set mainMedia`);
-      }
+      await wixStoresBackend.updateProductFields(wixProductId, {
+        mainMedia: importedUrls[0]
+      });
     } catch (err) {
       console.error(`Failed to set mainMedia on product ${wixProductId}: ${err.message}`);
     }
