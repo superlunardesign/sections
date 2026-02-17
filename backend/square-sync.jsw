@@ -28,7 +28,7 @@ import { MAPPING_COLLECTION, SYNC_CATEGORY_IDS } from "./square-config";
  * @returns {Promise<Object>} Summary of sync results
  */
 export async function syncSquareToWix() {
-  const results = { created: 0, updated: 0, skipped: [], errors: [], inventorySynced: 0 };
+  const results = { created: 0, updated: 0, errors: [], inventorySynced: 0 };
 
   try {
     // 1. Get all Square catalog items (filtered by category if configured)
@@ -136,18 +136,6 @@ async function syncSingleItem(squareItem, results) {
     await updateWixProduct(mapping.wixProductId, squareItem);
     results.updated++;
   } else {
-    // Check if item has a valid price before creating
-    let hasPrice = false;
-    if (itemData.variations && itemData.variations.length > 0) {
-      const priceMoney = itemData.variations[0].item_variation_data?.price_money;
-      hasPrice = priceMoney && priceMoney.amount > 0;
-    }
-
-    if (!hasPrice) {
-      results.skipped.push(itemData.name || squareItem.id);
-      return;
-    }
-
     // Create new Wix product
     const wixProductId = await createWixProduct(squareItem);
     if (wixProductId) {
@@ -170,29 +158,29 @@ async function createWixProduct(squareItem) {
   // Use description_html if available, fall back to plain description
   const description = itemData.description_html || itemData.description || "";
 
-  // Get price from the first variation (required by Wix, must be > 0)
-  let price = 0;
-  if (itemData.variations && itemData.variations.length > 0) {
-    const priceMoney = itemData.variations[0].item_variation_data?.price_money;
-    if (priceMoney && priceMoney.amount) {
-      price = priceMoney.amount / 100;
-    }
-  }
-
-  // Skip products with no price — Wix requires price > 0
-  if (!price) {
-    console.log(`Skipped (no price): ${itemData.name}`);
-    return null;
-  }
-
   // Build the Wix product info object
   const productInfo = {
     name: (itemData.name || "Untitled Product").substring(0, 80),
     description: description,
-    priceData: { price: price },
     productType: "physical",
     visible: true
   };
+
+  // Set price from the first variation
+  if (itemData.variations && itemData.variations.length > 0) {
+    const priceMoney = itemData.variations[0].item_variation_data?.price_money;
+    if (priceMoney) {
+      productInfo.price = priceMoney.amount / 100;
+    }
+  }
+
+  // Set SKU from the first variation
+  if (itemData.variations && itemData.variations.length > 0) {
+    const sku = itemData.variations[0].item_variation_data?.sku;
+    if (sku) {
+      productInfo.sku = sku;
+    }
+  }
 
   try {
     const wixProduct = await wixStoresBackend.createProduct(productInfo);
@@ -224,7 +212,7 @@ async function updateWixProduct(wixProductId, squareItem) {
   if (itemData.variations && itemData.variations.length > 0) {
     const priceMoney = itemData.variations[0].item_variation_data?.price_money;
     if (priceMoney) {
-      updateFields.priceData = { price: priceMoney.amount / 100 };
+      updateFields.price = priceMoney.amount / 100;
     }
   }
 
