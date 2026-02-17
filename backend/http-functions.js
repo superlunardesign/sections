@@ -101,12 +101,8 @@ async function handleInventoryCountUpdated(data) {
 
     try {
       // Get current Wix inventory
-      const wixVariants = await wixStoresBackend.getProductVariants(wixProductId);
-      let currentWixQty = 0;
-
-      if (wixVariants && wixVariants.length > 0) {
-        currentWixQty = wixVariants[0].stock?.quantity || 0;
-      }
+      const product = await wixData.get("Stores/Products", wixProductId);
+      const currentWixQty = product?.stock?.quantity || 0;
 
       const delta = newQuantity - currentWixQty;
 
