@@ -38,7 +38,7 @@ export async function getSquareItemIds() {
  * @returns {Promise<Object>} Summary of this batch's results
  */
 export async function syncBatch(itemIds) {
-  const results = { created: [], updated: [], errors: [] };
+  const results = { created: [], updated: [], skipped: [], errors: [] };
 
   try {
     // Fetch the full item objects for just this batch
@@ -106,7 +106,7 @@ export async function getInventoryMappings() {
  * @returns {Promise<Object>} { synced: number, errors: string[] }
  */
 export async function syncInventoryBatch(batch) {
-  const results = { synced: 0, errors: [] };
+  const results = { synced: 0, updated: [], skipped: 0, errors: [] };
 
   for (const item of batch) {
     try {
@@ -126,6 +126,14 @@ export async function syncInventoryBatch(batch) {
       mapping.lastSynced = new Date();
       await wixData.update(MAPPING_COLLECTION, mapping);
 
+      if (delta !== 0) {
+        results.updated.push({
+          name: item.squareItemName,
+          change: `${currentWixQty} → ${item.squareQty} (${delta > 0 ? "+" : ""}${delta})`
+        });
+      } else {
+        results.skipped++;
+      }
       results.synced++;
     } catch (err) {
       results.errors.push(`${item.squareItemName}: ${err.message}`);
@@ -194,10 +202,15 @@ export async function getImageSyncList() {
  */
 export async function syncSingleProductImages(wixProductId, imageUrls, productName) {
   try {
-    await importImagesToWixProduct(wixProductId, imageUrls, productName);
-    return { success: true, error: null };
+    const imageResult = await importImagesToWixProduct(wixProductId, imageUrls, productName);
+    return {
+      success: true,
+      imported: imageResult.imported,
+      failed: imageResult.failed,
+      error: null
+    };
   } catch (err) {
-    return { success: false, error: err.message };
+    return { success: false, imported: 0, failed: imageUrls.length, error: err.message };
   }
 }
 
@@ -217,10 +230,14 @@ async function syncSingleItem(squareItem, results) {
     .find();
 
   if (existingMapping.items.length > 0) {
-    // Update existing Wix product
+    // Update existing Wix product — track what changed
     const mapping = existingMapping.items[0];
-    await updateWixProduct(mapping.wixProductId, squareItem);
-    results.updated.push(name);
+    const changes = await updateWixProduct(mapping.wixProductId, squareItem);
+    if (changes.length > 0) {
+      results.updated.push({ name, changes });
+    } else {
+      results.skipped.push(name);
+    }
   } else {
     // Create new Wix product
     const wixProductId = await createWixProduct(squareItem);
@@ -283,35 +300,66 @@ async function createWixProduct(squareItem) {
 
 /**
  * Updates an existing Wix product with data from Square.
+ * Returns a list of field names that actually changed.
  *
  * @param {string} wixProductId - The Wix product ID
  * @param {Object} squareItem - The Square CatalogObject
+ * @returns {Promise<string[]>} List of changed fields (e.g. ["price", "name"])
  */
 async function updateWixProduct(wixProductId, squareItem) {
   const itemData = squareItem.item_data;
+  const changes = [];
+
+  // Fetch current Wix product to compare
+  let currentProduct;
+  try {
+    currentProduct = await wixData.get("Stores/Products", wixProductId);
+  } catch (err) {
+    console.error(`Failed to read Wix product ${wixProductId}:`, err);
+    return changes;
+  }
 
   // Use description_html if available, fall back to plain description
-  const description = itemData.description_html || itemData.description || undefined;
+  const newDescription = itemData.description_html || itemData.description || undefined;
+  const newName = itemData.name ? itemData.name.substring(0, 80) : undefined;
 
-  const updateFields = {
-    name: itemData.name ? itemData.name.substring(0, 80) : undefined,
-    description: description,
-    trackInventory: true
-  };
-
-  // Update price from first variation
+  // Determine new price from Square
+  let newPrice;
   if (itemData.variations && itemData.variations.length > 0) {
     const priceMoney = itemData.variations[0].item_variation_data?.price_money;
     if (priceMoney) {
-      updateFields.price = priceMoney.amount / 100;
+      newPrice = priceMoney.amount / 100;
     }
   }
 
-  try {
-    await wixStoresBackend.updateProductFields(wixProductId, updateFields);
-  } catch (err) {
-    console.error(`Failed to update Wix product ${wixProductId}:`, err);
+  // Compare and build updateFields only for actual changes
+  const updateFields = { trackInventory: true };
+
+  if (newName && newName !== currentProduct.name) {
+    updateFields.name = newName;
+    changes.push("name");
   }
+
+  if (newDescription && newDescription !== currentProduct.description) {
+    updateFields.description = newDescription;
+    changes.push("description");
+  }
+
+  if (newPrice !== undefined && newPrice !== currentProduct.price) {
+    updateFields.price = newPrice;
+    changes.push(`price ($${currentProduct.price || 0} → $${newPrice})`);
+  }
+
+  // Only call the API if something actually changed
+  if (changes.length > 0) {
+    try {
+      await wixStoresBackend.updateProductFields(wixProductId, updateFields);
+    } catch (err) {
+      console.error(`Failed to update Wix product ${wixProductId}:`, err);
+    }
+  }
+
+  return changes;
 }
 
 /**
@@ -410,14 +458,16 @@ async function importImagesToWixProduct(wixProductId, imageUrls, productName) {
       fileName,
       mediaOptions: { mimeType: "image/jpeg" }
     })
-      .then(result => result && result.fileUrl ? { mediaId: result.fileUrl, mediaType: "IMAGE" } : null)
+      .then(result => result && result.fileUrl ? { src: result.fileUrl } : null)
       .catch(err => {
         console.error(`Failed to import image ${url}:`, err);
         return null;
       });
   });
 
-  const mediaItems = (await Promise.all(importPromises)).filter(Boolean);
+  const allResults = await Promise.all(importPromises);
+  const mediaItems = allResults.filter(Boolean);
+  const failedCount = allResults.length - mediaItems.length;
 
   if (mediaItems.length > 0) {
     try {
@@ -426,6 +476,8 @@ async function importImagesToWixProduct(wixProductId, imageUrls, productName) {
       console.error(`Failed to attach media to product ${wixProductId}:`, err);
     }
   }
+
+  return { imported: mediaItems.length, failed: failedCount };
 }
 
 // ─── INVENTORY SYNC (Square -> Wix) ────────────────────────────────────────
