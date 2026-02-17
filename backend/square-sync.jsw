@@ -439,41 +439,43 @@ async function fetchSquareImageUrls(squareItems) {
 /**
  * Imports images from external URLs and attaches them to a Wix product.
  * Uses wix-media-backend importFile to bring images into the Media Manager,
- * then attaches them to the product.
+ * then attaches them to the product via addProductMedia.
  */
 async function importImagesToWixProduct(wixProductId, imageUrls, productName) {
-  // Build a URL-safe base name from the product name (e.g. "Gold Ring" -> "gold-ring")
-  const baseName = (productName || wixProductId)
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
+  const mediaItems = [];
+  let failedCount = 0;
 
-  // Import all images in parallel to save time
-  const importPromises = imageUrls.map((url, index) => {
-    const fileName = imageUrls.length === 1
-      ? `${baseName}.jpg`
-      : `${baseName}-${index + 1}.jpg`;
-
-    return mediaManager.importFile("/square-products", url, {
-      fileName,
-      mediaOptions: { mimeType: "image/jpeg" }
-    })
-      .then(result => result && result.fileUrl ? { src: result.fileUrl } : null)
-      .catch(err => {
-        console.error(`Failed to import image ${url}:`, err);
-        return null;
+  // Import images sequentially to avoid overwhelming the API
+  for (let i = 0; i < imageUrls.length; i++) {
+    const url = imageUrls[i];
+    try {
+      const result = await mediaManager.importFile("/square-products", url, {
+        mediaOptions: { mimeType: "image/jpeg" },
+        metadataOptions: { isVisitorUpload: false }
       });
-  });
 
-  const allResults = await Promise.all(importPromises);
-  const mediaItems = allResults.filter(Boolean);
-  const failedCount = allResults.length - mediaItems.length;
+      // fileUrl is the current property; fileName is the legacy equivalent
+      const wixUrl = result?.fileUrl || result?.fileName;
+
+      if (wixUrl) {
+        mediaItems.push({ src: wixUrl });
+      } else {
+        // Import succeeded but no URL yet — use external URL as fallback
+        console.warn(`Import of ${url} returned no fileUrl (keys: ${Object.keys(result || {}).join(", ")}). Using external URL.`);
+        mediaItems.push({ src: url });
+      }
+    } catch (err) {
+      console.error(`Failed to import image ${url}: ${err.message}`);
+      failedCount++;
+    }
+  }
 
   if (mediaItems.length > 0) {
     try {
       await wixStoresBackend.addProductMedia(wixProductId, mediaItems);
     } catch (err) {
-      console.error(`Failed to attach media to product ${wixProductId}:`, err);
+      console.error(`Failed to attach ${mediaItems.length} images to product ${wixProductId}: ${err.message}`);
+      console.error("Media items attempted:", JSON.stringify(mediaItems));
     }
   }
 
