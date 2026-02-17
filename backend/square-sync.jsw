@@ -176,7 +176,9 @@ async function createWixProduct(squareItem) {
     name: (itemData.name || "Untitled Product").substring(0, 80),
     description: description,
     productType: "physical",
-    visible: true
+    visible: true,
+    trackInventory: true,
+    manageVariants: false
   };
 
   // Set price from the first variation
@@ -218,7 +220,8 @@ async function updateWixProduct(wixProductId, squareItem) {
 
   const updateFields = {
     name: itemData.name ? itemData.name.substring(0, 80) : undefined,
-    description: description
+    description: description,
+    trackInventory: true
   };
 
   // Update price from first variation
