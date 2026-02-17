@@ -63,12 +63,79 @@ export async function syncBatch(itemIds) {
 }
 
 /**
- * Step 3: Sync inventory counts for all mapped products.
- * Call this once after all batches are done.
+ * Step 3a: Get all variation IDs that need inventory syncing.
+ * Returns the mapping data needed for batched inventory sync.
  */
-export async function syncInventory() {
-  const results = { inventorySynced: 0, errors: [] };
-  await syncAllInventoryCounts(results);
+export async function getInventoryMappings() {
+  try {
+    const mappings = await wixData.query(MAPPING_COLLECTION)
+      .ne("squareVariationId", "")
+      .limit(1000)
+      .find();
+
+    // Get all Square inventory counts in one batch call
+    const variationIds = mappings.items.map(m => m.squareVariationId);
+    const inventoryCounts = await getInventoryCounts(variationIds);
+
+    // Build lookup
+    const countLookup = {};
+    for (const count of inventoryCounts) {
+      countLookup[count.catalog_object_id] = parseFloat(count.quantity) || 0;
+    }
+
+    // Return mappings with Square quantities attached
+    const items = mappings.items.map(m => ({
+      _id: m._id,
+      wixProductId: m.wixProductId,
+      squareVariationId: m.squareVariationId,
+      squareItemName: m.squareItemName,
+      squareQty: countLookup[m.squareVariationId] || 0
+    }));
+
+    return { items, total: items.length };
+  } catch (err) {
+    return { items: [], total: 0, error: err.message };
+  }
+}
+
+/**
+ * Step 3b: Sync inventory for a batch of mappings.
+ * Called in a loop from the frontend.
+ *
+ * @param {Array} batch - Array of { _id, wixProductId, squareQty, squareItemName }
+ * @returns {Promise<Object>} { synced: number, errors: string[] }
+ */
+export async function syncInventoryBatch(batch) {
+  const results = { synced: 0, errors: [] };
+
+  for (const item of batch) {
+    try {
+      const wixVariants = await wixStoresBackend.getProductVariants(item.wixProductId);
+      let currentWixQty = 0;
+
+      if (wixVariants && wixVariants.length > 0) {
+        currentWixQty = wixVariants[0].stock?.quantity || 0;
+      }
+
+      const delta = item.squareQty - currentWixQty;
+
+      if (delta > 0) {
+        await wixStoresBackend.incrementInventory(item.wixProductId, null, delta);
+      } else if (delta < 0) {
+        await wixStoresBackend.decrementInventory(item.wixProductId, null, Math.abs(delta));
+      }
+
+      // Update lastSynced timestamp
+      const mapping = await wixData.get(MAPPING_COLLECTION, item._id);
+      mapping.lastSynced = new Date();
+      await wixData.update(MAPPING_COLLECTION, mapping);
+
+      results.synced++;
+    } catch (err) {
+      results.errors.push(`${item.squareItemName}: ${err.message}`);
+    }
+  }
+
   return results;
 }
 
