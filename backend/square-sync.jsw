@@ -185,7 +185,7 @@ async function saveMappings(squareItem, wixProductId) {
     squareVariationId: "",
     wixProductId: wixProductId,
     wixVariantId: "",
-    squareCategoryId: itemData.category_id || "",
+    squareCategoryId: (itemData.categories && itemData.categories[0]?.id) || itemData.category_id || "",
     squareItemName: itemData.name || "",
     lastSynced: new Date()
   };
@@ -200,7 +200,7 @@ async function saveMappings(squareItem, wixProductId) {
         squareVariationId: variation.id,
         wixProductId: wixProductId,
         wixVariantId: "", // Will be populated if Wix variants are created
-        squareCategoryId: itemData.category_id || "",
+        squareCategoryId: (itemData.categories && itemData.categories[0]?.id) || itemData.category_id || "",
         squareItemName: `${itemData.name} - ${variation.item_variation_data?.name || "Default"}`,
         lastSynced: new Date()
       };
