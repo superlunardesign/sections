@@ -38,7 +38,7 @@ export async function getSquareItemIds() {
  * @returns {Promise<Object>} Summary of this batch's results
  */
 export async function syncBatch(itemIds) {
-  const results = { created: 0, updated: 0, errors: [] };
+  const results = { created: [], updated: [], errors: [] };
 
   try {
     // Fetch the full item objects for just this batch
@@ -46,16 +46,17 @@ export async function syncBatch(itemIds) {
 
     for (const squareItem of squareItems) {
       if (squareItem.type !== "ITEM") continue;
+      const name = squareItem.item_data?.name || squareItem.id;
       try {
         await syncSingleItem(squareItem, results);
       } catch (err) {
-        results.errors.push(`Error syncing ${squareItem.id}: ${err.message}`);
+        results.errors.push(`${name}: ${err.message}`);
       }
       // Small delay between API calls to avoid Wix rate limiting
       await new Promise(resolve => setTimeout(resolve, 500));
     }
   } catch (err) {
-    results.errors.push(`Batch sync error: ${err.message}`);
+    results.errors.push(`Batch error: ${err.message}`);
   }
 
   return results;
@@ -138,6 +139,8 @@ async function syncSingleItem(squareItem, results) {
   const itemData = squareItem.item_data;
   if (!itemData) return;
 
+  const name = itemData.name || squareItem.id;
+
   // Check if we already have a mapping for this Square item
   const existingMapping = await wixData.query(MAPPING_COLLECTION)
     .eq("squareCatalogId", squareItem.id)
@@ -147,14 +150,16 @@ async function syncSingleItem(squareItem, results) {
     // Update existing Wix product
     const mapping = existingMapping.items[0];
     await updateWixProduct(mapping.wixProductId, squareItem);
-    results.updated++;
+    results.updated.push(name);
   } else {
     // Create new Wix product
     const wixProductId = await createWixProduct(squareItem);
     if (wixProductId) {
       // Save the mapping
       await saveMappings(squareItem, wixProductId);
-      results.created++;
+      results.created.push(name);
+    } else {
+      results.errors.push(`${name}: failed to create`);
     }
   }
 }
