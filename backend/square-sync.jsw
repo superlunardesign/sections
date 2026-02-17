@@ -189,11 +189,12 @@ export async function getImageSyncList() {
  *
  * @param {string} wixProductId - The Wix product ID
  * @param {Array<string>} imageUrls - URLs of images to import
+ * @param {string} [productName] - Product name used for file naming
  * @returns {Promise<Object>} { success: boolean, error: string|null }
  */
-export async function syncSingleProductImages(wixProductId, imageUrls) {
+export async function syncSingleProductImages(wixProductId, imageUrls, productName) {
   try {
-    await importImagesToWixProduct(wixProductId, imageUrls);
+    await importImagesToWixProduct(wixProductId, imageUrls, productName);
     return { success: true, error: null };
   } catch (err) {
     return { success: false, error: err.message };
@@ -392,16 +393,29 @@ async function fetchSquareImageUrls(squareItems) {
  * Uses wix-media-backend importFile to bring images into the Media Manager,
  * then attaches them to the product.
  */
-async function importImagesToWixProduct(wixProductId, imageUrls) {
+async function importImagesToWixProduct(wixProductId, imageUrls, productName) {
+  // Build a URL-safe base name from the product name (e.g. "Gold Ring" -> "gold-ring")
+  const baseName = (productName || wixProductId)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+
   // Import all images in parallel to save time
-  const importPromises = imageUrls.map(url =>
-    mediaManager.importFile("/square-products", url, { mediaOptions: { mimeType: "image/jpeg" } })
+  const importPromises = imageUrls.map((url, index) => {
+    const fileName = imageUrls.length === 1
+      ? `${baseName}.jpg`
+      : `${baseName}-${index + 1}.jpg`;
+
+    return mediaManager.importFile("/square-products", url, {
+      fileName,
+      mediaOptions: { mimeType: "image/jpeg" }
+    })
       .then(result => result && result.fileUrl ? { mediaId: result.fileUrl, mediaType: "IMAGE" } : null)
       .catch(err => {
         console.error(`Failed to import image ${url}:`, err);
         return null;
-      })
-  );
+      });
+  });
 
   const mediaItems = (await Promise.all(importPromises)).filter(Boolean);
 
