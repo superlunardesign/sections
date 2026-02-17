@@ -13,7 +13,7 @@
 
 import wixData from "wix-data";
 import wixStoresBackend from "wix-stores-backend";
-import { importFile } from "wix-media-backend";
+import { mediaManager } from "wix-media-backend";
 import { listSquareCatalogItems, listSquareItemIds, getInventoryCounts, adjustSquareInventory, batchRetrieveCatalogObjects } from "./square-api";
 import { MAPPING_COLLECTION, SYNC_CATEGORY_IDS } from "./square-config";
 
@@ -110,12 +110,8 @@ export async function syncInventoryBatch(batch) {
 
   for (const item of batch) {
     try {
-      const wixVariants = await wixStoresBackend.getProductVariants(item.wixProductId);
-      let currentWixQty = 0;
-
-      if (wixVariants && wixVariants.length > 0) {
-        currentWixQty = wixVariants[0].stock?.quantity || 0;
-      }
+      const product = await wixData.get("Stores/Products", item.wixProductId);
+      const currentWixQty = product?.stock?.quantity || 0;
 
       const delta = item.squareQty - currentWixQty;
 
@@ -399,7 +395,7 @@ async function fetchSquareImageUrls(squareItems) {
 async function importImagesToWixProduct(wixProductId, imageUrls) {
   // Import all images in parallel to save time
   const importPromises = imageUrls.map(url =>
-    importFile("/square-products", url, { mediaOptions: { mimeType: "image/jpeg" } })
+    mediaManager.importFile("/square-products", url, { mediaOptions: { mimeType: "image/jpeg" } })
       .then(result => result && result.fileUrl ? { mediaId: result.fileUrl, mediaType: "IMAGE" } : null)
       .catch(err => {
         console.error(`Failed to import image ${url}:`, err);
@@ -454,12 +450,8 @@ export async function syncAllInventoryCounts(results = { inventorySynced: 0, err
 
       try {
         // Get current Wix inventory to calculate the delta
-        const wixVariants = await wixStoresBackend.getProductVariants(mapping.wixProductId);
-        let currentWixQty = 0;
-
-        if (wixVariants && wixVariants.length > 0) {
-          currentWixQty = wixVariants[0].stock?.quantity || 0;
-        }
+        const product = await wixData.get("Stores/Products", mapping.wixProductId);
+        const currentWixQty = product?.stock?.quantity || 0;
 
         const delta = squareQty - currentWixQty;
 
@@ -593,8 +585,8 @@ export async function syncSingleProductInventory(wixProductId) {
 
   if (counts.length > 0) {
     const squareQty = parseFloat(counts[0].quantity) || 0;
-    const wixVariants = await wixStoresBackend.getProductVariants(wixProductId);
-    const currentWixQty = wixVariants?.[0]?.stock?.quantity || 0;
+    const product = await wixData.get("Stores/Products", wixProductId);
+    const currentWixQty = product?.stock?.quantity || 0;
     const delta = squareQty - currentWixQty;
 
     if (delta > 0) {
