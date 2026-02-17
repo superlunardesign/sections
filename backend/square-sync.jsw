@@ -13,7 +13,7 @@
 
 import wixData from "wix-data";
 import wixStoresBackend from "wix-stores-backend";
-import { mediaManager } from "wix-media-backend";
+import { importFile } from "wix-media-backend";
 import { listSquareCatalogItems, getInventoryCounts, adjustSquareInventory, batchRetrieveCatalogObjects } from "./square-api";
 import { MAPPING_COLLECTION, SYNC_CATEGORY_IDS } from "./square-config";
 
@@ -69,8 +69,9 @@ async function syncSingleItem(squareItem, results, imageUrlMap = {}) {
   const itemData = squareItem.item_data;
   if (!itemData) return;
 
-  // Gather image URLs for this item
+  // Gather image URLs for this item (limit to first 2 to avoid timeout)
   const imageUrls = (itemData.image_ids || [])
+    .slice(0, 2)
     .map(id => imageUrlMap[id])
     .filter(Boolean);
 
@@ -260,31 +261,22 @@ async function fetchSquareImageUrls(squareItems) {
 }
 
 /**
- * Imports images from external URLs into Wix Media Manager
- * and attaches them to a Wix product.
+ * Imports images from external URLs and attaches them to a Wix product.
+ * Uses wix-media-backend importFile to bring images into the Media Manager,
+ * then attaches them to the product.
  */
 async function importImagesToWixProduct(wixProductId, imageUrls) {
-  const mediaItems = [];
+  // Import all images in parallel to save time
+  const importPromises = imageUrls.map(url =>
+    importFile("/square-products", url, { mediaOptions: { mimeType: "image/jpeg" } })
+      .then(result => result && result.fileUrl ? { mediaId: result.fileUrl, mediaType: "IMAGE" } : null)
+      .catch(err => {
+        console.error(`Failed to import image ${url}:`, err);
+        return null;
+      })
+  );
 
-  for (const url of imageUrls) {
-    try {
-      // Import the external image into Wix Media Manager
-      const result = await mediaManager.importFile(
-        "/square-products",
-        url,
-        { mediaOptions: { mimeType: "image/jpeg" } }
-      );
-
-      if (result && result.fileUrl) {
-        mediaItems.push({
-          mediaId: result.fileUrl,
-          mediaType: "IMAGE"
-        });
-      }
-    } catch (err) {
-      console.error(`Failed to import image ${url}:`, err);
-    }
-  }
+  const mediaItems = (await Promise.all(importPromises)).filter(Boolean);
 
   if (mediaItems.length > 0) {
     try {
