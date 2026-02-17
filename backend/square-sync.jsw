@@ -1,0 +1,406 @@
+/**
+ * Square <-> Wix Sync Web Module
+ *
+ * .jsw files are "web modules" — their exported functions can be called
+ * from frontend code (e.g., a dashboard page button) while running securely
+ * on the backend.
+ *
+ * This module handles:
+ *   1. Full product sync (Square -> Wix): imports/updates products
+ *   2. Inventory sync (Square -> Wix): updates Wix stock levels
+ *   3. Inventory push (Wix -> Square): after a Wix sale, decrements Square stock
+ */
+
+import wixData from "wix-data";
+import wixStoresBackend from "wix-stores-backend";
+import { listSquareCatalogItems, getInventoryCounts, adjustSquareInventory } from "./square-api";
+import { MAPPING_COLLECTION, SYNC_CATEGORY_IDS } from "./square-config";
+
+// ─── FULL PRODUCT SYNC (Square -> Wix) ─────────────────────────────────────
+
+/**
+ * Main sync function: pulls items from Square and creates/updates them in Wix Stores.
+ * Also syncs inventory counts.
+ *
+ * Call this from a dashboard page button or run it on a schedule.
+ *
+ * @returns {Promise<Object>} Summary of sync results
+ */
+export async function syncSquareToWix() {
+  const results = { created: 0, updated: 0, errors: [], inventorySynced: 0 };
+
+  try {
+    // 1. Get all Square catalog items (filtered by category if configured)
+    const squareItems = await listSquareCatalogItems();
+
+    if (!squareItems || squareItems.length === 0) {
+      results.errors.push("No items found in Square catalog (check SYNC_CATEGORY_IDS config).");
+      return results;
+    }
+
+    // 2. Process each Square item
+    for (const squareItem of squareItems) {
+      try {
+        await syncSingleItem(squareItem, results);
+      } catch (err) {
+        results.errors.push(`Error syncing ${squareItem.id}: ${err.message}`);
+      }
+    }
+
+    // 3. Sync inventory counts for all mapped items
+    await syncAllInventoryCounts(results);
+
+  } catch (err) {
+    results.errors.push(`Fatal sync error: ${err.message}`);
+  }
+
+  return results;
+}
+
+/**
+ * Sync a single Square catalog item to Wix.
+ * Creates the product if it doesn't exist, updates it if it does.
+ */
+async function syncSingleItem(squareItem, results) {
+  const itemData = squareItem.item_data;
+  if (!itemData) return;
+
+  // Check if we already have a mapping for this Square item
+  const existingMapping = await wixData.query(MAPPING_COLLECTION)
+    .eq("squareCatalogId", squareItem.id)
+    .find();
+
+  if (existingMapping.items.length > 0) {
+    // Update existing Wix product
+    const mapping = existingMapping.items[0];
+    await updateWixProduct(mapping.wixProductId, squareItem);
+    results.updated++;
+  } else {
+    // Create new Wix product
+    const wixProductId = await createWixProduct(squareItem);
+    if (wixProductId) {
+      // Save the mapping
+      await saveMappings(squareItem, wixProductId);
+      results.created++;
+    }
+  }
+}
+
+/**
+ * Creates a new product in Wix Stores from a Square catalog item.
+ *
+ * @param {Object} squareItem - The Square CatalogObject (type: ITEM)
+ * @returns {Promise<string|null>} The new Wix product ID, or null on failure
+ */
+async function createWixProduct(squareItem) {
+  const itemData = squareItem.item_data;
+
+  // Build the Wix product info object
+  const productInfo = {
+    name: itemData.name || "Untitled Product",
+    description: itemData.description || "",
+    productType: "physical",
+    visible: true
+  };
+
+  // Set price from the first variation
+  if (itemData.variations && itemData.variations.length > 0) {
+    const firstVariation = itemData.variations[0];
+    const priceMoney = firstVariation.item_variation_data?.price_money;
+    if (priceMoney) {
+      // Square prices are in smallest currency unit (cents)
+      productInfo.price = priceMoney.amount / 100;
+    }
+  }
+
+  // Set SKU from the first variation
+  if (itemData.variations && itemData.variations.length > 0) {
+    const sku = itemData.variations[0].item_variation_data?.sku;
+    if (sku) {
+      productInfo.sku = sku;
+    }
+  }
+
+  // Set weight if available
+  if (itemData.variations && itemData.variations.length > 0) {
+    const measurementUnit = itemData.variations[0].item_variation_data?.measurement_unit_id;
+    // Square doesn't store weight the same way; skip unless you have custom attributes
+  }
+
+  try {
+    const wixProduct = await wixStoresBackend.createProduct(productInfo);
+
+    // If Square item has images, add them
+    if (itemData.image_ids && itemData.image_ids.length > 0) {
+      // Note: You'd need to fetch the image URLs from Square's catalog
+      // and then use wixStoresBackend.addProductMedia()
+      // This requires an additional API call to get image URLs
+    }
+
+    return wixProduct._id;
+  } catch (err) {
+    console.error("Failed to create Wix product:", err);
+    return null;
+  }
+}
+
+/**
+ * Updates an existing Wix product with data from Square.
+ *
+ * @param {string} wixProductId - The Wix product ID
+ * @param {Object} squareItem - The Square CatalogObject
+ */
+async function updateWixProduct(wixProductId, squareItem) {
+  const itemData = squareItem.item_data;
+
+  const updateFields = {
+    name: itemData.name || undefined,
+    description: itemData.description || undefined
+  };
+
+  // Update price from first variation
+  if (itemData.variations && itemData.variations.length > 0) {
+    const priceMoney = itemData.variations[0].item_variation_data?.price_money;
+    if (priceMoney) {
+      updateFields.price = priceMoney.amount / 100;
+    }
+  }
+
+  try {
+    await wixStoresBackend.updateProductFields(wixProductId, updateFields);
+  } catch (err) {
+    console.error(`Failed to update Wix product ${wixProductId}:`, err);
+  }
+}
+
+/**
+ * Saves mapping entries for a Square item and all its variations.
+ */
+async function saveMappings(squareItem, wixProductId) {
+  const itemData = squareItem.item_data;
+
+  // Save the main item mapping
+  const mapping = {
+    squareCatalogId: squareItem.id,
+    squareVariationId: "",
+    wixProductId: wixProductId,
+    wixVariantId: "",
+    squareCategoryId: itemData.category_id || "",
+    squareItemName: itemData.name || "",
+    lastSynced: new Date()
+  };
+
+  await wixData.insert(MAPPING_COLLECTION, mapping);
+
+  // Save mappings for each variation
+  if (itemData.variations) {
+    for (const variation of itemData.variations) {
+      const varMapping = {
+        squareCatalogId: squareItem.id,
+        squareVariationId: variation.id,
+        wixProductId: wixProductId,
+        wixVariantId: "", // Will be populated if Wix variants are created
+        squareCategoryId: itemData.category_id || "",
+        squareItemName: `${itemData.name} - ${variation.item_variation_data?.name || "Default"}`,
+        lastSynced: new Date()
+      };
+
+      await wixData.insert(MAPPING_COLLECTION, varMapping);
+    }
+  }
+}
+
+// ─── INVENTORY SYNC (Square -> Wix) ────────────────────────────────────────
+
+/**
+ * Syncs inventory counts from Square to Wix for all mapped products.
+ * Called as part of the full sync and also independently on a schedule.
+ *
+ * @param {Object} results - Optional results accumulator
+ */
+export async function syncAllInventoryCounts(results = { inventorySynced: 0, errors: [] }) {
+  try {
+    // Get all mappings that have a Square variation ID
+    const mappings = await wixData.query(MAPPING_COLLECTION)
+      .ne("squareVariationId", "")
+      .limit(1000)
+      .find();
+
+    if (mappings.items.length === 0) return results;
+
+    // Collect all Square variation IDs
+    const variationIds = mappings.items.map(m => m.squareVariationId);
+
+    // Batch retrieve inventory from Square
+    const inventoryCounts = await getInventoryCounts(variationIds);
+
+    // Build a lookup: squareVariationId -> quantity
+    const countLookup = {};
+    for (const count of inventoryCounts) {
+      countLookup[count.catalog_object_id] = parseFloat(count.quantity) || 0;
+    }
+
+    // Update each Wix product's inventory
+    for (const mapping of mappings.items) {
+      const squareQty = countLookup[mapping.squareVariationId] || 0;
+
+      try {
+        // Get current Wix inventory to calculate the delta
+        const wixVariants = await wixStoresBackend.getProductVariants(mapping.wixProductId);
+        let currentWixQty = 0;
+
+        if (wixVariants && wixVariants.length > 0) {
+          currentWixQty = wixVariants[0].stock?.quantity || 0;
+        }
+
+        const delta = squareQty - currentWixQty;
+
+        if (delta > 0) {
+          await wixStoresBackend.incrementInventory(mapping.wixProductId, null, delta);
+        } else if (delta < 0) {
+          await wixStoresBackend.decrementInventory(mapping.wixProductId, null, Math.abs(delta));
+        }
+
+        // Update the lastSynced timestamp
+        mapping.lastSynced = new Date();
+        await wixData.update(MAPPING_COLLECTION, mapping);
+
+        results.inventorySynced++;
+      } catch (err) {
+        results.errors.push(`Inventory sync error for ${mapping.squareItemName}: ${err.message}`);
+      }
+    }
+  } catch (err) {
+    results.errors.push(`Inventory sync fatal error: ${err.message}`);
+  }
+
+  return results;
+}
+
+// ─── INVENTORY PUSH (Wix -> Square) ────────────────────────────────────────
+
+/**
+ * After a Wix order is completed, decrement the corresponding Square inventory.
+ * Called from events.js when an order is paid.
+ *
+ * @param {Array} lineItems - Array of { productId, quantity } from the Wix order
+ * @returns {Promise<Object>} Results of the Square inventory adjustments
+ */
+export async function decrementSquareInventoryForOrder(lineItems) {
+  const results = { adjusted: 0, errors: [] };
+
+  for (const item of lineItems) {
+    try {
+      // Look up the Square variation ID from our mapping
+      const mapping = await wixData.query(MAPPING_COLLECTION)
+        .eq("wixProductId", item.productId)
+        .ne("squareVariationId", "")
+        .find();
+
+      if (mapping.items.length === 0) {
+        results.errors.push(`No Square mapping found for Wix product ${item.productId}`);
+        continue;
+      }
+
+      // Use the first variation mapping (for products without variants)
+      const squareVariationId = mapping.items[0].squareVariationId;
+
+      // Decrement inventory in Square
+      await adjustSquareInventory(
+        squareVariationId,
+        -item.quantity,
+        `Wix order - sold ${item.quantity}`
+      );
+
+      results.adjusted++;
+    } catch (err) {
+      results.errors.push(`Failed to adjust Square inventory for ${item.productId}: ${err.message}`);
+    }
+  }
+
+  return results;
+}
+
+// ─── UTILITY FUNCTIONS ─────────────────────────────────────────────────────
+
+/**
+ * Get all current mappings (useful for a dashboard display).
+ *
+ * @returns {Promise<Array>} All mapping records
+ */
+export async function getAllMappings() {
+  const result = await wixData.query(MAPPING_COLLECTION)
+    .limit(1000)
+    .ascending("squareItemName")
+    .find();
+
+  return result.items;
+}
+
+/**
+ * Remove a mapping and optionally delete the Wix product.
+ *
+ * @param {string} mappingId - The _id of the mapping record
+ * @param {boolean} deleteWixProduct - Whether to also delete the Wix product
+ */
+export async function removeMapping(mappingId, deleteWixProduct = false) {
+  const mapping = await wixData.get(MAPPING_COLLECTION, mappingId);
+
+  if (deleteWixProduct && mapping.wixProductId) {
+    try {
+      await wixStoresBackend.deleteProduct(mapping.wixProductId);
+    } catch (err) {
+      console.error("Failed to delete Wix product:", err);
+    }
+  }
+
+  // Remove all mappings for this Square item
+  const allMappings = await wixData.query(MAPPING_COLLECTION)
+    .eq("squareCatalogId", mapping.squareCatalogId)
+    .find();
+
+  for (const m of allMappings.items) {
+    await wixData.remove(MAPPING_COLLECTION, m._id);
+  }
+}
+
+/**
+ * Sync inventory for a single product (by Wix product ID).
+ * Useful for on-demand sync from a product page.
+ *
+ * @param {string} wixProductId - The Wix product ID
+ */
+export async function syncSingleProductInventory(wixProductId) {
+  const mapping = await wixData.query(MAPPING_COLLECTION)
+    .eq("wixProductId", wixProductId)
+    .ne("squareVariationId", "")
+    .find();
+
+  if (mapping.items.length === 0) {
+    throw new Error("No Square mapping found for this product.");
+  }
+
+  const squareVariationId = mapping.items[0].squareVariationId;
+  const counts = await getInventoryCounts([squareVariationId]);
+
+  if (counts.length > 0) {
+    const squareQty = parseFloat(counts[0].quantity) || 0;
+    const wixVariants = await wixStoresBackend.getProductVariants(wixProductId);
+    const currentWixQty = wixVariants?.[0]?.stock?.quantity || 0;
+    const delta = squareQty - currentWixQty;
+
+    if (delta > 0) {
+      await wixStoresBackend.incrementInventory(wixProductId, null, delta);
+    } else if (delta < 0) {
+      await wixStoresBackend.decrementInventory(wixProductId, null, Math.abs(delta));
+    }
+  }
+
+  // Update sync timestamp
+  for (const m of mapping.items) {
+    m.lastSynced = new Date();
+    await wixData.update(MAPPING_COLLECTION, m);
+  }
+
+  return { success: true };
+}
