@@ -465,12 +465,16 @@ async function importImagesToWixProduct(wixProductId, imageUrls, productName) {
     }
   }
 
-  // Set the first imported image as the product's main media
+  // Set the first imported image as the product's main media via CMS
   if (importedUrls.length > 0) {
     try {
-      await wixStoresBackend.updateProductFields(wixProductId, {
-        mainMedia: importedUrls[0]
-      });
+      const product = await wixData.get("Stores/Products", wixProductId);
+      if (product) {
+        product.mainMedia = importedUrls[0];
+        await wixData.update("Stores/Products", product);
+      } else {
+        console.error(`Product ${wixProductId} not found in Stores/Products — cannot set mainMedia`);
+      }
     } catch (err) {
       console.error(`Failed to set mainMedia on product ${wixProductId}: ${err.message}`);
     }
