@@ -97,7 +97,7 @@ async function createWixProduct(squareItem) {
 
   // Build the Wix product info object
   const productInfo = {
-    name: itemData.name || "Untitled Product",
+    name: (itemData.name || "Untitled Product").substring(0, 80),
     description: itemData.description || "",
     productType: "physical",
     visible: true
@@ -154,7 +154,7 @@ async function updateWixProduct(wixProductId, squareItem) {
   const itemData = squareItem.item_data;
 
   const updateFields = {
-    name: itemData.name || undefined,
+    name: itemData.name ? itemData.name.substring(0, 80) : undefined,
     description: itemData.description || undefined
   };
 
