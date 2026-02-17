@@ -21,14 +21,14 @@ import { MAPPING_COLLECTION, SYNC_CATEGORY_IDS } from "./square-config";
 
 /**
  * Main sync function: pulls items from Square and creates/updates them in Wix Stores.
- * Also syncs inventory counts.
+ * Processes items in batches to stay under Wix's 59-second timeout.
  *
- * Call this from a dashboard page button or run it on a schedule.
- *
- * @returns {Promise<Object>} Summary of sync results
+ * @param {number} offset - Start index (0 on first call)
+ * @param {number} batchSize - Number of items per batch (default 10)
+ * @returns {Promise<Object>} Summary including offset for next batch
  */
-export async function syncSquareToWix() {
-  const results = { created: 0, updated: 0, errors: [], inventorySynced: 0 };
+export async function syncSquareToWix(offset = 0, batchSize = 10) {
+  const results = { created: 0, updated: 0, errors: [], inventorySynced: 0, done: false, nextOffset: 0, total: 0 };
 
   try {
     // 1. Get all Square catalog items (filtered by category if configured)
@@ -36,11 +36,16 @@ export async function syncSquareToWix() {
 
     if (!squareItems || squareItems.length === 0) {
       results.errors.push("No items found in Square catalog (check SYNC_CATEGORY_IDS config).");
+      results.done = true;
       return results;
     }
 
-    // 2. Process each Square item (products only, no images)
-    for (const squareItem of squareItems) {
+    results.total = squareItems.length;
+
+    // 2. Process only this batch of items
+    const batch = squareItems.slice(offset, offset + batchSize);
+
+    for (const squareItem of batch) {
       try {
         await syncSingleItem(squareItem, results);
       } catch (err) {
@@ -50,11 +55,20 @@ export async function syncSquareToWix() {
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
 
-    // 3. Sync inventory counts for all mapped items
-    await syncAllInventoryCounts(results);
+    // 3. Check if we're done
+    const nextOffset = offset + batchSize;
+    if (nextOffset >= squareItems.length) {
+      results.done = true;
+      // Sync inventory counts after all products are done
+      await syncAllInventoryCounts(results);
+    } else {
+      results.done = false;
+      results.nextOffset = nextOffset;
+    }
 
   } catch (err) {
     results.errors.push(`Fatal sync error: ${err.message}`);
+    results.done = true;
   }
 
   return results;
