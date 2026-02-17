@@ -39,6 +39,7 @@ export async function getSquareItemIds() {
  */
 export async function syncBatch(itemIds) {
   const results = { created: [], updated: [], skipped: [], errors: [] };
+  const batchStart = Date.now();
 
   try {
     // Fetch the full item objects for just this batch
@@ -47,13 +48,20 @@ export async function syncBatch(itemIds) {
     for (const squareItem of squareItems) {
       if (squareItem.type !== "ITEM") continue;
       const name = squareItem.item_data?.name || squareItem.id;
+
+      // Stop early if we're approaching the Wix timeout (~14s)
+      if (Date.now() - batchStart > 11000) {
+        results.errors.push(`${name}: skipped (approaching timeout)`);
+        continue;
+      }
+
       try {
         await syncSingleItem(squareItem, results);
       } catch (err) {
         results.errors.push(`${name}: ${err.message}`);
       }
       // Small delay between API calls to avoid Wix rate limiting
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 150));
     }
   } catch (err) {
     results.errors.push(`Batch error: ${err.message}`);
@@ -240,13 +248,9 @@ async function syncSingleItem(squareItem, results) {
   } else {
     // Create new Wix product
     const wixProductId = await createWixProduct(squareItem);
-    if (wixProductId) {
-      // Save the mapping
-      await saveMappings(squareItem, wixProductId);
-      results.created.push(name);
-    } else {
-      results.errors.push(`${name}: failed to create`);
-    }
+    // Save the mapping
+    await saveMappings(squareItem, wixProductId);
+    results.created.push(name);
   }
 }
 
@@ -288,13 +292,8 @@ async function createWixProduct(squareItem) {
     }
   }
 
-  try {
-    const wixProduct = await wixStoresBackend.createProduct(productInfo);
-    return wixProduct._id;
-  } catch (err) {
-    console.error("Failed to create Wix product:", err);
-    return null;
-  }
+  const wixProduct = await wixStoresBackend.createProduct(productInfo);
+  return wixProduct._id;
 }
 
 /**
@@ -366,36 +365,35 @@ async function updateWixProduct(wixProductId, squareItem) {
  */
 async function saveMappings(squareItem, wixProductId) {
   const itemData = squareItem.item_data;
+  const categoryId = (itemData.categories && itemData.categories[0]?.id) || itemData.category_id || "";
+  const now = new Date();
 
-  // Save the main item mapping
-  const mapping = {
+  // Build all mappings at once (main item + variations)
+  const allMappings = [{
     squareCatalogId: squareItem.id,
     squareVariationId: "",
     wixProductId: wixProductId,
     wixVariantId: "",
-    squareCategoryId: (itemData.categories && itemData.categories[0]?.id) || itemData.category_id || "",
+    squareCategoryId: categoryId,
     squareItemName: itemData.name || "",
-    lastSynced: new Date()
-  };
+    lastSynced: now
+  }];
 
-  await wixData.insert(MAPPING_COLLECTION, mapping);
-
-  // Save mappings for each variation
   if (itemData.variations) {
     for (const variation of itemData.variations) {
-      const varMapping = {
+      allMappings.push({
         squareCatalogId: squareItem.id,
         squareVariationId: variation.id,
         wixProductId: wixProductId,
-        wixVariantId: "", // Will be populated if Wix variants are created
-        squareCategoryId: (itemData.categories && itemData.categories[0]?.id) || itemData.category_id || "",
+        wixVariantId: "",
+        squareCategoryId: categoryId,
         squareItemName: `${itemData.name} - ${variation.item_variation_data?.name || "Default"}`,
-        lastSynced: new Date()
-      };
-
-      await wixData.insert(MAPPING_COLLECTION, varMapping);
+        lastSynced: now
+      });
     }
   }
+
+  await wixData.bulkInsert(MAPPING_COLLECTION, allMappings);
 }
 
 // ─── IMAGE HELPERS ──────────────────────────────────────────────────────────
