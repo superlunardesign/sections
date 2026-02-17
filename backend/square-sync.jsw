@@ -158,11 +158,11 @@ async function createWixProduct(squareItem) {
   // Use description_html if available, fall back to plain description
   const description = itemData.description_html || itemData.description || "";
 
-  // Get price from the first variation (required by Wix)
-  let price = 0;
+  // Get price from the first variation (required by Wix, must be > 0)
+  let price = 0.01;
   if (itemData.variations && itemData.variations.length > 0) {
     const priceMoney = itemData.variations[0].item_variation_data?.price_money;
-    if (priceMoney) {
+    if (priceMoney && priceMoney.amount) {
       price = priceMoney.amount / 100;
     }
   }
