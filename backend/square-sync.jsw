@@ -116,11 +116,9 @@ export async function syncInventoryBatch(batch) {
       const delta = item.squareQty - currentWixQty;
 
       if (delta !== 0) {
-        await wixData.update("Stores/Products", {
-          _id: item.wixProductId,
-          trackInventory: true,
-          quantityInStock: item.squareQty
-        });
+        product.trackInventory = true;
+        product.quantityInStock = item.squareQty;
+        await wixData.update("Stores/Products", product);
         results.updated.push({
           name: item.squareItemName,
           change: `${currentWixQty} → ${item.squareQty} (${delta > 0 ? "+" : ""}${delta})`
@@ -471,10 +469,9 @@ async function importImagesToWixProduct(wixProductId, imageUrls, productName) {
   // Set the first imported image as the product's main media
   if (importedUrls.length > 0) {
     try {
-      await wixData.update("Stores/Products", {
-        _id: wixProductId,
-        mainMedia: importedUrls[0]
-      });
+      const product = await wixData.get("Stores/Products", wixProductId);
+      product.mainMedia = importedUrls[0];
+      await wixData.update("Stores/Products", product);
     } catch (err) {
       console.error(`Failed to set mainMedia on product ${wixProductId}: ${err.message}`);
     }
@@ -518,11 +515,10 @@ export async function syncAllInventoryCounts(results = { inventorySynced: 0, err
       const squareQty = countLookup[mapping.squareVariationId] || 0;
 
       try {
-        await wixData.update("Stores/Products", {
-          _id: mapping.wixProductId,
-          trackInventory: true,
-          quantityInStock: squareQty
-        });
+        const product = await wixData.get("Stores/Products", mapping.wixProductId);
+        product.trackInventory = true;
+        product.quantityInStock = squareQty;
+        await wixData.update("Stores/Products", product);
 
         // Update the lastSynced timestamp
         mapping.lastSynced = new Date();
@@ -648,11 +644,10 @@ export async function syncSingleProductInventory(wixProductId) {
 
   if (counts.length > 0) {
     const squareQty = parseFloat(counts[0].quantity) || 0;
-    await wixData.update("Stores/Products", {
-      _id: wixProductId,
-      trackInventory: true,
-      quantityInStock: squareQty
-    });
+    const product = await wixData.get("Stores/Products", wixProductId);
+    product.trackInventory = true;
+    product.quantityInStock = squareQty;
+    await wixData.update("Stores/Products", product);
   }
 
   // Update sync timestamp
