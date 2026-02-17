@@ -14,63 +14,60 @@
 import wixData from "wix-data";
 import wixStoresBackend from "wix-stores-backend";
 import { importFile } from "wix-media-backend";
-import { listSquareCatalogItems, getInventoryCounts, adjustSquareInventory, batchRetrieveCatalogObjects } from "./square-api";
+import { listSquareCatalogItems, listSquareItemIds, getInventoryCounts, adjustSquareInventory, batchRetrieveCatalogObjects } from "./square-api";
 import { MAPPING_COLLECTION, SYNC_CATEGORY_IDS } from "./square-config";
 
 // ─── FULL PRODUCT SYNC (Square -> Wix) ─────────────────────────────────────
 
 /**
- * Main sync function: pulls items from Square and creates/updates them in Wix Stores.
- * Processes items in batches to stay under Wix's 59-second timeout.
+ * Step 1: Fetches all Square item IDs (filtered by category).
+ * Call this once from the frontend to get the full list of IDs.
  *
- * @param {number} offset - Start index (0 on first call)
- * @param {number} batchSize - Number of items per batch (default 10)
- * @returns {Promise<Object>} Summary including offset for next batch
+ * @returns {Promise<Object>} { itemIds: string[], total: number }
  */
-export async function syncSquareToWix(offset = 0, batchSize = 10) {
-  const results = { created: 0, updated: 0, errors: [], inventorySynced: 0, done: false, nextOffset: 0, total: 0 };
+export async function getSquareItemIds() {
+  const itemIds = await listSquareItemIds();
+  return { itemIds, total: itemIds.length };
+}
+
+/**
+ * Step 2: Processes a batch of Square items by their IDs.
+ * Call this in a loop from the frontend, passing a slice of IDs each time.
+ *
+ * @param {Array<string>} itemIds - Square catalog item IDs to process
+ * @returns {Promise<Object>} Summary of this batch's results
+ */
+export async function syncBatch(itemIds) {
+  const results = { created: 0, updated: 0, errors: [] };
 
   try {
-    // 1. Get all Square catalog items (filtered by category if configured)
-    const squareItems = await listSquareCatalogItems();
+    // Fetch the full item objects for just this batch
+    const squareItems = await batchRetrieveCatalogObjects(itemIds);
 
-    if (!squareItems || squareItems.length === 0) {
-      results.errors.push("No items found in Square catalog (check SYNC_CATEGORY_IDS config).");
-      results.done = true;
-      return results;
-    }
-
-    results.total = squareItems.length;
-
-    // 2. Process only this batch of items
-    const batch = squareItems.slice(offset, offset + batchSize);
-
-    for (const squareItem of batch) {
+    for (const squareItem of squareItems) {
+      if (squareItem.type !== "ITEM") continue;
       try {
         await syncSingleItem(squareItem, results);
       } catch (err) {
         results.errors.push(`Error syncing ${squareItem.id}: ${err.message}`);
       }
       // Small delay between API calls to avoid Wix rate limiting
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
-
-    // 3. Check if we're done
-    const nextOffset = offset + batchSize;
-    if (nextOffset >= squareItems.length) {
-      results.done = true;
-      // Sync inventory counts after all products are done
-      await syncAllInventoryCounts(results);
-    } else {
-      results.done = false;
-      results.nextOffset = nextOffset;
-    }
-
   } catch (err) {
-    results.errors.push(`Fatal sync error: ${err.message}`);
-    results.done = true;
+    results.errors.push(`Batch sync error: ${err.message}`);
   }
 
+  return results;
+}
+
+/**
+ * Step 3: Sync inventory counts for all mapped products.
+ * Call this once after all batches are done.
+ */
+export async function syncInventory() {
+  const results = { inventorySynced: 0, errors: [] };
+  await syncAllInventoryCounts(results);
   return results;
 }
 

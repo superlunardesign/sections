@@ -44,12 +44,10 @@ export async function listSquareCatalogItems() {
       const itemData = item.item_data;
       if (!itemData) return false;
 
-      // Square uses a "categories" array of objects: [{id: "...", ordinal: ...}]
       if (itemData.categories && Array.isArray(itemData.categories)) {
         return itemData.categories.some(cat => SYNC_CATEGORY_IDS.includes(cat.id));
       }
 
-      // Fallback: older Square items may use a single category_id string
       if (itemData.category_id) {
         return SYNC_CATEGORY_IDS.includes(itemData.category_id);
       }
@@ -59,6 +57,15 @@ export async function listSquareCatalogItems() {
   }
 
   return allItems;
+}
+
+/**
+ * Returns just the IDs of Square catalog items (filtered by category).
+ * Much faster than returning full objects — used by the batched sync.
+ */
+export async function listSquareItemIds() {
+  const items = await listSquareCatalogItems();
+  return items.map(item => item.id);
 }
 
 /**
