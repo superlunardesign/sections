@@ -46,6 +46,8 @@ export async function syncSquareToWix() {
       } catch (err) {
         results.errors.push(`Error syncing ${squareItem.id}: ${err.message}`);
       }
+      // Small delay between API calls to avoid Wix rate limiting
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
 
     // 3. Sync inventory counts for all mapped items
