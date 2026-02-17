@@ -13,7 +13,8 @@
 
 import wixData from "wix-data";
 import wixStoresBackend from "wix-stores-backend";
-import { listSquareCatalogItems, getInventoryCounts, adjustSquareInventory } from "./square-api";
+import { mediaManager } from "wix-media-backend";
+import { listSquareCatalogItems, getInventoryCounts, adjustSquareInventory, batchRetrieveCatalogObjects } from "./square-api";
 import { MAPPING_COLLECTION, SYNC_CATEGORY_IDS } from "./square-config";
 
 // ─── FULL PRODUCT SYNC (Square -> Wix) ─────────────────────────────────────
@@ -38,10 +39,13 @@ export async function syncSquareToWix() {
       return results;
     }
 
-    // 2. Process each Square item
+    // 2. Fetch all image URLs from Square
+    const imageUrlMap = await fetchSquareImageUrls(squareItems);
+
+    // 3. Process each Square item
     for (const squareItem of squareItems) {
       try {
-        await syncSingleItem(squareItem, results);
+        await syncSingleItem(squareItem, results, imageUrlMap);
       } catch (err) {
         results.errors.push(`Error syncing ${squareItem.id}: ${err.message}`);
       }
@@ -61,9 +65,14 @@ export async function syncSquareToWix() {
  * Sync a single Square catalog item to Wix.
  * Creates the product if it doesn't exist, updates it if it does.
  */
-async function syncSingleItem(squareItem, results) {
+async function syncSingleItem(squareItem, results, imageUrlMap = {}) {
   const itemData = squareItem.item_data;
   if (!itemData) return;
+
+  // Gather image URLs for this item
+  const imageUrls = (itemData.image_ids || [])
+    .map(id => imageUrlMap[id])
+    .filter(Boolean);
 
   // Check if we already have a mapping for this Square item
   const existingMapping = await wixData.query(MAPPING_COLLECTION)
@@ -73,11 +82,11 @@ async function syncSingleItem(squareItem, results) {
   if (existingMapping.items.length > 0) {
     // Update existing Wix product
     const mapping = existingMapping.items[0];
-    await updateWixProduct(mapping.wixProductId, squareItem);
+    await updateWixProduct(mapping.wixProductId, squareItem, imageUrls);
     results.updated++;
   } else {
     // Create new Wix product
-    const wixProductId = await createWixProduct(squareItem);
+    const wixProductId = await createWixProduct(squareItem, imageUrls);
     if (wixProductId) {
       // Save the mapping
       await saveMappings(squareItem, wixProductId);
@@ -92,13 +101,16 @@ async function syncSingleItem(squareItem, results) {
  * @param {Object} squareItem - The Square CatalogObject (type: ITEM)
  * @returns {Promise<string|null>} The new Wix product ID, or null on failure
  */
-async function createWixProduct(squareItem) {
+async function createWixProduct(squareItem, imageUrls = []) {
   const itemData = squareItem.item_data;
+
+  // Use description_html if available, fall back to plain description
+  const description = itemData.description_html || itemData.description || "";
 
   // Build the Wix product info object
   const productInfo = {
     name: (itemData.name || "Untitled Product").substring(0, 80),
-    description: itemData.description || "",
+    description: description,
     productType: "physical",
     visible: true
   };
@@ -121,20 +133,12 @@ async function createWixProduct(squareItem) {
     }
   }
 
-  // Set weight if available
-  if (itemData.variations && itemData.variations.length > 0) {
-    const measurementUnit = itemData.variations[0].item_variation_data?.measurement_unit_id;
-    // Square doesn't store weight the same way; skip unless you have custom attributes
-  }
-
   try {
     const wixProduct = await wixStoresBackend.createProduct(productInfo);
 
-    // If Square item has images, add them
-    if (itemData.image_ids && itemData.image_ids.length > 0) {
-      // Note: You'd need to fetch the image URLs from Square's catalog
-      // and then use wixStoresBackend.addProductMedia()
-      // This requires an additional API call to get image URLs
+    // Import images from Square into Wix
+    if (imageUrls.length > 0) {
+      await importImagesToWixProduct(wixProduct._id, imageUrls);
     }
 
     return wixProduct._id;
@@ -150,12 +154,15 @@ async function createWixProduct(squareItem) {
  * @param {string} wixProductId - The Wix product ID
  * @param {Object} squareItem - The Square CatalogObject
  */
-async function updateWixProduct(wixProductId, squareItem) {
+async function updateWixProduct(wixProductId, squareItem, imageUrls = []) {
   const itemData = squareItem.item_data;
+
+  // Use description_html if available, fall back to plain description
+  const description = itemData.description_html || itemData.description || undefined;
 
   const updateFields = {
     name: itemData.name ? itemData.name.substring(0, 80) : undefined,
-    description: itemData.description || undefined
+    description: description
   };
 
   // Update price from first variation
@@ -168,6 +175,11 @@ async function updateWixProduct(wixProductId, squareItem) {
 
   try {
     await wixStoresBackend.updateProductFields(wixProductId, updateFields);
+
+    // Import images if the product doesn't have any yet
+    if (imageUrls.length > 0) {
+      await importImagesToWixProduct(wixProductId, imageUrls);
+    }
   } catch (err) {
     console.error(`Failed to update Wix product ${wixProductId}:`, err);
   }
@@ -206,6 +218,79 @@ async function saveMappings(squareItem, wixProductId) {
       };
 
       await wixData.insert(MAPPING_COLLECTION, varMapping);
+    }
+  }
+}
+
+// ─── IMAGE HELPERS ──────────────────────────────────────────────────────────
+
+/**
+ * Fetches all Square image objects for the given items and returns a map of imageId -> URL.
+ */
+async function fetchSquareImageUrls(squareItems) {
+  const imageUrlMap = {};
+
+  // Collect all unique image IDs from all items
+  const allImageIds = [];
+  for (const item of squareItems) {
+    const imageIds = item.item_data?.image_ids || [];
+    for (const id of imageIds) {
+      if (!allImageIds.includes(id)) {
+        allImageIds.push(id);
+      }
+    }
+  }
+
+  if (allImageIds.length === 0) return imageUrlMap;
+
+  try {
+    // Batch retrieve image objects from Square (max 1000 per request)
+    const imageObjects = await batchRetrieveCatalogObjects(allImageIds);
+
+    for (const obj of imageObjects) {
+      if (obj.type === "IMAGE" && obj.image_data?.url) {
+        imageUrlMap[obj.id] = obj.image_data.url;
+      }
+    }
+  } catch (err) {
+    console.error("Failed to fetch Square image URLs:", err);
+  }
+
+  return imageUrlMap;
+}
+
+/**
+ * Imports images from external URLs into Wix Media Manager
+ * and attaches them to a Wix product.
+ */
+async function importImagesToWixProduct(wixProductId, imageUrls) {
+  const mediaItems = [];
+
+  for (const url of imageUrls) {
+    try {
+      // Import the external image into Wix Media Manager
+      const result = await mediaManager.importFile(
+        "/square-products",
+        url,
+        { mediaOptions: { mimeType: "image/jpeg" } }
+      );
+
+      if (result && result.fileUrl) {
+        mediaItems.push({
+          mediaId: result.fileUrl,
+          mediaType: "IMAGE"
+        });
+      }
+    } catch (err) {
+      console.error(`Failed to import image ${url}:`, err);
+    }
+  }
+
+  if (mediaItems.length > 0) {
+    try {
+      await wixStoresBackend.addProductMedia(wixProductId, mediaItems);
+    } catch (err) {
+      console.error(`Failed to attach media to product ${wixProductId}:`, err);
     }
   }
 }
