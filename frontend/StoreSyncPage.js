@@ -222,8 +222,8 @@ async function runFullSync() {
 
   const imageData = await getImageSyncList();
   const imgTotal = imageData.total;
-  const imgSkipped = imageData.skippedExisting || 0;
-  log(`Found ${imgTotal} products needing images${imgSkipped > 0 ? ` (${imgSkipped} already have images — skipped)` : ""}.`);
+  const imgSkipped = imageData.skippedUnchanged || 0;
+  log(`Found ${imgTotal} products needing images${imgSkipped > 0 ? ` (${imgSkipped} unchanged — skipped)` : ""}.`);
 
   let imgSuccess = 0, imgErrors = 0;
 
@@ -237,7 +237,9 @@ async function runFullSync() {
       const result = await syncSingleProductImages(
         item.wixProductId,
         item.imageUrls,
-        item.name
+        item.name,
+        item.mappingId,
+        item.squareImageIds
       );
 
       if (result.success) {

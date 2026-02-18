@@ -289,11 +289,11 @@ export async function syncInventoryBatch(batch) {
  */
 export async function getImageSyncList() {
   const items = [];
-  let skippedExisting = 0;
+  let skippedUnchanged = 0;
 
   try {
     const squareItems = await listSquareCatalogItems();
-    if (!squareItems || squareItems.length === 0) return { items, total: 0, skippedExisting: 0 };
+    if (!squareItems || squareItems.length === 0) return { items, total: 0, skippedUnchanged: 0 };
 
     // Fetch all image URLs from Square
     const imageUrlMap = await fetchSquareImageUrls(squareItems);
@@ -302,7 +302,7 @@ export async function getImageSyncList() {
       const itemData = squareItem.item_data;
       if (!itemData || !itemData.image_ids || itemData.image_ids.length === 0) continue;
 
-      // Find the Wix product mapping
+      // Find the Wix product mapping (main item row, not variation)
       const mapping = await wixData.query(MAPPING_COLLECTION)
         .eq("squareCatalogId", squareItem.id)
         .eq("squareVariationId", "")
@@ -310,17 +310,15 @@ export async function getImageSyncList() {
 
       if (mapping.items.length === 0) continue;
 
-      const wixProductId = mapping.items[0].wixProductId;
+      const mappingRecord = mapping.items[0];
+      const wixProductId = mappingRecord.wixProductId;
 
-      // Skip products that already have images in Wix
-      try {
-        const wixProduct = await wixData.get("Stores/Products", wixProductId);
-        if (wixProduct && wixProduct.mediaItems && wixProduct.mediaItems.length > 0) {
-          skippedExisting++;
-          continue;
-        }
-      } catch (err) {
-        // Product may have been deleted — skip it
+      // Compare current Square image IDs with what we stored last time
+      const currentImageIds = itemData.image_ids.sort().join(",");
+      const storedImageIds = mappingRecord.squareImageIds || "";
+
+      if (currentImageIds === storedImageIds) {
+        skippedUnchanged++;
         continue;
       }
 
@@ -333,28 +331,45 @@ export async function getImageSyncList() {
       items.push({
         name: itemData.name || squareItem.id,
         wixProductId: wixProductId,
-        imageUrls: imageUrls
+        mappingId: mappingRecord._id,
+        imageUrls: imageUrls,
+        squareImageIds: currentImageIds
       });
     }
   } catch (err) {
     console.error("Failed to build image sync list:", err);
   }
 
-  return { items, total: items.length, skippedExisting };
+  return { items, total: items.length, skippedUnchanged };
 }
 
 /**
  * Step 2 for images: Imports images for a single product.
- * Called in a loop from the frontend.
+ * Called in a loop from the frontend. After a successful import, stores
+ * the Square image IDs on the mapping so we can skip unchanged images next sync.
  *
  * @param {string} wixProductId - The Wix product ID
  * @param {Array<string>} imageUrls - URLs of images to import
  * @param {string} [productName] - Product name used for file naming
+ * @param {string} [mappingId] - Mapping record _id to update with squareImageIds
+ * @param {string} [squareImageIds] - Comma-separated Square image IDs to store
  * @returns {Promise<Object>} { success: boolean, error: string|null }
  */
-export async function syncSingleProductImages(wixProductId, imageUrls, productName) {
+export async function syncSingleProductImages(wixProductId, imageUrls, productName, mappingId, squareImageIds) {
   try {
     const imageResult = await importImagesToWixProduct(wixProductId, imageUrls, productName);
+
+    // Store the Square image IDs on the mapping so next sync can skip if unchanged
+    if (mappingId && squareImageIds && imageResult.imported > 0) {
+      try {
+        const mapping = await wixData.get(MAPPING_COLLECTION, mappingId);
+        mapping.squareImageIds = squareImageIds;
+        await wixData.update(MAPPING_COLLECTION, mapping);
+      } catch (err) {
+        console.error("Failed to save squareImageIds on mapping:", err);
+      }
+    }
+
     return {
       success: true,
       imported: imageResult.imported,
@@ -975,25 +990,35 @@ export async function syncSingleProductComplete(squareItemId) {
     log.push(`! Inventory sync failed: ${err.message}`);
   }
 
-  // 5. Sync images (skip if product already has images in Wix)
+  // 5. Sync images (skip if Square image IDs haven't changed since last import)
   log.push("Checking images...");
   try {
-    // Check if Wix product already has images
-    let hasExistingImages = false;
-    try {
-      const wixProduct = await wixData.get("Stores/Products", wixProductId);
-      if (wixProduct && wixProduct.mediaItems && wixProduct.mediaItems.length > 0) {
-        hasExistingImages = true;
-      }
-    } catch (err) {
-      // Couldn't read product — proceed with import attempt
-    }
+    const imageIds = squareItem.item_data?.image_ids || [];
 
-    if (hasExistingImages) {
-      log.push("Product already has images in Wix — skipping import.");
+    if (imageIds.length === 0) {
+      log.push("No images on this Square item.");
     } else {
-      const imageIds = squareItem.item_data?.image_ids || [];
-      if (imageIds.length > 0) {
+      // Check if the Square image IDs have changed since last import
+      const currentImageIds = imageIds.sort().join(",");
+      let storedImageIds = "";
+      let mainMappingId = null;
+
+      try {
+        const mainMapping = await wixData.query(MAPPING_COLLECTION)
+          .eq("squareCatalogId", squareItem.id)
+          .eq("squareVariationId", "")
+          .find();
+        if (mainMapping.items.length > 0) {
+          storedImageIds = mainMapping.items[0].squareImageIds || "";
+          mainMappingId = mainMapping.items[0]._id;
+        }
+      } catch (err) {
+        // Couldn't read mapping — proceed with import
+      }
+
+      if (currentImageIds === storedImageIds) {
+        log.push("Images unchanged since last import — skipping.");
+      } else {
         const imageObjects = await batchRetrieveCatalogObjects(imageIds);
         const imageUrls = imageObjects
           .filter(obj => obj.type === "IMAGE" && obj.image_data?.url)
@@ -1003,11 +1028,20 @@ export async function syncSingleProductComplete(squareItemId) {
           log.push(`Importing ${imageUrls.length} image(s)...`);
           const imgResult = await importImagesToWixProduct(wixProductId, imageUrls, name);
           log.push(`Images done (${imgResult.imported} imported, ${imgResult.failed} failed).`);
+
+          // Store the image IDs so we can skip next time if unchanged
+          if (mainMappingId && imgResult.imported > 0) {
+            try {
+              const m = await wixData.get(MAPPING_COLLECTION, mainMappingId);
+              m.squareImageIds = currentImageIds;
+              await wixData.update(MAPPING_COLLECTION, m);
+            } catch (err) {
+              // Non-critical — just means we'll re-import next time
+            }
+          }
         } else {
           log.push("No image URLs resolved — skipping.");
         }
-      } else {
-        log.push("No images on this Square item.");
       }
     }
   } catch (err) {
