@@ -13,8 +13,98 @@
 
 import wixData from "wix-data";
 import wixStoresBackend from "wix-stores-backend";
-import { listSquareCatalogItems, listSquareItemIds, getInventoryCounts, adjustSquareInventory, batchRetrieveCatalogObjects } from "./square-api";
+import { products } from "wix-stores.v2";
+import { elevate } from "wix-auth";
+import { listSquareCatalogItems, listSquareItemIds, getInventoryCounts, adjustSquareInventory, batchRetrieveCatalogObjects, listSquareCategories } from "./square-api";
 import { MAPPING_COLLECTION, SYNC_CATEGORY_IDS } from "./square-config";
+
+const elevatedCreateCollection = elevate(products.createCollection);
+
+// ─── COLLECTION (CATEGORY) SYNC ────────────────────────────────────────────
+
+/**
+ * Ensures Wix Store collections exist for each Square category we sync.
+ * Fetches Square category names, checks existing Wix collections, creates missing ones.
+ *
+ * @returns {Promise<Object>} Map of squareCategoryId → wixCollectionId
+ */
+async function ensureWixCollections() {
+  // 1. Fetch Square categories to get ID → name mapping
+  const squareCategories = await listSquareCategories();
+  const categoryNameMap = {};
+  for (const cat of squareCategories) {
+    if (SYNC_CATEGORY_IDS.length === 0 || SYNC_CATEGORY_IDS.includes(cat.id)) {
+      categoryNameMap[cat.id] = cat.category_data?.name || cat.id;
+    }
+  }
+
+  // 2. Query existing Wix Store collections
+  const existingCollections = await wixData.query("Stores/Collections").limit(1000).find();
+  const existingByName = {};
+  for (const col of existingCollections.items) {
+    existingByName[col.name] = col._id;
+  }
+
+  // 3. Create missing collections, build the map
+  const collectionMap = {};
+  for (const [squareId, name] of Object.entries(categoryNameMap)) {
+    if (existingByName[name]) {
+      collectionMap[squareId] = existingByName[name];
+    } else {
+      try {
+        const result = await elevatedCreateCollection({ name });
+        collectionMap[squareId] = result.collection._id;
+      } catch (err) {
+        console.error(`Failed to create Wix collection "${name}":`, err);
+      }
+    }
+  }
+
+  return collectionMap;
+}
+
+/**
+ * Returns all Square category IDs for an item that are in our sync list.
+ */
+function getItemCategoryIds(squareItem) {
+  const itemData = squareItem.item_data;
+  if (!itemData) return [];
+
+  const ids = [];
+  if (itemData.categories && Array.isArray(itemData.categories)) {
+    for (const cat of itemData.categories) {
+      if (SYNC_CATEGORY_IDS.length === 0 || SYNC_CATEGORY_IDS.includes(cat.id)) {
+        ids.push(cat.id);
+      }
+    }
+  }
+  if (ids.length === 0 && itemData.category_id) {
+    if (SYNC_CATEGORY_IDS.length === 0 || SYNC_CATEGORY_IDS.includes(itemData.category_id)) {
+      ids.push(itemData.category_id);
+    }
+  }
+  return ids;
+}
+
+/**
+ * Adds a product to all matching Wix collections based on its Square categories.
+ */
+async function assignProductToCollections(wixProductId, squareItem, collectionMap) {
+  const categoryIds = getItemCategoryIds(squareItem);
+  for (const catId of categoryIds) {
+    const wixCollectionId = collectionMap[catId];
+    if (wixCollectionId) {
+      try {
+        await wixStoresBackend.addProductsToCollection(wixCollectionId, [wixProductId]);
+      } catch (err) {
+        // Ignore if product already in collection
+        if (!err.message?.includes("already")) {
+          console.error(`Failed to add product to collection:`, err);
+        }
+      }
+    }
+  }
+}
 
 // ─── FULL PRODUCT SYNC (Square -> Wix) ─────────────────────────────────────
 
@@ -41,6 +131,14 @@ export async function syncBatch(itemIds) {
   const batchStart = Date.now();
 
   try {
+    // Ensure Wix collections exist for Square categories
+    let collectionMap = {};
+    try {
+      collectionMap = await ensureWixCollections();
+    } catch (err) {
+      console.error("Failed to ensure collections:", err);
+    }
+
     // Fetch the full item objects for just this batch
     const squareItems = await batchRetrieveCatalogObjects(itemIds);
 
@@ -55,7 +153,7 @@ export async function syncBatch(itemIds) {
       }
 
       try {
-        await syncSingleItem(squareItem, results);
+        await syncSingleItem(squareItem, results, collectionMap);
       } catch (err) {
         results.errors.push(`${name}: ${err.message}`);
       }
@@ -218,11 +316,12 @@ export async function syncSingleProductImages(wixProductId, imageUrls, productNa
  * Sync a single Square catalog item to Wix.
  * Creates the product if it doesn't exist, updates it if it does.
  */
-async function syncSingleItem(squareItem, results) {
+async function syncSingleItem(squareItem, results, collectionMap) {
   const itemData = squareItem.item_data;
   if (!itemData) return;
 
   const name = itemData.name || squareItem.id;
+  let wixProductId;
 
   // Check if we already have a mapping for this Square item
   const existingMapping = await wixData.query(MAPPING_COLLECTION)
@@ -232,7 +331,8 @@ async function syncSingleItem(squareItem, results) {
   if (existingMapping.items.length > 0) {
     // Update existing Wix product — track what changed
     const mapping = existingMapping.items[0];
-    const changes = await updateWixProduct(mapping.wixProductId, squareItem);
+    wixProductId = mapping.wixProductId;
+    const changes = await updateWixProduct(wixProductId, squareItem);
     if (changes.length > 0) {
       results.updated.push({ name, changes });
     } else {
@@ -240,10 +340,15 @@ async function syncSingleItem(squareItem, results) {
     }
   } else {
     // Create new Wix product
-    const wixProductId = await createWixProduct(squareItem);
+    wixProductId = await createWixProduct(squareItem);
     // Save the mapping
     await saveMappings(squareItem, wixProductId);
     results.created.push(name);
+  }
+
+  // Assign product to matching Wix collections
+  if (wixProductId && collectionMap) {
+    await assignProductToCollections(wixProductId, squareItem, collectionMap);
   }
 }
 
