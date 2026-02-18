@@ -546,6 +546,153 @@ async function saveMappings(squareItem, wixProductId) {
   await wixData.bulkInsert(MAPPING_COLLECTION, allMappings);
 }
 
+// ─── PER-ITEM SYNC (for detailed frontend logging) ─────────────────────────
+
+/**
+ * Fetches a batch of Square items and returns their basic info for the
+ * frontend to display as it loops through them.
+ *
+ * @param {Array<string>} itemIds - Square catalog item IDs
+ * @returns {Promise<Array>} Array of { squareId, name } for logging
+ */
+export async function fetchSquareItemSummaries(itemIds) {
+  try {
+    const squareItems = await batchRetrieveCatalogObjects(itemIds);
+    return squareItems
+      .filter(item => item.type === "ITEM")
+      .map(item => ({
+        squareId: item.id,
+        name: item.item_data?.name || item.id
+      }));
+  } catch (err) {
+    return [];
+  }
+}
+
+/**
+ * Syncs a single Square item by ID and returns a detailed status message.
+ * Called from the frontend in a loop for per-item status logging.
+ *
+ * @param {string} itemId - Single Square catalog item ID
+ * @param {Object} collectionMap - Map from prepareSync()
+ * @returns {Promise<Object>} { status, name, details }
+ *   status: "created" | "updated" | "skipped" | "error"
+ *   name: product name
+ *   details: human-readable description of what happened
+ */
+export async function syncSingleItemById(itemId, collectionMap = {}) {
+  try {
+    const items = await batchRetrieveCatalogObjects([itemId]);
+    if (!items || items.length === 0) {
+      return { status: "error", name: itemId, details: "Not found in Square" };
+    }
+
+    const squareItem = items.find(i => i.type === "ITEM");
+    if (!squareItem) {
+      return { status: "error", name: itemId, details: "Not an ITEM type" };
+    }
+
+    const itemData = squareItem.item_data;
+    if (!itemData) {
+      return { status: "error", name: itemId, details: "No item data" };
+    }
+
+    const name = itemData.name || squareItem.id;
+
+    // Check for existing mapping
+    const existingMapping = await wixData.query(MAPPING_COLLECTION)
+      .eq("squareCatalogId", squareItem.id)
+      .find();
+
+    if (existingMapping.items.length > 0) {
+      // Existing product — check for changes
+      const mapping = existingMapping.items[0];
+      const wixProductId = mapping.wixProductId;
+      const changes = await updateWixProduct(wixProductId, squareItem);
+
+      if (wixProductId && collectionMap) {
+        await assignProductToCollections(wixProductId, squareItem, collectionMap);
+      }
+
+      if (changes.length > 0) {
+        return {
+          status: "updated",
+          name,
+          details: `Updated: ${changes.join(", ")}`
+        };
+      } else {
+        return {
+          status: "skipped",
+          name,
+          details: "No changes detected"
+        };
+      }
+    } else {
+      // New product — create it
+      const wixProductId = await createWixProduct(squareItem);
+      await saveMappings(squareItem, wixProductId);
+
+      if (wixProductId && collectionMap) {
+        await assignProductToCollections(wixProductId, squareItem, collectionMap);
+      }
+
+      // Get price info for the log
+      let priceStr = "";
+      if (itemData.variations && itemData.variations.length > 0) {
+        const priceMoney = itemData.variations[0].item_variation_data?.price_money;
+        if (priceMoney) {
+          priceStr = ` ($${(priceMoney.amount / 100).toFixed(2)})`;
+        }
+      }
+
+      return {
+        status: "created",
+        name,
+        details: `New product added to Wix${priceStr}`
+      };
+    }
+  } catch (err) {
+    return { status: "error", name: itemId, details: err.message };
+  }
+}
+
+/**
+ * Syncs inventory for a single mapping item.
+ * Called from the frontend in a loop for per-item status logging.
+ *
+ * @param {Object} item - { _id, wixProductId, squareVariationId, squareItemName, squareQty }
+ * @returns {Promise<Object>} { status, name, details }
+ */
+export async function syncSingleInventoryItem(item) {
+  try {
+    await elevatedUpdateInventoryVariants(item.wixProductId, {
+      trackQuantity: true,
+      variants: [{
+        variantId: "00000000-0000-0000-0000-000000000000",
+        quantity: item.squareQty,
+        inStock: item.squareQty > 0
+      }]
+    });
+
+    // Update lastSynced timestamp
+    const mapping = await wixData.get(MAPPING_COLLECTION, item._id);
+    mapping.lastSynced = new Date();
+    await wixData.update(MAPPING_COLLECTION, mapping);
+
+    return {
+      status: "synced",
+      name: item.squareItemName,
+      details: `qty: ${item.squareQty}${item.squareQty === 0 ? " (out of stock)" : ""}`
+    };
+  } catch (err) {
+    return {
+      status: "error",
+      name: item.squareItemName,
+      details: err.message
+    };
+  }
+}
+
 // ─── IMAGE HELPERS ──────────────────────────────────────────────────────────
 
 /**
