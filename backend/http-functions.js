@@ -15,9 +15,12 @@
 
 import { ok, badRequest, forbidden } from "wix-http-functions";
 import wixData from "wix-data";
-import wixStoresBackend from "wix-stores-backend";
+import { inventory } from "wix-stores.v2";
+import { elevate } from "wix-auth";
 import { getInventoryCount } from "./square-api";
 import { MAPPING_COLLECTION, getWebhookSignatureKey } from "./square-config";
+
+const elevatedUpdateInventoryVariants = elevate(inventory.updateInventoryVariants);
 
 /**
  * POST endpoint: receives Square webhook events.
@@ -100,17 +103,15 @@ async function handleInventoryCountUpdated(data) {
     const wixProductId = mapping.wixProductId;
 
     try {
-      // Get current Wix inventory
-      const product = await wixData.get("Stores/Products", wixProductId);
-      const currentWixQty = product?.stock?.quantity || 0;
-
-      const delta = newQuantity - currentWixQty;
-
-      if (delta > 0) {
-        await wixStoresBackend.incrementInventory(wixProductId, null, delta);
-      } else if (delta < 0) {
-        await wixStoresBackend.decrementInventory(wixProductId, null, Math.abs(delta));
-      }
+      // Set Wix inventory to match Square quantity
+      await elevatedUpdateInventoryVariants(wixProductId, {
+        trackQuantity: true,
+        variants: [{
+          variantId: "00000000-0000-0000-0000-000000000000",
+          quantity: newQuantity,
+          inStock: newQuantity > 0
+        }]
+      });
 
       // Update sync timestamp
       mapping.lastSynced = new Date();

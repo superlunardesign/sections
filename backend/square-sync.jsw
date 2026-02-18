@@ -12,13 +12,18 @@
  */
 
 import wixData from "wix-data";
-import wixStoresBackend from "wix-stores-backend";
-import { products } from "wix-stores.v2";
+import { products, inventory } from "wix-stores.v2";
 import { elevate } from "wix-auth";
 import { listSquareCatalogItems, listSquareItemIds, getInventoryCounts, adjustSquareInventory, batchRetrieveCatalogObjects, listSquareCategories } from "./square-api";
 import { MAPPING_COLLECTION, SYNC_CATEGORY_IDS } from "./square-config";
 
 const elevatedCreateCollection = elevate(products.createCollection);
+const elevatedCreateProduct = elevate(products.createProduct);
+const elevatedUpdateProduct = elevate(products.updateProduct);
+const elevatedDeleteProduct = elevate(products.deleteProduct);
+const elevatedAddProductMedia = elevate(products.addProductMedia);
+const elevatedAddProductsToCollection = elevate(products.addProductsToCollection);
+const elevatedUpdateInventoryVariants = elevate(inventory.updateInventoryVariants);
 
 /**
  * Paginates through a wixData query, returning all items.
@@ -113,7 +118,7 @@ async function assignProductToCollections(wixProductId, squareItem, collectionMa
     const wixCollectionId = collectionMap[catId];
     if (wixCollectionId) {
       try {
-        await wixStoresBackend.addProductsToCollection(wixCollectionId, [wixProductId]);
+        await elevatedAddProductsToCollection(wixCollectionId, [wixProductId]);
       } catch (err) {
         // Ignore if product already in collection
         if (!err.message?.includes("already")) {
@@ -232,7 +237,7 @@ export async function syncInventoryBatch(batch) {
 
   for (const item of batch) {
     try {
-      await wixStoresBackend.updateInventoryVariantFieldsByProductId(item.wixProductId, {
+      await elevatedUpdateInventoryVariants(item.wixProductId, {
         trackQuantity: true,
         variants: [{
           variantId: "00000000-0000-0000-0000-000000000000",
@@ -387,16 +392,14 @@ async function createWixProduct(squareItem) {
     name: (itemData.name || "Untitled Product").substring(0, 80),
     description: description,
     productType: "physical",
-    visible: true,
-    trackInventory: true,
-    manageVariants: false
+    visible: true
   };
 
   // Set price from the first variation
   if (itemData.variations && itemData.variations.length > 0) {
     const priceMoney = itemData.variations[0].item_variation_data?.price_money;
     if (priceMoney) {
-      productInfo.price = priceMoney.amount / 100;
+      productInfo.priceData = { price: priceMoney.amount / 100 };
     }
   }
 
@@ -408,8 +411,23 @@ async function createWixProduct(squareItem) {
     }
   }
 
-  const wixProduct = await wixStoresBackend.createProduct(productInfo);
-  return wixProduct._id;
+  const result = await elevatedCreateProduct(productInfo);
+  const wixProductId = result.product._id;
+
+  // Set inventory tracking via the Inventory API (decoupled from product in v2)
+  try {
+    await elevatedUpdateInventoryVariants(wixProductId, {
+      trackQuantity: true,
+      variants: [{
+        variantId: "00000000-0000-0000-0000-000000000000",
+        inStock: true
+      }]
+    });
+  } catch (err) {
+    console.error(`Failed to enable inventory tracking for ${wixProductId}:`, err);
+  }
+
+  return wixProductId;
 }
 
 /**
@@ -447,7 +465,7 @@ async function updateWixProduct(wixProductId, squareItem) {
   }
 
   // Compare and build updateFields only for actual changes
-  const updateFields = { trackInventory: true };
+  const updateFields = {};
 
   if (newName && newName !== currentProduct.name) {
     updateFields.name = newName;
@@ -460,14 +478,14 @@ async function updateWixProduct(wixProductId, squareItem) {
   }
 
   if (newPrice !== undefined && newPrice !== currentProduct.price) {
-    updateFields.price = newPrice;
+    updateFields.priceData = { price: newPrice };
     changes.push(`price ($${currentProduct.price || 0} → $${newPrice})`);
   }
 
   // Only call the API if something actually changed
   if (changes.length > 0) {
     try {
-      await wixStoresBackend.updateProductFields(wixProductId, updateFields);
+      await elevatedUpdateProduct(wixProductId, updateFields);
     } catch (err) {
       console.error(`Failed to update Wix product ${wixProductId}:`, err);
     }
@@ -556,7 +574,7 @@ async function fetchSquareImageUrls(squareItems) {
 async function importImagesToWixProduct(wixProductId, imageUrls, productName) {
   try {
     const mediaItems = imageUrls.map(url => ({ url }));
-    await wixStoresBackend.addProductMedia(wixProductId, mediaItems);
+    await elevatedAddProductMedia(wixProductId, mediaItems);
     return { imported: imageUrls.length, failed: 0 };
   } catch (err) {
     console.error(`Failed to add media to product ${wixProductId}: ${err.message}`);
@@ -598,7 +616,7 @@ export async function syncAllInventoryCounts(results = { inventorySynced: 0, err
       const squareQty = countLookup[mapping.squareVariationId] || 0;
 
       try {
-        await wixStoresBackend.updateInventoryVariantFieldsByProductId(mapping.wixProductId, {
+        await elevatedUpdateInventoryVariants(mapping.wixProductId, {
           trackQuantity: true,
           variants: [{
             variantId: "00000000-0000-0000-0000-000000000000",
@@ -693,7 +711,7 @@ export async function removeMapping(mappingId, deleteWixProduct = false) {
 
   if (deleteWixProduct && mapping.wixProductId) {
     try {
-      await wixStoresBackend.deleteProduct(mapping.wixProductId);
+      await elevatedDeleteProduct(mapping.wixProductId);
     } catch (err) {
       console.error("Failed to delete Wix product:", err);
     }
@@ -730,7 +748,7 @@ export async function syncSingleProductInventory(wixProductId) {
 
   if (counts.length > 0) {
     const squareQty = parseFloat(counts[0].quantity) || 0;
-    await wixStoresBackend.updateInventoryVariantFieldsByProductId(wixProductId, {
+    await elevatedUpdateInventoryVariants(wixProductId, {
       trackQuantity: true,
       variants: [{
         variantId: "00000000-0000-0000-0000-000000000000",
