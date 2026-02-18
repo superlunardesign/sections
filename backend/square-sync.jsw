@@ -848,6 +848,148 @@ export async function decrementSquareInventoryForOrder(lineItems) {
   return results;
 }
 
+// ─── SINGLE PRODUCT FULL SYNC ───────────────────────────────────────────────
+
+/**
+ * Full sync of a single Square product: product data + inventory + images.
+ * Returns an array of log messages for the frontend to display.
+ *
+ * @param {string} squareItemId - The Square catalog item ID
+ * @returns {Promise<Object>} { success, log: string[] }
+ */
+export async function syncSingleProductComplete(squareItemId) {
+  const log = [];
+  const trimmedId = squareItemId.trim();
+
+  log.push(`Looking up Square item: ${trimmedId}...`);
+
+  // 1. Fetch the item from Square
+  let squareItem;
+  try {
+    const items = await batchRetrieveCatalogObjects([trimmedId]);
+    squareItem = items?.find(i => i.type === "ITEM");
+    if (!squareItem) {
+      log.push("! Item not found in Square. Check the ID and try again.");
+      return { success: false, log };
+    }
+  } catch (err) {
+    log.push(`! Failed to fetch from Square: ${err.message}`);
+    return { success: false, log };
+  }
+
+  const name = squareItem.item_data?.name || trimmedId;
+  log.push(`Found: ${name}`);
+
+  // 2. Prepare collections
+  log.push("Preparing collections...");
+  let collectionMap = {};
+  try {
+    collectionMap = await ensureWixCollections();
+  } catch (err) {
+    log.push(`! Collection setup failed: ${err.message}`);
+  }
+
+  // 3. Sync product (create or update)
+  log.push("Checking product status...");
+  const existingMapping = await wixData.query(MAPPING_COLLECTION)
+    .eq("squareCatalogId", squareItem.id)
+    .find();
+
+  let wixProductId;
+
+  if (existingMapping.items.length > 0) {
+    wixProductId = existingMapping.items[0].wixProductId;
+    const changes = await updateWixProduct(wixProductId, squareItem);
+
+    if (changes.length > 0) {
+      log.push(`~ Updated: ${changes.join(", ")}`);
+    } else {
+      log.push(". Product data unchanged — no update needed.");
+    }
+  } else {
+    log.push(`+ New product detected — adding "${name}" to Wix...`);
+    wixProductId = await createWixProduct(squareItem);
+    await saveMappings(squareItem, wixProductId);
+
+    let priceStr = "";
+    const priceMoney = squareItem.item_data?.variations?.[0]?.item_variation_data?.price_money;
+    if (priceMoney) {
+      priceStr = ` at $${(priceMoney.amount / 100).toFixed(2)}`;
+    }
+    log.push(`+ Created successfully${priceStr}.`);
+  }
+
+  // Assign to collections
+  if (wixProductId && collectionMap) {
+    await assignProductToCollections(wixProductId, squareItem, collectionMap);
+    log.push("Collections assigned.");
+  }
+
+  // 4. Sync inventory
+  log.push("Checking inventory...");
+  try {
+    const variationMapping = await wixData.query(MAPPING_COLLECTION)
+      .eq("squareCatalogId", squareItem.id)
+      .ne("squareVariationId", "")
+      .find();
+
+    if (variationMapping.items.length > 0) {
+      const varId = variationMapping.items[0].squareVariationId;
+      const counts = await getInventoryCounts([varId]);
+      const squareQty = counts.length > 0 ? (parseFloat(counts[0].quantity) || 0) : 0;
+
+      await elevatedUpdateInventoryVariants(wixProductId, {
+        trackQuantity: true,
+        variants: [{
+          variantId: "00000000-0000-0000-0000-000000000000",
+          quantity: squareQty,
+          inStock: squareQty > 0
+        }]
+      });
+
+      // Update timestamp
+      const m = variationMapping.items[0];
+      m.lastSynced = new Date();
+      await wixData.update(MAPPING_COLLECTION, m);
+
+      log.push(`Inventory set to ${squareQty}${squareQty === 0 ? " (out of stock)" : ""}.`);
+    } else {
+      log.push("No variation mapping found — skipping inventory.");
+    }
+  } catch (err) {
+    log.push(`! Inventory sync failed: ${err.message}`);
+  }
+
+  // 5. Sync images
+  log.push("Checking images...");
+  try {
+    const imageIds = squareItem.item_data?.image_ids || [];
+    if (imageIds.length > 0) {
+      const imageObjects = await batchRetrieveCatalogObjects(imageIds);
+      const imageUrls = imageObjects
+        .filter(obj => obj.type === "IMAGE" && obj.image_data?.url)
+        .map(obj => obj.image_data.url);
+
+      if (imageUrls.length > 0) {
+        log.push(`Importing ${imageUrls.length} image(s)...`);
+        const imgResult = await importImagesToWixProduct(wixProductId, imageUrls, name);
+        log.push(`Images done (${imgResult.imported} imported, ${imgResult.failed} failed).`);
+      } else {
+        log.push("No image URLs resolved — skipping.");
+      }
+    } else {
+      log.push("No images on this Square item.");
+    }
+  } catch (err) {
+    log.push(`! Image sync failed: ${err.message}`);
+  }
+
+  log.push("");
+  log.push(`=== DONE: "${name}" fully synced. ===`);
+
+  return { success: true, log };
+}
+
 // ─── UTILITY FUNCTIONS ─────────────────────────────────────────────────────
 
 /**

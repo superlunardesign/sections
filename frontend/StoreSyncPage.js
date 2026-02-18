@@ -4,12 +4,13 @@
  * Paste this into your Wix Studio page code for the Store Sync admin page.
  *
  * Required page elements:
- *   #syncButton    — Button to start the full sync
- *   #statusLog     — Text element (or textBox) to display the running log
+ *   #syncButton      — Button to start the full sync
+ *   #statusText      — Text element to display the running log
+ *   #progressBar1    — ProgressBar element to show overall progress
  *
- * Optional elements:
- *   #progressBar   — ProgressBar element to show overall progress
- *   #syncImages    — Checkbox or toggle: whether to sync images (default: on)
+ * Single product sync elements:
+ *   #productIdInput  — Text input for Square product ID
+ *   #singleSyncBtn   — Button to sync a single product
  */
 
 import {
@@ -19,20 +20,25 @@ import {
   getInventoryMappings,
   syncSingleInventoryItem,
   getImageSyncList,
-  syncSingleProductImages
+  syncSingleProductImages,
+  syncSingleProductComplete
 } from "backend/square-sync";
 
 let logLines = [];
 let isSyncing = false;
 
 $w.onReady(function () {
-  $w("#statusLog").text = "Ready. Press Sync to start.";
+  $w("#statusText").text = "Ready. Press Sync to start.";
+  $w("#progressBar1").value = 0;
 
+  // ── Full Sync button ────────────────────────────────────────────────────
   $w("#syncButton").onClick(async () => {
     if (isSyncing) return;
     isSyncing = true;
     logLines = [];
     $w("#syncButton").disable();
+    $w("#singleSyncBtn").disable();
+    $w("#progressBar1").value = 0;
 
     try {
       await runFullSync();
@@ -42,6 +48,35 @@ $w.onReady(function () {
 
     isSyncing = false;
     $w("#syncButton").enable();
+    $w("#singleSyncBtn").enable();
+  });
+
+  // ── Single Product Sync button ──────────────────────────────────────────
+  $w("#singleSyncBtn").onClick(async () => {
+    if (isSyncing) return;
+
+    const inputVal = $w("#productIdInput").value;
+    if (!inputVal || inputVal.trim().length === 0) {
+      $w("#statusText").text = "Enter a Square product ID first.";
+      return;
+    }
+
+    isSyncing = true;
+    logLines = [];
+    $w("#syncButton").disable();
+    $w("#singleSyncBtn").disable();
+    $w("#progressBar1").value = 0;
+
+    try {
+      await runSingleSync(inputVal.trim());
+    } catch (err) {
+      log(`FATAL ERROR: ${err.message}`);
+    }
+
+    isSyncing = false;
+    $w("#syncButton").enable();
+    $w("#singleSyncBtn").enable();
+    $w("#progressBar1").value = 100;
   });
 });
 
@@ -53,7 +88,27 @@ function log(message) {
   if (logLines.length > 200) {
     logLines = logLines.slice(-200);
   }
-  $w("#statusLog").text = logLines.join("\n");
+  $w("#statusText").text = logLines.join("\n");
+}
+
+// ─── Single Product Sync ─────────────────────────────────────────────────────
+
+async function runSingleSync(squareItemId) {
+  log("=== SINGLE PRODUCT SYNC ===");
+  log("");
+
+  $w("#progressBar1").value = 10;
+
+  const result = await syncSingleProductComplete(squareItemId);
+
+  $w("#progressBar1").value = 90;
+
+  // Display all log lines from the backend
+  for (const line of result.log) {
+    log(line);
+  }
+
+  $w("#progressBar1").value = 100;
 }
 
 // ─── Full Sync Flow ──────────────────────────────────────────────────────────
@@ -61,7 +116,7 @@ function log(message) {
 async function runFullSync() {
   const startTime = Date.now();
 
-  log("=== STARTING SYNC ===");
+  log("=== STARTING FULL SYNC ===");
   log("");
 
   // ── Phase 1: Fetch item list from Square ──────────────────────────────────
@@ -112,10 +167,7 @@ async function runFullSync() {
       errors++;
     }
 
-    // Update progress bar if available
-    try {
-      $w("#progressBar").value = Math.round(((i + 1) / total) * 33);
-    } catch (e) { /* no progress bar */ }
+    $w("#progressBar1").value = Math.round(((i + 1) / total) * 33);
   }
 
   log("");
@@ -156,9 +208,7 @@ async function runFullSync() {
       invErrors++;
     }
 
-    try {
-      $w("#progressBar").value = 33 + Math.round(((i + 1) / invTotal) * 33);
-    } catch (e) { /* no progress bar */ }
+    $w("#progressBar1").value = 33 + Math.round(((i + 1) / invTotal) * 33);
   }
 
   log("");
@@ -201,9 +251,7 @@ async function runFullSync() {
       imgErrors++;
     }
 
-    try {
-      $w("#progressBar").value = 66 + Math.round(((i + 1) / imgTotal) * 34);
-    } catch (e) { /* no progress bar */ }
+    $w("#progressBar1").value = 66 + Math.round(((i + 1) / imgTotal) * 34);
   }
 
   log("");
@@ -224,7 +272,5 @@ async function runFullSync() {
   log(`Time      — ${mins}m ${secs}s`);
   log("========================================");
 
-  try {
-    $w("#progressBar").value = 100;
-  } catch (e) { /* no progress bar */ }
+  $w("#progressBar1").value = 100;
 }
