@@ -64,14 +64,8 @@ async function ensureWixCollections() {
   // 2. Query existing Wix Store collections via v2 API
   const existingByName = {};
   try {
-    let allCollections = [];
-    let result = await products.queryCollections().limit(100).find();
-    allCollections = allCollections.concat(result.items);
-    while (result.hasNext()) {
-      result = await result.next();
-      allCollections = allCollections.concat(result.items);
-    }
-    for (const col of allCollections) {
+    const result = await products.queryCollections().find();
+    for (const col of result.items) {
       existingByName[col.name] = col._id;
     }
   } catch (err) {
