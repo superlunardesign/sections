@@ -13,7 +13,6 @@
 
 import wixData from "wix-data";
 import wixStoresBackend from "wix-stores-backend";
-import { mediaManager } from "wix-media-backend";
 import { listSquareCatalogItems, listSquareItemIds, getInventoryCounts, adjustSquareInventory, batchRetrieveCatalogObjects } from "./square-api";
 import { MAPPING_COLLECTION, SYNC_CATEGORY_IDS } from "./square-config";
 
@@ -434,49 +433,18 @@ async function fetchSquareImageUrls(squareItems) {
 }
 
 /**
- * Imports images from external URLs into the Media Manager and sets
- * the first image as the product's mainMedia via wixStoresBackend.
+ * Adds images to a Wix product directly from external (Square) URLs.
+ * Wix automatically sets the first image as the product's mainMedia.
  */
 async function importImagesToWixProduct(wixProductId, imageUrls, productName) {
-  const importedUrls = [];
-  let failedCount = 0;
-
-  // Import images sequentially to avoid overwhelming the API
-  for (let i = 0; i < imageUrls.length; i++) {
-    const url = imageUrls[i];
-    try {
-      const result = await mediaManager.importFile("/square-products", url, {
-        mediaOptions: { mimeType: "image/jpeg" },
-        metadataOptions: { isVisitorUpload: false }
-      });
-
-      // fileUrl is the current property; fileName is the legacy equivalent
-      const wixUrl = result?.fileUrl || result?.fileName;
-
-      if (wixUrl) {
-        importedUrls.push(wixUrl);
-      } else {
-        console.warn(`Import of ${url} returned no fileUrl (keys: ${Object.keys(result || {}).join(", ")})`);
-        failedCount++;
-      }
-    } catch (err) {
-      console.error(`Failed to import image ${url}: ${err.message}`);
-      failedCount++;
-    }
+  try {
+    const mediaItems = imageUrls.map(url => ({ url }));
+    await wixStoresBackend.addProductMedia(wixProductId, mediaItems);
+    return { imported: imageUrls.length, failed: 0 };
+  } catch (err) {
+    console.error(`Failed to add media to product ${wixProductId}: ${err.message}`);
+    return { imported: 0, failed: imageUrls.length };
   }
-
-  // Add imported images to the product via addProductMedia
-  // (Wix defaults the first image as mainMedia)
-  if (importedUrls.length > 0) {
-    try {
-      const mediaItems = importedUrls.map(src => ({ src }));
-      await wixStoresBackend.addProductMedia(wixProductId, mediaItems);
-    } catch (err) {
-      console.error(`Failed to add media to product ${wixProductId}: ${err.message}`);
-    }
-  }
-
-  return { imported: importedUrls.length, failed: failedCount };
 }
 
 // ─── INVENTORY SYNC (Square -> Wix) ────────────────────────────────────────
