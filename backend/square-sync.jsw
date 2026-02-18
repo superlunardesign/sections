@@ -61,11 +61,21 @@ async function ensureWixCollections() {
     }
   }
 
-  // 2. Query existing Wix Store collections
-  const existingItems = await queryAll(wixData.query("Stores/Collections"));
+  // 2. Query existing Wix Store collections via v2 API
   const existingByName = {};
-  for (const col of existingItems) {
-    existingByName[col.name] = col._id;
+  try {
+    let allCollections = [];
+    let result = await products.queryCollections().limit(100).find();
+    allCollections = allCollections.concat(result.items);
+    while (result.hasNext()) {
+      result = await result.next();
+      allCollections = allCollections.concat(result.items);
+    }
+    for (const col of allCollections) {
+      existingByName[col.name] = col._id;
+    }
+  } catch (err) {
+    console.error("Failed to query collections via v2:", err);
   }
 
   // 3. Create missing collections, build the map
@@ -78,7 +88,10 @@ async function ensureWixCollections() {
         const result = await elevatedCreateCollection({ name });
         collectionMap[squareId] = result.collection._id;
       } catch (err) {
-        console.error(`Failed to create Wix collection "${name}":`, err);
+        // If collection already exists, the query missed it — skip gracefully
+        if (!err.message?.includes("already exists")) {
+          console.error(`Failed to create Wix collection "${name}":`, err);
+        }
       }
     }
   }
