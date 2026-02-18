@@ -222,7 +222,8 @@ async function runFullSync() {
 
   const imageData = await getImageSyncList();
   const imgTotal = imageData.total;
-  log(`Found ${imgTotal} products with images.`);
+  const imgSkipped = imageData.skippedExisting || 0;
+  log(`Found ${imgTotal} products needing images${imgSkipped > 0 ? ` (${imgSkipped} already have images — skipped)` : ""}.`);
 
   let imgSuccess = 0, imgErrors = 0;
 

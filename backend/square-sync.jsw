@@ -289,10 +289,11 @@ export async function syncInventoryBatch(batch) {
  */
 export async function getImageSyncList() {
   const items = [];
+  let skippedExisting = 0;
 
   try {
     const squareItems = await listSquareCatalogItems();
-    if (!squareItems || squareItems.length === 0) return { items, total: 0 };
+    if (!squareItems || squareItems.length === 0) return { items, total: 0, skippedExisting: 0 };
 
     // Fetch all image URLs from Square
     const imageUrlMap = await fetchSquareImageUrls(squareItems);
@@ -309,6 +310,20 @@ export async function getImageSyncList() {
 
       if (mapping.items.length === 0) continue;
 
+      const wixProductId = mapping.items[0].wixProductId;
+
+      // Skip products that already have images in Wix
+      try {
+        const wixProduct = await wixData.get("Stores/Products", wixProductId);
+        if (wixProduct && wixProduct.mediaItems && wixProduct.mediaItems.length > 0) {
+          skippedExisting++;
+          continue;
+        }
+      } catch (err) {
+        // Product may have been deleted — skip it
+        continue;
+      }
+
       const imageUrls = itemData.image_ids
         .map(id => imageUrlMap[id])
         .filter(Boolean);
@@ -317,7 +332,7 @@ export async function getImageSyncList() {
 
       items.push({
         name: itemData.name || squareItem.id,
-        wixProductId: mapping.items[0].wixProductId,
+        wixProductId: wixProductId,
         imageUrls: imageUrls
       });
     }
@@ -325,7 +340,7 @@ export async function getImageSyncList() {
     console.error("Failed to build image sync list:", err);
   }
 
-  return { items, total: items.length };
+  return { items, total: items.length, skippedExisting };
 }
 
 /**
@@ -960,25 +975,40 @@ export async function syncSingleProductComplete(squareItemId) {
     log.push(`! Inventory sync failed: ${err.message}`);
   }
 
-  // 5. Sync images
+  // 5. Sync images (skip if product already has images in Wix)
   log.push("Checking images...");
   try {
-    const imageIds = squareItem.item_data?.image_ids || [];
-    if (imageIds.length > 0) {
-      const imageObjects = await batchRetrieveCatalogObjects(imageIds);
-      const imageUrls = imageObjects
-        .filter(obj => obj.type === "IMAGE" && obj.image_data?.url)
-        .map(obj => obj.image_data.url);
-
-      if (imageUrls.length > 0) {
-        log.push(`Importing ${imageUrls.length} image(s)...`);
-        const imgResult = await importImagesToWixProduct(wixProductId, imageUrls, name);
-        log.push(`Images done (${imgResult.imported} imported, ${imgResult.failed} failed).`);
-      } else {
-        log.push("No image URLs resolved — skipping.");
+    // Check if Wix product already has images
+    let hasExistingImages = false;
+    try {
+      const wixProduct = await wixData.get("Stores/Products", wixProductId);
+      if (wixProduct && wixProduct.mediaItems && wixProduct.mediaItems.length > 0) {
+        hasExistingImages = true;
       }
+    } catch (err) {
+      // Couldn't read product — proceed with import attempt
+    }
+
+    if (hasExistingImages) {
+      log.push("Product already has images in Wix — skipping import.");
     } else {
-      log.push("No images on this Square item.");
+      const imageIds = squareItem.item_data?.image_ids || [];
+      if (imageIds.length > 0) {
+        const imageObjects = await batchRetrieveCatalogObjects(imageIds);
+        const imageUrls = imageObjects
+          .filter(obj => obj.type === "IMAGE" && obj.image_data?.url)
+          .map(obj => obj.image_data.url);
+
+        if (imageUrls.length > 0) {
+          log.push(`Importing ${imageUrls.length} image(s)...`);
+          const imgResult = await importImagesToWixProduct(wixProductId, imageUrls, name);
+          log.push(`Images done (${imgResult.imported} imported, ${imgResult.failed} failed).`);
+        } else {
+          log.push("No image URLs resolved — skipping.");
+        }
+      } else {
+        log.push("No images on this Square item.");
+      }
     }
   } catch (err) {
     log.push(`! Image sync failed: ${err.message}`);
