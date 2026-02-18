@@ -150,25 +150,34 @@ export async function getSquareItemIds() {
 }
 
 /**
+ * Step 1b: Prepares collections before starting batch sync.
+ * Call this ONCE from the frontend before the batch loop.
+ * Returns a collectionMap to pass into each syncBatch() call.
+ *
+ * @returns {Promise<Object>} collectionMap: squareCategoryId → wixCollectionId
+ */
+export async function prepareSync() {
+  try {
+    return await ensureWixCollections();
+  } catch (err) {
+    console.error("Failed to ensure collections:", err);
+    return {};
+  }
+}
+
+/**
  * Step 2: Processes a batch of Square items by their IDs.
  * Call this in a loop from the frontend, passing a slice of IDs each time.
  *
  * @param {Array<string>} itemIds - Square catalog item IDs to process
+ * @param {Object} [collectionMap] - Pre-built map from prepareSync(). If omitted, collections are skipped.
  * @returns {Promise<Object>} Summary of this batch's results
  */
-export async function syncBatch(itemIds) {
+export async function syncBatch(itemIds, collectionMap = {}) {
   const results = { created: [], updated: [], skipped: [], errors: [] };
   const batchStart = Date.now();
 
   try {
-    // Ensure Wix collections exist for Square categories
-    let collectionMap = {};
-    try {
-      collectionMap = await ensureWixCollections();
-    } catch (err) {
-      console.error("Failed to ensure collections:", err);
-    }
-
     // Fetch the full item objects for just this batch
     const squareItems = await batchRetrieveCatalogObjects(itemIds);
 

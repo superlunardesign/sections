@@ -6,7 +6,7 @@
  */
 
 import { listSquareItemIds } from "./square-api";
-import { syncBatch, getInventoryMappings, syncInventoryBatch } from "./square-sync";
+import { prepareSync, syncBatch, getInventoryMappings, syncInventoryBatch } from "./square-sync";
 
 /**
  * Runs every 30 minutes (configurable in jobs.config).
@@ -42,13 +42,14 @@ export async function scheduledFullSync() {
   console.log("Scheduled full sync starting...");
 
   try {
+    const collectionMap = await prepareSync();
     const itemIds = await listSquareItemIds();
     let totalCreated = 0, totalUpdated = 0, totalErrors = 0;
 
     const batchSize = 10;
     for (let i = 0; i < itemIds.length; i += batchSize) {
       const batch = itemIds.slice(i, i + batchSize);
-      const results = await syncBatch(batch);
+      const results = await syncBatch(batch, collectionMap);
       totalCreated += results.created.length;
       totalUpdated += results.updated.length;
       totalErrors += results.errors.length;
