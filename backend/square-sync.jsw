@@ -219,7 +219,8 @@ export async function syncInventoryBatch(batch) {
         trackQuantity: true,
         variants: [{
           variantId: "00000000-0000-0000-0000-000000000000",
-          quantity: item.squareQty
+          quantity: item.squareQty,
+          inStock: item.squareQty > 0
         }]
       });
       results.updated.push({
@@ -585,7 +586,8 @@ export async function syncAllInventoryCounts(results = { inventorySynced: 0, err
           trackQuantity: true,
           variants: [{
             variantId: "00000000-0000-0000-0000-000000000000",
-            quantity: squareQty
+            quantity: squareQty,
+            inStock: squareQty > 0
           }]
         });
 
@@ -717,7 +719,8 @@ export async function syncSingleProductInventory(wixProductId) {
       trackQuantity: true,
       variants: [{
         variantId: "00000000-0000-0000-0000-000000000000",
-        quantity: squareQty
+        quantity: squareQty,
+        inStock: squareQty > 0
       }]
     });
   }
