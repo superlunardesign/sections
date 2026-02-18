@@ -117,23 +117,17 @@ export async function syncInventoryBatch(batch) {
 
   for (const item of batch) {
     try {
-      const product = await wixData.get("Stores/Products", item.wixProductId);
-      const currentWixQty = product?.quantityInStock || 0;
-
-      const delta = item.squareQty - currentWixQty;
-
-      if (delta !== 0) {
-        await wixStoresBackend.updateInventoryVariantFieldsByProductId(item.wixProductId, [{
-          trackInventory: true,
-          quantityInStock: item.squareQty
-        }]);
-        results.updated.push({
-          name: item.squareItemName,
-          change: `${currentWixQty} → ${item.squareQty} (${delta > 0 ? "+" : ""}${delta})`
-        });
-      } else {
-        results.skipped++;
-      }
+      await wixStoresBackend.updateInventoryVariantFieldsByProductId(item.wixProductId, {
+        trackQuantity: true,
+        variants: [{
+          variantId: "00000000-0000-0000-0000-000000000000",
+          quantity: item.squareQty
+        }]
+      });
+      results.updated.push({
+        name: item.squareItemName,
+        change: `set to ${item.squareQty}`
+      });
 
       // Update lastSynced timestamp
       const mapping = await wixData.get(MAPPING_COLLECTION, item._id);
@@ -482,10 +476,13 @@ export async function syncAllInventoryCounts(results = { inventorySynced: 0, err
       const squareQty = countLookup[mapping.squareVariationId] || 0;
 
       try {
-        await wixStoresBackend.updateInventoryVariantFieldsByProductId(mapping.wixProductId, [{
-          trackInventory: true,
-          quantityInStock: squareQty
-        }]);
+        await wixStoresBackend.updateInventoryVariantFieldsByProductId(mapping.wixProductId, {
+          trackQuantity: true,
+          variants: [{
+            variantId: "00000000-0000-0000-0000-000000000000",
+            quantity: squareQty
+          }]
+        });
 
         // Update the lastSynced timestamp
         mapping.lastSynced = new Date();
@@ -611,10 +608,13 @@ export async function syncSingleProductInventory(wixProductId) {
 
   if (counts.length > 0) {
     const squareQty = parseFloat(counts[0].quantity) || 0;
-    await wixStoresBackend.updateInventoryVariantFieldsByProductId(wixProductId, [{
-      trackInventory: true,
-      quantityInStock: squareQty
-    }]);
+    await wixStoresBackend.updateInventoryVariantFieldsByProductId(wixProductId, {
+      trackQuantity: true,
+      variants: [{
+        variantId: "00000000-0000-0000-0000-000000000000",
+        quantity: squareQty
+      }]
+    });
   }
 
   // Update sync timestamp
