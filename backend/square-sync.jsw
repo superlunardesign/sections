@@ -61,15 +61,15 @@ async function ensureWixCollections() {
     }
   }
 
-  // 2. Query existing Wix Store collections via v2 API
+  // 2. Query existing Wix Store collections
   const existingByName = {};
   try {
-    const result = await products.queryCollections().find();
-    for (const col of result.items) {
+    const existingItems = await queryAll(wixData.query("Stores/Collections"));
+    for (const col of existingItems) {
       existingByName[col.name] = col._id;
     }
   } catch (err) {
-    console.error("Failed to query collections via v2:", err);
+    console.error("Failed to query collections:", err);
   }
 
   // 3. Create missing collections, build the map
