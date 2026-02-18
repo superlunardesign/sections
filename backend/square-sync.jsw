@@ -20,6 +20,24 @@ import { MAPPING_COLLECTION, SYNC_CATEGORY_IDS } from "./square-config";
 
 const elevatedCreateCollection = elevate(products.createCollection);
 
+/**
+ * Paginates through a wixData query, returning all items.
+ * Wix caps .limit() at 100 per page.
+ *
+ * @param {WixDataQuery} query - A wixData.query() chain (without .limit() or .find())
+ * @returns {Promise<Array>} All matching items
+ */
+async function queryAll(query) {
+  let allItems = [];
+  let result = await query.limit(100).find();
+  allItems = allItems.concat(result.items);
+  while (result.hasNext()) {
+    result = await result.next();
+    allItems = allItems.concat(result.items);
+  }
+  return allItems;
+}
+
 // ─── COLLECTION (CATEGORY) SYNC ────────────────────────────────────────────
 
 /**
@@ -39,9 +57,9 @@ async function ensureWixCollections() {
   }
 
   // 2. Query existing Wix Store collections
-  const existingCollections = await wixData.query("Stores/Collections").limit(1000).find();
+  const existingItems = await queryAll(wixData.query("Stores/Collections"));
   const existingByName = {};
-  for (const col of existingCollections.items) {
+  for (const col of existingItems) {
     existingByName[col.name] = col._id;
   }
 
@@ -173,13 +191,12 @@ export async function syncBatch(itemIds) {
  */
 export async function getInventoryMappings() {
   try {
-    const mappings = await wixData.query(MAPPING_COLLECTION)
-      .ne("squareVariationId", "")
-      .limit(1000)
-      .find();
+    const mappingItems = await queryAll(
+      wixData.query(MAPPING_COLLECTION).ne("squareVariationId", "")
+    );
 
     // Get all Square inventory counts in one batch call
-    const variationIds = mappings.items.map(m => m.squareVariationId);
+    const variationIds = mappingItems.map(m => m.squareVariationId);
     const inventoryCounts = await getInventoryCounts(variationIds);
 
     // Build lookup
@@ -189,7 +206,7 @@ export async function getInventoryMappings() {
     }
 
     // Return mappings with Square quantities attached
-    const items = mappings.items.map(m => ({
+    const items = mappingItems.map(m => ({
       _id: m._id,
       wixProductId: m.wixProductId,
       squareVariationId: m.squareVariationId,
@@ -558,15 +575,14 @@ async function importImagesToWixProduct(wixProductId, imageUrls, productName) {
 export async function syncAllInventoryCounts(results = { inventorySynced: 0, errors: [] }) {
   try {
     // Get all mappings that have a Square variation ID
-    const mappings = await wixData.query(MAPPING_COLLECTION)
-      .ne("squareVariationId", "")
-      .limit(1000)
-      .find();
+    const mappingItems = await queryAll(
+      wixData.query(MAPPING_COLLECTION).ne("squareVariationId", "")
+    );
 
-    if (mappings.items.length === 0) return results;
+    if (mappingItems.length === 0) return results;
 
     // Collect all Square variation IDs
-    const variationIds = mappings.items.map(m => m.squareVariationId);
+    const variationIds = mappingItems.map(m => m.squareVariationId);
 
     // Batch retrieve inventory from Square
     const inventoryCounts = await getInventoryCounts(variationIds);
@@ -578,7 +594,7 @@ export async function syncAllInventoryCounts(results = { inventorySynced: 0, err
     }
 
     // Update each Wix product's inventory
-    for (const mapping of mappings.items) {
+    for (const mapping of mappingItems) {
       const squareQty = countLookup[mapping.squareVariationId] || 0;
 
       try {
@@ -659,12 +675,11 @@ export async function decrementSquareInventoryForOrder(lineItems) {
  * @returns {Promise<Array>} All mapping records
  */
 export async function getAllMappings() {
-  const result = await wixData.query(MAPPING_COLLECTION)
-    .limit(1000)
-    .ascending("squareItemName")
-    .find();
+  const items = await queryAll(
+    wixData.query(MAPPING_COLLECTION).ascending("squareItemName")
+  );
 
-  return result.items;
+  return items;
 }
 
 /**
