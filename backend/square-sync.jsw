@@ -303,7 +303,11 @@ export async function getImageSyncList() {
 
     for (const squareItem of squareItems) {
       const itemData = squareItem.item_data;
-      if (!itemData || !itemData.image_ids || itemData.image_ids.length === 0) continue;
+      if (!itemData) continue;
+
+      // Collect image IDs from both parent item and variants
+      const allImageIds = collectAllImageIds(squareItem);
+      if (allImageIds.length === 0) continue;
 
       // Find the Wix product mapping (main item row, not variation)
       const mapping = await wixData.query(MAPPING_COLLECTION)
@@ -317,7 +321,7 @@ export async function getImageSyncList() {
       const wixProductId = mappingRecord.wixProductId;
 
       // Compare current Square image IDs with what we stored last time
-      const currentImageIds = itemData.image_ids.sort().join(",");
+      const currentImageIds = allImageIds.sort().join(",");
       const storedImageIds = mappingRecord.squareImageIds || "";
 
       if (currentImageIds === storedImageIds) {
@@ -325,7 +329,7 @@ export async function getImageSyncList() {
         continue;
       }
 
-      const imageUrls = itemData.image_ids
+      const imageUrls = allImageIds
         .map(id => imageUrlMap[id])
         .filter(Boolean);
 
@@ -917,21 +921,45 @@ export async function syncSingleInventoryItem(item) {
 // ─── IMAGE HELPERS ──────────────────────────────────────────────────────────
 
 /**
+ * Collects all unique image IDs from a Square item, including both
+ * parent-level images (item_data.image_ids) and per-variant images
+ * (item_variation_data.image_ids on each variation).
+ */
+function collectAllImageIds(squareItem) {
+  const imageIds = new Set();
+
+  // Parent item images
+  const parentImageIds = squareItem.item_data?.image_ids || [];
+  for (const id of parentImageIds) {
+    imageIds.add(id);
+  }
+
+  // Variant images
+  const variations = squareItem.item_data?.variations || [];
+  for (const v of variations) {
+    const varImageIds = v.item_variation_data?.image_ids || [];
+    for (const id of varImageIds) {
+      imageIds.add(id);
+    }
+  }
+
+  return Array.from(imageIds);
+}
+
+/**
  * Fetches all Square image objects for the given items and returns a map of imageId -> URL.
  */
 async function fetchSquareImageUrls(squareItems) {
   const imageUrlMap = {};
 
-  // Collect all unique image IDs from all items
-  const allImageIds = [];
+  // Collect all unique image IDs from all items (parent + variant images)
+  const allImageIdSet = new Set();
   for (const item of squareItems) {
-    const imageIds = item.item_data?.image_ids || [];
-    for (const id of imageIds) {
-      if (!allImageIds.includes(id)) {
-        allImageIds.push(id);
-      }
+    for (const id of collectAllImageIds(item)) {
+      allImageIdSet.add(id);
     }
   }
+  const allImageIds = Array.from(allImageIdSet);
 
   if (allImageIds.length === 0) return imageUrlMap;
 
@@ -1240,11 +1268,14 @@ export async function syncSingleProductComplete(sku) {
   // 5. Sync images (skip if Square image IDs haven't changed since last import)
   log.push("Checking images...");
   try {
-    const imageIds = squareItem.item_data?.image_ids || [];
+    // Collect image IDs from both parent item and variants
+    const imageIds = collectAllImageIds(squareItem);
 
     if (imageIds.length === 0) {
       log.push("No images on this Square item.");
     } else {
+      log.push(`Found ${imageIds.length} image(s) (parent + variants).`);
+
       // Check if the Square image IDs have changed since last import
       const currentImageIds = imageIds.sort().join(",");
       let storedImageIds = "";
