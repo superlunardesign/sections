@@ -8,8 +8,8 @@
  *   #statusText      — Text element to display the running log
  *   #progressBar1    — ProgressBar element to show overall progress
  *
- * Single product sync elements:
- *   #productIdInput  — Text input for Square product ID
+ * Single product sync elements (optional — page works without them):
+ *   #productIdInput  — Text input for product SKU
  *   #singleSyncBtn   — Button to sync a single product
  */
 
@@ -27,88 +27,120 @@ import {
 let logLines = [];
 let isSyncing = false;
 
+/** Safely get a page element — returns null if it doesn't exist. */
+function safeEl(selector) {
+  try {
+    const el = $w(selector);
+    if (el.type) return el;
+  } catch (e) { /* element not on page */ }
+  return null;
+}
+
 $w.onReady(function () {
-  $w("#statusText").text = "Ready. Press Sync to start.";
-  $w("#progressBar1").value = 0;
+  const statusText = safeEl("#statusText");
+  const progressBar = safeEl("#progressBar1");
+  const syncBtn = safeEl("#syncButton");
+  const singleBtn = safeEl("#singleSyncBtn");
+  const skuInput = safeEl("#productIdInput");
+
+  if (statusText) statusText.text = "Ready. Press Sync to start.";
+  if (progressBar) progressBar.value = 0;
+
+  function disableAll() {
+    if (syncBtn) syncBtn.disable();
+    if (singleBtn) singleBtn.disable();
+  }
+
+  function enableAll() {
+    if (syncBtn) syncBtn.enable();
+    if (singleBtn) singleBtn.enable();
+  }
 
   // ── Full Sync button ────────────────────────────────────────────────────
-  $w("#syncButton").onClick(async () => {
-    if (isSyncing) return;
-    isSyncing = true;
-    logLines = [];
-    $w("#syncButton").disable();
-    $w("#singleSyncBtn").disable();
-    $w("#progressBar1").value = 0;
+  if (syncBtn) {
+    syncBtn.onClick(async () => {
+      if (isSyncing) return;
+      isSyncing = true;
+      logLines = [];
+      disableAll();
+      setProgress(0);
 
-    try {
-      await runFullSync();
-    } catch (err) {
-      log(`FATAL ERROR: ${err.message}`);
-    }
+      try {
+        await runFullSync();
+      } catch (err) {
+        log(`FATAL ERROR: ${err.message}`);
+      }
 
-    isSyncing = false;
-    $w("#syncButton").enable();
-    $w("#singleSyncBtn").enable();
-  });
+      isSyncing = false;
+      enableAll();
+    });
+  }
 
   // ── Single Product Sync button ──────────────────────────────────────────
-  $w("#singleSyncBtn").onClick(async () => {
-    if (isSyncing) return;
+  if (singleBtn && skuInput) {
+    singleBtn.onClick(async () => {
+      if (isSyncing) return;
 
-    const inputVal = $w("#productIdInput").value;
-    if (!inputVal || inputVal.trim().length === 0) {
-      $w("#statusText").text = "Enter a Square product ID first.";
-      return;
-    }
+      const inputVal = skuInput.value;
+      if (!inputVal || inputVal.trim().length === 0) {
+        if (statusText) statusText.text = "Enter a product SKU first.";
+        return;
+      }
 
-    isSyncing = true;
-    logLines = [];
-    $w("#syncButton").disable();
-    $w("#singleSyncBtn").disable();
-    $w("#progressBar1").value = 0;
+      isSyncing = true;
+      logLines = [];
+      disableAll();
+      setProgress(0);
 
-    try {
-      await runSingleSync(inputVal.trim());
-    } catch (err) {
-      log(`FATAL ERROR: ${err.message}`);
-    }
+      try {
+        await runSingleSync(inputVal.trim());
+      } catch (err) {
+        log(`FATAL ERROR: ${err.message}`);
+      }
 
-    isSyncing = false;
-    $w("#syncButton").enable();
-    $w("#singleSyncBtn").enable();
-    $w("#progressBar1").value = 100;
-  });
+      isSyncing = false;
+      enableAll();
+      setProgress(100);
+    });
+  }
 });
 
 // ─── Logging helper ──────────────────────────────────────────────────────────
 
 function log(message) {
   logLines.push(message);
-  // Keep last 200 lines to avoid UI slowdown
   if (logLines.length > 200) {
     logLines = logLines.slice(-200);
   }
-  $w("#statusText").text = logLines.join("\n");
+  try {
+    $w("#statusText").text = logLines.join("\n");
+  } catch (e) {
+    console.log("log:", message);
+  }
+}
+
+function setProgress(value) {
+  try { $w("#progressBar1").value = value; } catch (e) { /* element missing */ }
 }
 
 // ─── Single Product Sync ─────────────────────────────────────────────────────
 
-async function runSingleSync(squareItemId) {
+async function runSingleSync(sku) {
   log("=== SINGLE PRODUCT SYNC ===");
   log("");
 
-  $w("#progressBar1").value = 10;
+  setProgress(10);
 
-  const result = await syncSingleProductComplete(squareItemId);
+  const result = await syncSingleProductComplete(sku);
 
-  $w("#progressBar1").value = 90;
+  setProgress(90);
 
   // Display all log lines from the backend
   for (const line of result.log) {
     log(line);
   }
 
-  $w("#progressBar1").value = 100;
+  setProgress(100);
 }
 
 // ─── Full Sync Flow ──────────────────────────────────────────────────────────
@@ -167,7 +199,7 @@ async function runFullSync() {
       errors++;
     }
 
-    $w("#progressBar1").value = Math.round(((i + 1) / total) * 33);
+    setProgress(Math.round(((i + 1) / total) * 33));
   }
 
   log("");
@@ -208,7 +240,7 @@ async function runFullSync() {
       invErrors++;
     }
 
-    $w("#progressBar1").value = 33 + Math.round(((i + 1) / invTotal) * 33);
+    setProgress(33 + Math.round(((i + 1) / invTotal) * 33));
   }
 
   log("");
@@ -254,7 +286,7 @@ async function runFullSync() {
       imgErrors++;
     }
 
-    $w("#progressBar1").value = 66 + Math.round(((i + 1) / imgTotal) * 34);
+    setProgress(66 + Math.round(((i + 1) / imgTotal) * 34));
   }
 
   log("");
@@ -275,5 +307,5 @@ async function runFullSync() {
   log(`Time      — ${mins}m ${secs}s`);
   log("========================================");
 
-  $w("#progressBar1").value = 100;
+  setProgress(100);
 }

@@ -188,6 +188,38 @@ export async function searchCatalogByCategory(categoryIds) {
 // ─── INVENTORY ──────────────────────────────────────────────────────────────
 
 /**
+ * Search for a catalog item by SKU.
+ * Returns the parent ITEM object(s) that contain a variation matching the SKU.
+ *
+ * @param {string} sku - The SKU to search for
+ * @returns {Promise<Array>} Matching catalog items
+ */
+export async function searchCatalogBySku(sku) {
+  const baseUrl = getBaseUrl();
+  const headers = await getHeaders();
+
+  const body = {
+    object_types: ["ITEM"],
+    query: {
+      exact_query: {
+        attribute_name: "sku",
+        attribute_values: [sku]
+      }
+    },
+    include_related_objects: true
+  };
+
+  const response = await fetch(`${baseUrl}/catalog/search`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body)
+  });
+
+  const data = await response.json();
+  return data.objects || [];
+}
+
+/**
  * Get inventory counts for a list of catalog object IDs (variations).
  *
  * @param {Array<string>} catalogObjectIds - Square variation IDs

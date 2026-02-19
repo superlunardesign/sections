@@ -14,7 +14,7 @@
 import wixData from "wix-data";
 import { products, inventory } from "wix-stores.v2";
 import { elevate } from "wix-auth";
-import { listSquareCatalogItems, listSquareItemIds, getInventoryCounts, adjustSquareInventory, batchRetrieveCatalogObjects, listSquareCategories } from "./square-api";
+import { listSquareCatalogItems, listSquareItemIds, getInventoryCounts, adjustSquareInventory, batchRetrieveCatalogObjects, listSquareCategories, searchCatalogBySku } from "./square-api";
 import { MAPPING_COLLECTION, SYNC_CATEGORY_IDS } from "./square-config";
 
 const elevatedCreateCollection = elevate(products.createCollection);
@@ -552,6 +552,7 @@ async function saveMappings(squareItem, wixProductId) {
   const allMappings = [{
     squareCatalogId: squareItem.id,
     squareVariationId: "",
+    squareSku: "",
     wixProductId: wixProductId,
     wixVariantId: "",
     squareCategoryId: categoryId,
@@ -564,6 +565,7 @@ async function saveMappings(squareItem, wixProductId) {
       allMappings.push({
         squareCatalogId: squareItem.id,
         squareVariationId: variation.id,
+        squareSku: variation.item_variation_data?.sku || "",
         wixProductId: wixProductId,
         wixVariantId: "",
         squareCategoryId: categoryId,
@@ -882,32 +884,33 @@ export async function decrementSquareInventoryForOrder(lineItems) {
 
 /**
  * Full sync of a single Square product: product data + inventory + images.
+ * Accepts a SKU to identify the product.
  * Returns an array of log messages for the frontend to display.
  *
- * @param {string} squareItemId - The Square catalog item ID
+ * @param {string} sku - The product SKU (from Square variation)
  * @returns {Promise<Object>} { success, log: string[] }
  */
-export async function syncSingleProductComplete(squareItemId) {
+export async function syncSingleProductComplete(sku) {
   const log = [];
-  const trimmedId = squareItemId.trim();
+  const trimmedSku = sku.trim();
 
-  log.push(`Looking up Square item: ${trimmedId}...`);
+  log.push(`Looking up SKU: ${trimmedSku}...`);
 
-  // 1. Fetch the item from Square
+  // 1. Resolve SKU to a Square catalog item
   let squareItem;
   try {
-    const items = await batchRetrieveCatalogObjects([trimmedId]);
+    const items = await searchCatalogBySku(trimmedSku);
     squareItem = items?.find(i => i.type === "ITEM");
     if (!squareItem) {
-      log.push("! Item not found in Square. Check the ID and try again.");
+      log.push(`! No product found in Square with SKU "${trimmedSku}".`);
       return { success: false, log };
     }
   } catch (err) {
-    log.push(`! Failed to fetch from Square: ${err.message}`);
+    log.push(`! Failed to search Square: ${err.message}`);
     return { success: false, log };
   }
 
-  const name = squareItem.item_data?.name || trimmedId;
+  const name = squareItem.item_data?.name || trimmedSku;
   log.push(`Found: ${name}`);
 
   // 2. Prepare collections
