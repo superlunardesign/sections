@@ -54,7 +54,13 @@ $w.onReady(function () {
     logLines = [];
     $w("#syncButton").disable();
     try { $w("#singleSyncBtn").disable(); } catch (e) { /* not on page yet */ }
-    setProgress(0);
+
+    // Show immediately that the click registered
+    $w("#statusText").text = "Starting sync...";
+
+    try {
+      $w("#progressBar1").value = 0;
+    } catch (e) { /* progress bar missing */ }
 
     try {
       await runFullSync();
