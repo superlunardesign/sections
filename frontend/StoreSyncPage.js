@@ -27,69 +27,61 @@ import {
 let logLines = [];
 let isSyncing = false;
 
-/** Safely get a page element — returns null if it doesn't exist. */
-function safeEl(selector) {
-  try {
-    const el = $w(selector);
-    if (el.type) return el;
-  } catch (e) { /* element not on page */ }
-  return null;
+// ─── Logging + progress helpers ─────────────────────────────────────────────
+
+function log(message) {
+  logLines.push(message);
+  if (logLines.length > 200) {
+    logLines = logLines.slice(-200);
+  }
+  $w("#statusText").text = logLines.join("\n");
 }
 
+function setProgress(value) {
+  $w("#progressBar1").value = value;
+}
+
+// ─── Page setup ─────────────────────────────────────────────────────────────
+
 $w.onReady(function () {
-  const statusText = safeEl("#statusText");
-  const progressBar = safeEl("#progressBar1");
-  const syncBtn = safeEl("#syncButton");
-  const singleBtn = safeEl("#singleSyncBtn");
-  const skuInput = safeEl("#productIdInput");
-
-  if (statusText) statusText.text = "Ready. Press Sync to start.";
-  if (progressBar) progressBar.value = 0;
-
-  function disableAll() {
-    if (syncBtn) syncBtn.disable();
-    if (singleBtn) singleBtn.disable();
-  }
-
-  function enableAll() {
-    if (syncBtn) syncBtn.enable();
-    if (singleBtn) singleBtn.enable();
-  }
+  $w("#statusText").text = "Ready. Press Sync to start.";
+  $w("#progressBar1").value = 0;
 
   // ── Full Sync button ────────────────────────────────────────────────────
-  if (syncBtn) {
-    syncBtn.onClick(async () => {
+  $w("#syncButton").onClick(async () => {
+    if (isSyncing) return;
+    isSyncing = true;
+    logLines = [];
+    $w("#syncButton").disable();
+    try { $w("#singleSyncBtn").disable(); } catch (e) { /* not on page yet */ }
+    setProgress(0);
+
+    try {
+      await runFullSync();
+    } catch (err) {
+      log(`FATAL ERROR: ${err.message}`);
+    }
+
+    isSyncing = false;
+    $w("#syncButton").enable();
+    try { $w("#singleSyncBtn").enable(); } catch (e) { /* not on page yet */ }
+  });
+
+  // ── Single Product Sync button (only wired up if elements exist) ───────
+  try {
+    $w("#singleSyncBtn").onClick(async () => {
       if (isSyncing) return;
-      isSyncing = true;
-      logLines = [];
-      disableAll();
-      setProgress(0);
 
-      try {
-        await runFullSync();
-      } catch (err) {
-        log(`FATAL ERROR: ${err.message}`);
-      }
-
-      isSyncing = false;
-      enableAll();
-    });
-  }
-
-  // ── Single Product Sync button ──────────────────────────────────────────
-  if (singleBtn && skuInput) {
-    singleBtn.onClick(async () => {
-      if (isSyncing) return;
-
-      const inputVal = skuInput.value;
+      const inputVal = $w("#productIdInput").value;
       if (!inputVal || inputVal.trim().length === 0) {
-        if (statusText) statusText.text = "Enter a product SKU first.";
+        $w("#statusText").text = "Enter a product SKU first.";
         return;
       }
 
       isSyncing = true;
       logLines = [];
-      disableAll();
+      $w("#syncButton").disable();
+      $w("#singleSyncBtn").disable();
       setProgress(0);
 
       try {
@@ -99,29 +91,14 @@ $w.onReady(function () {
       }
 
       isSyncing = false;
-      enableAll();
+      $w("#syncButton").enable();
+      $w("#singleSyncBtn").enable();
       setProgress(100);
     });
+  } catch (e) {
+    // #singleSyncBtn or #productIdInput not on page — that's fine
   }
 });
-
-// ─── Logging helper ──────────────────────────────────────────────────────────
-
-function log(message) {
-  logLines.push(message);
-  if (logLines.length > 200) {
-    logLines = logLines.slice(-200);
-  }
-  try {
-    $w("#statusText").text = logLines.join("\n");
-  } catch (e) {
-    console.log("log:", message);
-  }
-}
-
-function setProgress(value) {
-  try { $w("#progressBar1").value = value; } catch (e) { /* element missing */ }
-}
 
 // ─── Single Product Sync ─────────────────────────────────────────────────────
 
