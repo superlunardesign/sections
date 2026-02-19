@@ -14,7 +14,7 @@
 import wixData from "wix-data";
 import { products, inventory } from "wix-stores.v2";
 import { elevate } from "wix-auth";
-import { listSquareCatalogItems, listSquareItemIds, getInventoryCounts, adjustSquareInventory, batchRetrieveCatalogObjects, listSquareCategories, searchCatalogBySku } from "./square-api";
+import { listSquareCatalogItems, listSquareItemIds, getInventoryCounts, adjustSquareInventory, batchRetrieveCatalogObjects, listSquareCategories, searchCatalogBySku, getCatalogObject } from "./square-api";
 import { MAPPING_COLLECTION, SYNC_CATEGORY_IDS } from "./square-config";
 
 const elevatedCreateCollection = elevate(products.createCollection);
@@ -1014,11 +1014,15 @@ export async function syncSingleProductComplete(sku) {
   let squareItem;
   try {
     const items = await searchCatalogBySku(trimmedSku);
-    squareItem = items?.find(i => i.type === "ITEM");
-    if (!squareItem) {
+    const searchHit = items?.find(i => i.type === "ITEM");
+    if (!searchHit) {
       log.push(`! No product found in Square with SKU "${trimmedSku}".`);
       return { success: false, log };
     }
+
+    // Re-fetch the full object to ensure all fields (image_ids, etc.) are present
+    const fullObject = await getCatalogObject(searchHit.id);
+    squareItem = fullObject.object || searchHit;
   } catch (err) {
     log.push(`! Failed to search Square: ${err.message}`);
     return { success: false, log };
