@@ -408,25 +408,30 @@ async function syncSingleItem(squareItem, results, collectionMap) {
     // Update existing Wix product — track what changed
     const mapping = existingMapping.items[0];
     wixProductId = mapping.wixProductId;
-    const { changes, variantMap } = await updateWixProduct(wixProductId, squareItem);
+    const { changes, needsRecreate } = await updateWixProduct(wixProductId, squareItem);
 
-    // If variants were just created, update the mapping records with real wixVariantIds
-    if (variantMap) {
-      const variationMappings = await wixData.query(MAPPING_COLLECTION)
-        .eq("squareCatalogId", squareItem.id)
-        .ne("squareVariationId", "")
-        .find();
-
-      for (const m of variationMappings.items) {
-        const newWixVarId = variantMap[m.squareVariationId];
-        if (newWixVarId && m.wixVariantId !== newWixVarId) {
-          m.wixVariantId = newWixVarId;
-          await wixData.update(MAPPING_COLLECTION, m);
-        }
+    if (needsRecreate) {
+      // Product has wrong variant setup — delete and recreate
+      try {
+        await elevatedDeleteProduct(wixProductId);
+      } catch (err) {
+        // Product may already be gone
       }
-    }
+      for (const m of existingMapping.items) {
+        await wixData.remove(MAPPING_COLLECTION, m._id);
+      }
+      const varMappings = await wixData.query(MAPPING_COLLECTION)
+        .eq("squareCatalogId", squareItem.id)
+        .find();
+      for (const m of varMappings.items) {
+        await wixData.remove(MAPPING_COLLECTION, m._id);
+      }
 
-    if (changes.length > 0) {
+      const created = await createWixProduct(squareItem);
+      wixProductId = created.wixProductId;
+      await saveMappings(squareItem, wixProductId, created.variantMap);
+      results.updated.push({ name, changes: ["recreated (variant fix)"] });
+    } else if (changes.length > 0) {
       results.updated.push({ name, changes });
     } else {
       results.skipped.push(name);
@@ -593,7 +598,6 @@ async function createWixProduct(squareItem) {
 async function updateWixProduct(wixProductId, squareItem) {
   const itemData = squareItem.item_data;
   const changes = [];
-  let variantMap = null;
 
   // Fetch current Wix product to compare
   let currentProduct;
@@ -601,11 +605,18 @@ async function updateWixProduct(wixProductId, squareItem) {
     currentProduct = await wixData.get("Stores/Products", wixProductId);
   } catch (err) {
     console.error(`Failed to read Wix product ${wixProductId}:`, err);
-    return { changes, variantMap };
+    return { changes, needsRecreate: false };
   }
 
   const variations = itemData.variations || [];
   const hasMultipleVariants = variations.length > 1;
+
+  // Check if product is missing variant options that Square has.
+  // Wix won't let us add productOptions to an existing product — signal for delete + recreate.
+  const wixHasOptions = currentProduct.productOptions && currentProduct.productOptions.length > 0;
+  if (hasMultipleVariants && !wixHasOptions) {
+    return { changes: ["variants (recreate needed)"], needsRecreate: true };
+  }
 
   // Use description_html if available, fall back to plain description
   const newDescription = itemData.description_html || itemData.description || undefined;
@@ -638,75 +649,16 @@ async function updateWixProduct(wixProductId, squareItem) {
     changes.push(`price ($${currentProduct.price || 0} → $${newPrice})`);
   }
 
-  // Check if product is missing variant options that Square has
-  const wixHasOptions = currentProduct.productOptions && currentProduct.productOptions.length > 0;
-  if (hasMultipleVariants && !wixHasOptions) {
-    updateFields.manageVariants = true;
-    updateFields.productOptions = [{
-      optionType: "drop_down",
-      name: "Option",
-      choices: variations.map(v => ({
-        value: (v.item_variation_data?.name || "Default").substring(0, 80),
-        description: (v.item_variation_data?.name || "Default").substring(0, 80),
-        inStock: true,
-        visible: true
-      }))
-    }];
-    changes.push("variants");
-  }
-
   // Only call the API if something actually changed
   if (changes.length > 0) {
     try {
-      const result = await elevatedUpdateProduct(wixProductId, updateFields);
-
-      // If variants were just added, build variant map from the response
-      if (hasMultipleVariants && !wixHasOptions && result?.product?.variants) {
-        variantMap = {};
-        for (const wixVariant of result.product.variants) {
-          const choiceValue = wixVariant.choices?.Option;
-          if (choiceValue) {
-            const squareVar = variations.find(v =>
-              (v.item_variation_data?.name || "Default") === choiceValue
-            );
-            if (squareVar) {
-              variantMap[squareVar.id] = wixVariant._id;
-            }
-          }
-        }
-
-        // Set per-variant SKU and price
-        const variantUpdates = [];
-        for (const v of variations) {
-          const wixVarId = variantMap[v.id];
-          if (!wixVarId) continue;
-
-          const varData = {};
-          const sku = v.item_variation_data?.sku;
-          if (sku) varData.sku = sku;
-
-          const priceMoney = v.item_variation_data?.price_money;
-          if (priceMoney) varData.priceData = { price: priceMoney.amount / 100 };
-
-          if (Object.keys(varData).length > 0) {
-            variantUpdates.push({ _id: wixVarId, variant: varData });
-          }
-        }
-
-        if (variantUpdates.length > 0) {
-          try {
-            await elevatedUpdateProduct(wixProductId, { variants: variantUpdates });
-          } catch (err) {
-            console.error(`Failed to set per-variant data for ${wixProductId}:`, err);
-          }
-        }
-      }
+      await elevatedUpdateProduct(wixProductId, updateFields);
     } catch (err) {
       console.error(`Failed to update Wix product ${wixProductId}:`, err);
     }
   }
 
-  return { changes, variantMap };
+  return { changes, needsRecreate: false };
 }
 
 /**
@@ -813,22 +765,35 @@ export async function syncSingleItemById(itemId, collectionMap = {}) {
       // Existing product — check for changes
       const mapping = existingMapping.items[0];
       const wixProductId = mapping.wixProductId;
-      const { changes, variantMap } = await updateWixProduct(wixProductId, squareItem);
+      const { changes, needsRecreate } = await updateWixProduct(wixProductId, squareItem);
 
-      // If variants were just created, update the mapping records with real wixVariantIds
-      if (variantMap) {
-        const variationMappings = await wixData.query(MAPPING_COLLECTION)
-          .eq("squareCatalogId", squareItem.id)
-          .ne("squareVariationId", "")
-          .find();
-
-        for (const m of variationMappings.items) {
-          const newWixVarId = variantMap[m.squareVariationId];
-          if (newWixVarId && m.wixVariantId !== newWixVarId) {
-            m.wixVariantId = newWixVarId;
-            await wixData.update(MAPPING_COLLECTION, m);
-          }
+      if (needsRecreate) {
+        // Product has wrong variant setup — delete and recreate
+        try {
+          await elevatedDeleteProduct(wixProductId);
+        } catch (err) {
+          // Product may already be gone
         }
+        const allMappings = await wixData.query(MAPPING_COLLECTION)
+          .eq("squareCatalogId", squareItem.id)
+          .find();
+        for (const m of allMappings.items) {
+          await wixData.remove(MAPPING_COLLECTION, m._id);
+        }
+
+        const created = await createWixProduct(squareItem);
+        const newWixProductId = created.wixProductId;
+        await saveMappings(squareItem, newWixProductId, created.variantMap);
+
+        if (newWixProductId && collectionMap) {
+          await assignProductToCollections(newWixProductId, squareItem, collectionMap);
+        }
+
+        return {
+          status: "updated",
+          name,
+          details: `Recreated with ${Object.keys(created.variantMap).length} variant(s)`
+        };
       }
 
       if (wixProductId && collectionMap) {
@@ -1118,6 +1083,66 @@ export async function decrementSquareInventoryForOrder(lineItems) {
   return results;
 }
 
+// ─── DELETION DETECTION ─────────────────────────────────────────────────────
+
+/**
+ * Finds and removes Wix products that no longer exist in Square.
+ * Compares all mapped squareCatalogIds against the current Square catalog.
+ * Call from the frontend after the product sync is done.
+ *
+ * @returns {Promise<Object>} { deleted: [{ name, wixProductId }], errors: string[] }
+ */
+export async function cleanupDeletedProducts() {
+  const results = { deleted: [], errors: [] };
+
+  try {
+    // Get all unique squareCatalogIds from our mappings (main rows only)
+    const mainMappings = await queryAll(
+      wixData.query(MAPPING_COLLECTION).eq("squareVariationId", "")
+    );
+
+    if (mainMappings.length === 0) return results;
+
+    // Get the current list of Square item IDs
+    const squareItemIds = await listSquareItemIds();
+    const squareIdSet = new Set(squareItemIds);
+
+    // Find mappings that point to Square items that no longer exist
+    for (const mapping of mainMappings) {
+      if (squareIdSet.has(mapping.squareCatalogId)) continue;
+
+      // This product no longer exists in Square — delete from Wix
+      const name = mapping.squareItemName || mapping.squareCatalogId;
+      try {
+        // Delete the Wix product
+        if (mapping.wixProductId) {
+          try {
+            await elevatedDeleteProduct(mapping.wixProductId);
+          } catch (err) {
+            // Product may already be gone from Wix
+          }
+        }
+
+        // Delete all mapping rows for this Square item (main + variations)
+        const allMappings = await wixData.query(MAPPING_COLLECTION)
+          .eq("squareCatalogId", mapping.squareCatalogId)
+          .find();
+        for (const m of allMappings.items) {
+          await wixData.remove(MAPPING_COLLECTION, m._id);
+        }
+
+        results.deleted.push({ name, wixProductId: mapping.wixProductId });
+      } catch (err) {
+        results.errors.push(`Failed to delete "${name}": ${err.message}`);
+      }
+    }
+  } catch (err) {
+    results.errors.push(`Cleanup error: ${err.message}`);
+  }
+
+  return results;
+}
+
 // ─── SINGLE PRODUCT FULL SYNC ───────────────────────────────────────────────
 
 /**
@@ -1174,29 +1199,37 @@ export async function syncSingleProductComplete(sku) {
 
   if (existingMapping.items.length > 0) {
     wixProductId = existingMapping.items[0].wixProductId;
-    const { changes, variantMap } = await updateWixProduct(wixProductId, squareItem);
+    const { changes, needsRecreate } = await updateWixProduct(wixProductId, squareItem);
 
-    if (changes.length > 0) {
+    if (needsRecreate) {
+      // Product has wrong variant setup — delete and recreate from scratch
+      log.push("Product has mismatched variants — deleting and recreating...");
+      try {
+        await elevatedDeleteProduct(wixProductId);
+      } catch (err) {
+        log.push(`! Failed to delete old product: ${err.message}`);
+      }
+      // Remove old mappings
+      for (const m of existingMapping.items) {
+        await wixData.remove(MAPPING_COLLECTION, m._id);
+      }
+      // Also remove any variation mappings
+      const varMappings = await wixData.query(MAPPING_COLLECTION)
+        .eq("squareCatalogId", squareItem.id)
+        .find();
+      for (const m of varMappings.items) {
+        await wixData.remove(MAPPING_COLLECTION, m._id);
+      }
+
+      // Recreate properly
+      const created = await createWixProduct(squareItem);
+      wixProductId = created.wixProductId;
+      await saveMappings(squareItem, wixProductId, created.variantMap);
+      log.push(`+ Recreated with ${Object.keys(created.variantMap).length} variant(s).`);
+    } else if (changes.length > 0) {
       log.push(`~ Updated: ${changes.join(", ")}`);
     } else {
       log.push(". Product data unchanged — no update needed.");
-    }
-
-    // If variants were just created, update the mapping records with real wixVariantIds
-    if (variantMap) {
-      const variationMappings = await wixData.query(MAPPING_COLLECTION)
-        .eq("squareCatalogId", squareItem.id)
-        .ne("squareVariationId", "")
-        .find();
-
-      for (const m of variationMappings.items) {
-        const newWixVarId = variantMap[m.squareVariationId];
-        if (newWixVarId && m.wixVariantId !== newWixVarId) {
-          m.wixVariantId = newWixVarId;
-          await wixData.update(MAPPING_COLLECTION, m);
-        }
-      }
-      log.push(`Repaired ${Object.keys(variantMap).length} variant mapping(s).`);
     }
   } else {
     const varCount = squareItem.item_data?.variations?.length || 0;

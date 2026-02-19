@@ -6,7 +6,7 @@
  */
 
 import { listSquareItemIds } from "./square-api";
-import { prepareSync, syncBatch, getInventoryMappings, syncInventoryBatch } from "./square-sync";
+import { prepareSync, syncBatch, getInventoryMappings, syncInventoryBatch, cleanupDeletedProducts } from "./square-sync";
 
 /**
  * Runs every 30 minutes (configurable in jobs.config).
@@ -66,10 +66,14 @@ export async function scheduledFullSync() {
       totalSynced += invResults.synced;
     }
 
+    // Cleanup products deleted from Square
+    const cleanup = await cleanupDeletedProducts();
+    const totalDeleted = cleanup.deleted.length;
+
     console.log(
       `Full sync complete: ${totalCreated} created, ` +
       `${totalUpdated} updated, ${totalSynced} inventory synced, ` +
-      `${totalErrors} errors.`
+      `${totalDeleted} deleted, ${totalErrors} errors.`
     );
   } catch (err) {
     console.error("Scheduled full sync failed:", err);

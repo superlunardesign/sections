@@ -22,7 +22,8 @@ import {
   syncSingleInventoryItem,
   getImageSyncList,
   syncSingleProductImages,
-  syncSingleProductComplete
+  syncSingleProductComplete,
+  cleanupDeletedProducts
 } from "backend/square-sync";
 
 let logLines = [];
@@ -309,10 +310,40 @@ async function runFullSync() {
   log(`=== IMAGES DONE === Success: ${imgSuccess}, Errors: ${imgErrors}`);
   log("");
 
-  logSummary(startTime, created, updated, skipped, errors, invSynced, invErrors, imgSuccess, imgErrors);
+  if (stopRequested) { logSummary(startTime, created, updated, skipped, errors, invSynced, invErrors, imgSuccess, imgErrors, 0); return; }
+
+  // ── Phase 6: Cleanup deleted products ───────────────────────────────────
+  log("Checking for products deleted from Square...");
+  let deletedCount = 0;
+
+  try {
+    const cleanup = await cleanupDeletedProducts();
+    deletedCount = cleanup.deleted.length;
+
+    if (deletedCount > 0) {
+      for (const d of cleanup.deleted) {
+        log(`  - Removed: ${d.name}`);
+      }
+      log(`Cleaned up ${deletedCount} deleted product(s).`);
+    } else {
+      log("No deleted products found.");
+    }
+
+    if (cleanup.errors.length > 0) {
+      for (const e of cleanup.errors) {
+        log(`  ! ${e}`);
+      }
+    }
+  } catch (err) {
+    log(`! Cleanup error: ${err.message}`);
+  }
+
+  log("");
+
+  logSummary(startTime, created, updated, skipped, errors, invSynced, invErrors, imgSuccess, imgErrors, deletedCount);
 }
 
-function logSummary(startTime, created, updated, skipped, errors, invSynced, invErrors, imgSuccess, imgErrors) {
+function logSummary(startTime, created, updated, skipped, errors, invSynced, invErrors, imgSuccess, imgErrors, deletedCount = 0) {
   const elapsed = Math.round((Date.now() - startTime) / 1000);
   const mins = Math.floor(elapsed / 60);
   const secs = elapsed % 60;
@@ -323,6 +354,7 @@ function logSummary(startTime, created, updated, skipped, errors, invSynced, inv
   log(`Products  — New: ${created}, Updated: ${updated}, Unchanged: ${skipped}, Errors: ${errors}`);
   log(`Inventory — Synced: ${invSynced}, Errors: ${invErrors}`);
   log(`Images    — Imported: ${imgSuccess}, Errors: ${imgErrors}`);
+  if (deletedCount > 0) log(`Cleanup   — Deleted: ${deletedCount}`);
   log(`Time      — ${mins}m ${secs}s`);
 
   // ── Error summary: list every failed product ──────────────────────────
