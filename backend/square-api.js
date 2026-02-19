@@ -198,25 +198,27 @@ export async function searchCatalogBySku(sku) {
   const baseUrl = getBaseUrl();
   const headers = await getHeaders();
 
-  const body = {
-    object_types: ["ITEM"],
-    query: {
-      exact_query: {
-        attribute_name: "sku",
-        attribute_values: [sku]
-      }
-    },
-    include_related_objects: true
-  };
-
-  const response = await fetch(`${baseUrl}/catalog/search`, {
+  // Use search-catalog-items with text_filter — this searches SKU, name, UPC
+  const response = await fetch(`${baseUrl}/catalog/search-catalog-items`, {
     method: "POST",
     headers,
-    body: JSON.stringify(body)
+    body: JSON.stringify({ text_filter: sku })
   });
 
   const data = await response.json();
-  return data.objects || [];
+  const items = data.items || [];
+
+  if (items.length === 0) return [];
+
+  // Filter to only items that have a variation with an exact SKU match
+  const matched = items.filter(item => {
+    const variations = item.item_data?.variations || [];
+    return variations.some(v =>
+      v.item_variation_data?.sku?.toLowerCase() === sku.toLowerCase()
+    );
+  });
+
+  return matched;
 }
 
 /**
