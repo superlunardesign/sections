@@ -225,7 +225,7 @@ export async function getInventoryMappings() {
     // Build lookup
     const countLookup = {};
     for (const count of inventoryCounts) {
-      countLookup[count.catalog_object_id] = parseFloat(count.quantity) || 0;
+      countLookup[count.catalog_object_id] = Math.max(0, parseFloat(count.quantity) || 0);
     }
 
     // Return mappings with Square quantities attached
@@ -1006,7 +1006,7 @@ export async function syncAllInventoryCounts(results = { inventorySynced: 0, err
     // Build a lookup: squareVariationId -> quantity
     const countLookup = {};
     for (const count of inventoryCounts) {
-      countLookup[count.catalog_object_id] = parseFloat(count.quantity) || 0;
+      countLookup[count.catalog_object_id] = Math.max(0, parseFloat(count.quantity) || 0);
     }
 
     // Update each Wix product's inventory
@@ -1266,7 +1266,7 @@ export async function syncSingleProductComplete(sku) {
       const counts = await getInventoryCounts(squareVarIds);
       const countLookup = {};
       for (const c of counts) {
-        countLookup[c.catalog_object_id] = parseFloat(c.quantity) || 0;
+        countLookup[c.catalog_object_id] = Math.max(0, parseFloat(c.quantity) || 0);
       }
 
       // Sync inventory for each variation
@@ -1427,7 +1427,7 @@ export async function syncSingleProductInventory(wixProductId) {
   for (const m of mappings.items) {
     const counts = await getInventoryCounts([m.squareVariationId]);
     if (counts.length > 0) {
-      const squareQty = parseFloat(counts[0].quantity) || 0;
+      const squareQty = Math.max(0, parseFloat(counts[0].quantity) || 0);
       await elevatedUpdateInventoryVariants(wixProductId, {
         trackQuantity: true,
         variants: [{
