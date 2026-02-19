@@ -654,6 +654,11 @@ async function updateWixProduct(wixProductId, squareItem) {
     try {
       await elevatedUpdateProduct(wixProductId, updateFields);
     } catch (err) {
+      // Wix v2 updateProduct fails on products with managed variants —
+      // fall back to delete + recreate so the changes still apply.
+      if (String(err).includes("productOptions")) {
+        return { changes, needsRecreate: true };
+      }
       console.error(`Failed to update Wix product ${wixProductId}:`, err);
     }
   }
