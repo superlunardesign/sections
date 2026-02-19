@@ -5,6 +5,7 @@
  *
  * Required page elements:
  *   #syncButton      — Button to start the full sync
+ *   #stopSyncBtn     — Button to stop a running sync
  *   #statusText      — Text element to display the running log
  *   #progressBar1    — ProgressBar element to show overall progress
  *
@@ -26,6 +27,8 @@ import {
 
 let logLines = [];
 let isSyncing = false;
+let stopRequested = false;
+let errorList = []; // Collects { name, details } for error summary
 
 // ─── Logging + progress helpers ─────────────────────────────────────────────
 
@@ -47,20 +50,25 @@ $w.onReady(function () {
   $w("#statusText").text = "Ready. Press Sync to start.";
   $w("#progressBar1").value = 0;
 
+  // Hide stop button initially
+  try { $w("#stopSyncBtn").hide(); } catch (e) { /* not on page yet */ }
+
   // ── Full Sync button ────────────────────────────────────────────────────
   $w("#syncButton").onClick(async () => {
     if (isSyncing) return;
     isSyncing = true;
+    stopRequested = false;
+    errorList = [];
     logLines = [];
     $w("#syncButton").disable();
-    try { $w("#singleSyncBtn").disable(); } catch (e) { /* not on page yet */ }
+    try { $w("#singleSyncBtn").disable(); } catch (e) {}
+    try { $w("#stopSyncBtn").show(); } catch (e) {}
 
-    // Show immediately that the click registered
     $w("#statusText").text = "Starting sync...";
 
     try {
       $w("#progressBar1").value = 0;
-    } catch (e) { /* progress bar missing */ }
+    } catch (e) {}
 
     try {
       await runFullSync();
@@ -69,11 +77,24 @@ $w.onReady(function () {
     }
 
     isSyncing = false;
+    stopRequested = false;
     $w("#syncButton").enable();
-    try { $w("#singleSyncBtn").enable(); } catch (e) { /* not on page yet */ }
+    try { $w("#singleSyncBtn").enable(); } catch (e) {}
+    try { $w("#stopSyncBtn").hide(); } catch (e) {}
   });
 
-  // ── Single Product Sync button (only wired up if elements exist) ───────
+  // ── Stop Sync button ───────────────────────────────────────────────────
+  try {
+    $w("#stopSyncBtn").onClick(() => {
+      stopRequested = true;
+      log("");
+      log("STOP REQUESTED — finishing current item...");
+    });
+  } catch (e) {
+    // #stopSyncBtn not on page — that's fine
+  }
+
+  // ── Single Product Sync button ─────────────────────────────────────────
   try {
     $w("#singleSyncBtn").onClick(async () => {
       if (isSyncing) return;
@@ -86,6 +107,7 @@ $w.onReady(function () {
 
       isSyncing = true;
       logLines = [];
+      errorList = [];
       $w("#syncButton").disable();
       $w("#singleSyncBtn").disable();
       setProgress(0);
@@ -118,7 +140,6 @@ async function runSingleSync(sku) {
 
   setProgress(90);
 
-  // Display all log lines from the backend
   for (const line of result.log) {
     log(line);
   }
@@ -154,6 +175,8 @@ async function runFullSync() {
   let created = 0, updated = 0, skipped = 0, errors = 0;
 
   for (let i = 0; i < itemIds.length; i++) {
+    if (stopRequested) { log("Sync stopped by user."); break; }
+
     const num = `(${i + 1}/${total})`;
 
     try {
@@ -174,11 +197,13 @@ async function runFullSync() {
           break;
         case "error":
           log(`${num} ! ERROR: ${result.name} — ${result.details}`);
+          errorList.push({ name: result.name, details: result.details });
           errors++;
           break;
       }
     } catch (err) {
       log(`${num} ! ERROR: ${err.message}`);
+      errorList.push({ name: itemIds[i], details: err.message });
       errors++;
     }
 
@@ -188,6 +213,8 @@ async function runFullSync() {
   log("");
   log(`=== PRODUCTS DONE === Created: ${created}, Updated: ${updated}, Skipped: ${skipped}, Errors: ${errors}`);
   log("");
+
+  if (stopRequested) { logSummary(startTime, created, updated, skipped, errors, 0, 0, 0, 0); return; }
 
   // ── Phase 4: Sync inventory ───────────────────────────────────────────────
   log("=== SYNCING INVENTORY ===");
@@ -205,6 +232,8 @@ async function runFullSync() {
   let invSynced = 0, invErrors = 0;
 
   for (let i = 0; i < inventoryData.items.length; i++) {
+    if (stopRequested) { log("Sync stopped by user."); break; }
+
     const item = inventoryData.items[i];
     const num = `(${i + 1}/${invTotal})`;
 
@@ -230,6 +259,8 @@ async function runFullSync() {
   log(`=== INVENTORY DONE === Synced: ${invSynced}, Errors: ${invErrors}`);
   log("");
 
+  if (stopRequested) { logSummary(startTime, created, updated, skipped, errors, invSynced, invErrors, 0, 0); return; }
+
   // ── Phase 5: Sync images ──────────────────────────────────────────────────
   log("=== SYNCING IMAGES ===");
   log("");
@@ -243,6 +274,8 @@ async function runFullSync() {
   let imgSuccess = 0, imgErrors = 0;
 
   for (let i = 0; i < imageData.items.length; i++) {
+    if (stopRequested) { log("Sync stopped by user."); break; }
+
     const item = imageData.items[i];
     const num = `(${i + 1}/${imgTotal})`;
 
@@ -276,19 +309,33 @@ async function runFullSync() {
   log(`=== IMAGES DONE === Success: ${imgSuccess}, Errors: ${imgErrors}`);
   log("");
 
-  // ── Summary ───────────────────────────────────────────────────────────────
+  logSummary(startTime, created, updated, skipped, errors, invSynced, invErrors, imgSuccess, imgErrors);
+}
+
+function logSummary(startTime, created, updated, skipped, errors, invSynced, invErrors, imgSuccess, imgErrors) {
   const elapsed = Math.round((Date.now() - startTime) / 1000);
   const mins = Math.floor(elapsed / 60);
   const secs = elapsed % 60;
 
   log("========================================");
-  log("           SYNC COMPLETE");
+  log(stopRequested ? "         SYNC STOPPED" : "           SYNC COMPLETE");
   log("========================================");
   log(`Products  — New: ${created}, Updated: ${updated}, Unchanged: ${skipped}, Errors: ${errors}`);
   log(`Inventory — Synced: ${invSynced}, Errors: ${invErrors}`);
   log(`Images    — Imported: ${imgSuccess}, Errors: ${imgErrors}`);
   log(`Time      — ${mins}m ${secs}s`);
-  log("========================================");
 
+  // ── Error summary: list every failed product ──────────────────────────
+  if (errorList.length > 0) {
+    log("");
+    log("========================================");
+    log("         FAILED PRODUCTS");
+    log("========================================");
+    for (const e of errorList) {
+      log(`  ! ${e.name}: ${e.details}`);
+    }
+  }
+
+  log("========================================");
   setProgress(100);
 }

@@ -230,6 +230,7 @@ export async function getInventoryMappings() {
     const items = mappingItems.map(m => ({
       _id: m._id,
       wixProductId: m.wixProductId,
+      wixVariantId: m.wixVariantId || "",
       squareVariationId: m.squareVariationId,
       squareItemName: m.squareItemName,
       squareQty: countLookup[m.squareVariationId] || 0
@@ -256,7 +257,7 @@ export async function syncInventoryBatch(batch) {
       await elevatedUpdateInventoryVariants(item.wixProductId, {
         trackQuantity: true,
         variants: [{
-          variantId: "00000000-0000-0000-0000-000000000000",
+          variantId: item.wixVariantId || "00000000-0000-0000-0000-000000000000",
           quantity: item.squareQty,
           inStock: item.squareQty > 0
         }]
@@ -409,9 +410,10 @@ async function syncSingleItem(squareItem, results, collectionMap) {
     }
   } else {
     // Create new Wix product
-    wixProductId = await createWixProduct(squareItem);
-    // Save the mapping
-    await saveMappings(squareItem, wixProductId);
+    const created = await createWixProduct(squareItem);
+    wixProductId = created.wixProductId;
+    // Save the mapping (with variant IDs if multi-variant)
+    await saveMappings(squareItem, wixProductId, created.variantMap);
     results.created.push(name);
   }
 
@@ -423,12 +425,17 @@ async function syncSingleItem(squareItem, results, collectionMap) {
 
 /**
  * Creates a new product in Wix Stores from a Square catalog item.
+ * For items with multiple variations, creates product options so variants
+ * appear as a dropdown in the Wix store.
  *
  * @param {Object} squareItem - The Square CatalogObject (type: ITEM)
- * @returns {Promise<string|null>} The new Wix product ID, or null on failure
+ * @returns {Promise<Object>} { wixProductId, variantMap }
+ *   variantMap: { squareVariationId -> wixVariantId }
  */
 async function createWixProduct(squareItem) {
   const itemData = squareItem.item_data;
+  const variations = itemData.variations || [];
+  const hasMultipleVariants = variations.length > 1;
 
   // Use description_html if available, fall back to plain description
   const description = itemData.description_html || itemData.description || "";
@@ -441,39 +448,115 @@ async function createWixProduct(squareItem) {
     visible: true
   };
 
-  // Set price from the first variation
-  if (itemData.variations && itemData.variations.length > 0) {
-    const priceMoney = itemData.variations[0].item_variation_data?.price_money;
+  // Set base price from first variation (required by Wix)
+  let hasPrice = false;
+  if (variations.length > 0) {
+    const priceMoney = variations[0].item_variation_data?.price_money;
     if (priceMoney) {
       productInfo.priceData = { price: priceMoney.amount / 100 };
+      hasPrice = true;
     }
   }
 
-  // Set SKU from the first variation
-  if (itemData.variations && itemData.variations.length > 0) {
-    const sku = itemData.variations[0].item_variation_data?.sku;
+  if (!hasPrice) {
+    throw new Error(`"${productInfo.name}" has no price set in Square. Update the pricing in Square and try again.`);
+  }
+
+  if (hasMultipleVariants) {
+    // Multi-variant: create with product options
+    productInfo.manageVariants = true;
+    productInfo.productOptions = [{
+      optionType: "drop_down",
+      name: "Option",
+      choices: variations.map(v => ({
+        value: (v.item_variation_data?.name || "Default").substring(0, 80),
+        description: (v.item_variation_data?.name || "Default").substring(0, 80),
+        inStock: true,
+        visible: true
+      }))
+    }];
+  } else if (variations.length === 1) {
+    // Single variation: set SKU directly on the product
+    const sku = variations[0].item_variation_data?.sku;
     if (sku) {
       productInfo.sku = sku;
     }
   }
 
   const result = await elevatedCreateProduct(productInfo);
-  const wixProductId = result.product._id;
+  const product = result.product;
+  const wixProductId = product._id;
 
-  // Set inventory tracking via the Inventory API (decoupled from product in v2)
+  // Build variant map: squareVariationId -> wixVariantId
+  const variantMap = {};
+
+  if (hasMultipleVariants && product.variants) {
+    for (const wixVariant of product.variants) {
+      const choiceValue = wixVariant.choices?.Option;
+      if (choiceValue) {
+        const squareVar = variations.find(v =>
+          (v.item_variation_data?.name || "Default") === choiceValue
+        );
+        if (squareVar) {
+          variantMap[squareVar.id] = wixVariant._id;
+        }
+      }
+    }
+
+    // Set per-variant SKU and price
+    try {
+      const variantUpdates = [];
+      for (const v of variations) {
+        const wixVarId = variantMap[v.id];
+        if (!wixVarId) continue;
+
+        const varData = {};
+        const sku = v.item_variation_data?.sku;
+        if (sku) varData.sku = sku;
+
+        const priceMoney = v.item_variation_data?.price_money;
+        if (priceMoney) varData.priceData = { price: priceMoney.amount / 100 };
+
+        if (Object.keys(varData).length > 0) {
+          variantUpdates.push({ _id: wixVarId, variant: varData });
+        }
+      }
+
+      if (variantUpdates.length > 0) {
+        await elevatedUpdateProduct(wixProductId, { variants: variantUpdates });
+      }
+    } catch (err) {
+      console.error(`Failed to set per-variant data for ${wixProductId}:`, err);
+    }
+  }
+
+  // Enable inventory tracking
   try {
-    await elevatedUpdateInventoryVariants(wixProductId, {
-      trackQuantity: true,
-      variants: [{
-        variantId: "00000000-0000-0000-0000-000000000000",
+    if (hasMultipleVariants) {
+      const variantEntries = Object.values(variantMap).map(wixVarId => ({
+        variantId: wixVarId,
         inStock: true
-      }]
-    });
+      }));
+      if (variantEntries.length > 0) {
+        await elevatedUpdateInventoryVariants(wixProductId, {
+          trackQuantity: true,
+          variants: variantEntries
+        });
+      }
+    } else {
+      await elevatedUpdateInventoryVariants(wixProductId, {
+        trackQuantity: true,
+        variants: [{
+          variantId: "00000000-0000-0000-0000-000000000000",
+          inStock: true
+        }]
+      });
+    }
   } catch (err) {
     console.error(`Failed to enable inventory tracking for ${wixProductId}:`, err);
   }
 
-  return wixProductId;
+  return { wixProductId, variantMap };
 }
 
 /**
@@ -542,8 +625,12 @@ async function updateWixProduct(wixProductId, squareItem) {
 
 /**
  * Saves mapping entries for a Square item and all its variations.
+ *
+ * @param {Object} squareItem - The Square CatalogObject
+ * @param {string} wixProductId - The Wix product ID
+ * @param {Object} [variantMap] - Map of squareVariationId -> wixVariantId
  */
-async function saveMappings(squareItem, wixProductId) {
+async function saveMappings(squareItem, wixProductId, variantMap = {}) {
   const itemData = squareItem.item_data;
   const categoryId = (itemData.categories && itemData.categories[0]?.id) || itemData.category_id || "";
   const now = new Date();
@@ -567,7 +654,7 @@ async function saveMappings(squareItem, wixProductId) {
         squareVariationId: variation.id,
         squareSku: variation.item_variation_data?.sku || "",
         wixProductId: wixProductId,
-        wixVariantId: "",
+        wixVariantId: variantMap[variation.id] || "",
         squareCategoryId: categoryId,
         squareItemName: `${itemData.name} - ${variation.item_variation_data?.name || "Default"}`,
         lastSynced: now
@@ -661,14 +748,15 @@ export async function syncSingleItemById(itemId, collectionMap = {}) {
       }
     } else {
       // New product — create it
-      const wixProductId = await createWixProduct(squareItem);
-      await saveMappings(squareItem, wixProductId);
+      const created = await createWixProduct(squareItem);
+      const wixProductId = created.wixProductId;
+      await saveMappings(squareItem, wixProductId, created.variantMap);
 
       if (wixProductId && collectionMap) {
         await assignProductToCollections(wixProductId, squareItem, collectionMap);
       }
 
-      // Get price info for the log
+      // Get price info and variant count for the log
       let priceStr = "";
       if (itemData.variations && itemData.variations.length > 0) {
         const priceMoney = itemData.variations[0].item_variation_data?.price_money;
@@ -677,10 +765,13 @@ export async function syncSingleItemById(itemId, collectionMap = {}) {
         }
       }
 
+      const variantCount = itemData.variations ? itemData.variations.length : 0;
+      const variantStr = variantCount > 1 ? ` [${variantCount} variants]` : "";
+
       return {
         status: "created",
         name,
-        details: `New product added to Wix${priceStr}`
+        details: `New product added to Wix${priceStr}${variantStr}`
       };
     }
   } catch (err) {
@@ -700,7 +791,7 @@ export async function syncSingleInventoryItem(item) {
     await elevatedUpdateInventoryVariants(item.wixProductId, {
       trackQuantity: true,
       variants: [{
-        variantId: "00000000-0000-0000-0000-000000000000",
+        variantId: item.wixVariantId || "00000000-0000-0000-0000-000000000000",
         quantity: item.squareQty,
         inStock: item.squareQty > 0
       }]
@@ -814,7 +905,7 @@ export async function syncAllInventoryCounts(results = { inventorySynced: 0, err
         await elevatedUpdateInventoryVariants(mapping.wixProductId, {
           trackQuantity: true,
           variants: [{
-            variantId: "00000000-0000-0000-0000-000000000000",
+            variantId: mapping.wixVariantId || "00000000-0000-0000-0000-000000000000",
             quantity: squareQty,
             inStock: squareQty > 0
           }]
@@ -940,9 +1031,11 @@ export async function syncSingleProductComplete(sku) {
       log.push(". Product data unchanged — no update needed.");
     }
   } else {
-    log.push(`+ New product detected — adding "${name}" to Wix...`);
-    wixProductId = await createWixProduct(squareItem);
-    await saveMappings(squareItem, wixProductId);
+    const varCount = squareItem.item_data?.variations?.length || 0;
+    log.push(`+ New product detected — adding "${name}" to Wix${varCount > 1 ? ` (${varCount} variants)` : ""}...`);
+    const created = await createWixProduct(squareItem);
+    wixProductId = created.wixProductId;
+    await saveMappings(squareItem, wixProductId, created.variantMap);
 
     let priceStr = "";
     const priceMoney = squareItem.item_data?.variations?.[0]?.item_variation_data?.price_money;
@@ -958,34 +1051,45 @@ export async function syncSingleProductComplete(sku) {
     log.push("Collections assigned.");
   }
 
-  // 4. Sync inventory
+  // 4. Sync inventory (per-variant)
   log.push("Checking inventory...");
   try {
-    const variationMapping = await wixData.query(MAPPING_COLLECTION)
+    const variationMappings = await wixData.query(MAPPING_COLLECTION)
       .eq("squareCatalogId", squareItem.id)
       .ne("squareVariationId", "")
       .find();
 
-    if (variationMapping.items.length > 0) {
-      const varId = variationMapping.items[0].squareVariationId;
-      const counts = await getInventoryCounts([varId]);
-      const squareQty = counts.length > 0 ? (parseFloat(counts[0].quantity) || 0) : 0;
+    if (variationMappings.items.length > 0) {
+      // Get all Square variation IDs and fetch counts in one batch
+      const squareVarIds = variationMappings.items.map(m => m.squareVariationId);
+      const counts = await getInventoryCounts(squareVarIds);
+      const countLookup = {};
+      for (const c of counts) {
+        countLookup[c.catalog_object_id] = parseFloat(c.quantity) || 0;
+      }
 
-      await elevatedUpdateInventoryVariants(wixProductId, {
-        trackQuantity: true,
-        variants: [{
-          variantId: "00000000-0000-0000-0000-000000000000",
-          quantity: squareQty,
-          inStock: squareQty > 0
-        }]
-      });
+      // Sync inventory for each variation
+      for (const m of variationMappings.items) {
+        const squareQty = countLookup[m.squareVariationId] || 0;
+        const variantId = m.wixVariantId || "00000000-0000-0000-0000-000000000000";
 
-      // Update timestamp
-      const m = variationMapping.items[0];
-      m.lastSynced = new Date();
-      await wixData.update(MAPPING_COLLECTION, m);
+        await elevatedUpdateInventoryVariants(wixProductId, {
+          trackQuantity: true,
+          variants: [{
+            variantId: variantId,
+            quantity: squareQty,
+            inStock: squareQty > 0
+          }]
+        });
 
-      log.push(`Inventory set to ${squareQty}${squareQty === 0 ? " (out of stock)" : ""}.`);
+        m.lastSynced = new Date();
+        await wixData.update(MAPPING_COLLECTION, m);
+
+        const varName = m.squareItemName.includes(" - ") ? m.squareItemName.split(" - ").pop() : "";
+        log.push(`  ${varName ? varName + ": " : ""}qty ${squareQty}${squareQty === 0 ? " (out of stock)" : ""}`);
+      }
+
+      log.push(`Inventory synced for ${variationMappings.items.length} variant(s).`);
     } else {
       log.push("No variation mapping found — skipping inventory.");
     }
@@ -1106,32 +1210,30 @@ export async function removeMapping(mappingId, deleteWixProduct = false) {
  * @param {string} wixProductId - The Wix product ID
  */
 export async function syncSingleProductInventory(wixProductId) {
-  const mapping = await wixData.query(MAPPING_COLLECTION)
+  const mappings = await wixData.query(MAPPING_COLLECTION)
     .eq("wixProductId", wixProductId)
     .ne("squareVariationId", "")
     .find();
 
-  if (mapping.items.length === 0) {
+  if (mappings.items.length === 0) {
     throw new Error("No Square mapping found for this product.");
   }
 
-  const squareVariationId = mapping.items[0].squareVariationId;
-  const counts = await getInventoryCounts([squareVariationId]);
+  // Sync all variations for this product
+  for (const m of mappings.items) {
+    const counts = await getInventoryCounts([m.squareVariationId]);
+    if (counts.length > 0) {
+      const squareQty = parseFloat(counts[0].quantity) || 0;
+      await elevatedUpdateInventoryVariants(wixProductId, {
+        trackQuantity: true,
+        variants: [{
+          variantId: m.wixVariantId || "00000000-0000-0000-0000-000000000000",
+          quantity: squareQty,
+          inStock: squareQty > 0
+        }]
+      });
+    }
 
-  if (counts.length > 0) {
-    const squareQty = parseFloat(counts[0].quantity) || 0;
-    await elevatedUpdateInventoryVariants(wixProductId, {
-      trackQuantity: true,
-      variants: [{
-        variantId: "00000000-0000-0000-0000-000000000000",
-        quantity: squareQty,
-        inStock: squareQty > 0
-      }]
-    });
-  }
-
-  // Update sync timestamp
-  for (const m of mapping.items) {
     m.lastSynced = new Date();
     await wixData.update(MAPPING_COLLECTION, m);
   }
