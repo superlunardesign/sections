@@ -22,6 +22,8 @@ const elevatedCreateProduct = elevate(products.createProduct);
 const elevatedUpdateProduct = elevate(products.updateProduct);
 const elevatedDeleteProduct = elevate(products.deleteProduct);
 const elevatedAddProductMedia = elevate(products.addProductMedia);
+const elevatedRemoveProductMedia = elevate(products.removeProductMedia);
+const elevatedGetProduct = elevate(products.getProduct);
 const elevatedAddProductsToCollection = elevate(products.addProductsToCollection);
 const elevatedUpdateInventoryVariants = elevate(inventory.updateInventoryVariants);
 
@@ -854,12 +856,33 @@ async function fetchSquareImageUrls(squareItems) {
 }
 
 /**
- * Adds images to a Wix product directly from external (Square) URLs.
- * Wix automatically sets the first image as the product's mainMedia.
+ * Replaces images on a Wix product from external (Square) URLs.
+ * Removes ALL existing media first, then adds the new images.
+ * This prevents duplicate images from accumulating on repeated syncs.
  */
 async function importImagesToWixProduct(wixProductId, imageUrls, productName) {
   try {
-    const mediaItems = imageUrls.map(url => ({ url }));
+    // 1. Remove all existing media from the product
+    try {
+      const existing = await elevatedGetProduct(wixProductId);
+      const existingMedia = existing?.product?.media?.items || [];
+      if (existingMedia.length > 0) {
+        const mediaIds = existingMedia.map(m => m._id).filter(Boolean);
+        if (mediaIds.length > 0) {
+          await elevatedRemoveProductMedia(wixProductId, mediaIds);
+        }
+      }
+    } catch (err) {
+      // If we can't remove old media, still try to add new ones
+      console.error(`Could not remove old media for ${wixProductId}:`, err.message);
+    }
+
+    // 2. Add new images with descriptive filenames
+    const safeName = (productName || "product").replace(/[^a-zA-Z0-9-_ ]/g, "").substring(0, 50);
+    const mediaItems = imageUrls.map((url, i) => ({
+      url,
+      fileName: `${safeName}-${i + 1}.jpg`
+    }));
     await elevatedAddProductMedia(wixProductId, mediaItems);
     return { imported: imageUrls.length, failed: 0 };
   } catch (err) {
