@@ -45,6 +45,30 @@ async function queryAll(query) {
   return allItems;
 }
 
+/**
+ * Sets a Wix product's visibility based on whether it has any stock.
+ * Hides products that are completely out of stock; shows them when
+ * any variant is back in stock. Only calls the API when the visibility
+ * actually needs to change.
+ *
+ * @param {string} wixProductId - The Wix product ID
+ * @param {boolean} hasAnyStock - true if at least one variant has qty > 0
+ */
+async function updateProductVisibility(wixProductId, hasAnyStock) {
+  try {
+    const product = await wixData.get("Stores/Products", wixProductId);
+    if (!product) return;
+    const currentlyVisible = product.visible !== false;
+    if (hasAnyStock && !currentlyVisible) {
+      await elevatedUpdateProduct(wixProductId, { visible: true });
+    } else if (!hasAnyStock && currentlyVisible) {
+      await elevatedUpdateProduct(wixProductId, { visible: false });
+    }
+  } catch (err) {
+    console.error(`Failed to update visibility for ${wixProductId}:`, err);
+  }
+}
+
 // ─── COLLECTION (CATEGORY) SYNC ────────────────────────────────────────────
 
 /**
@@ -253,6 +277,8 @@ export async function getInventoryMappings() {
  */
 export async function syncInventoryBatch(batch) {
   const results = { synced: 0, updated: [], skipped: 0, errors: [] };
+  // Track whether each product has any stock (for visibility)
+  const productStock = {};
 
   for (const item of batch) {
     try {
@@ -274,10 +300,19 @@ export async function syncInventoryBatch(batch) {
       mapping.lastSynced = new Date();
       await wixData.update(MAPPING_COLLECTION, mapping);
 
+      // Track stock per product (true if ANY variant has stock)
+      if (item.squareQty > 0) productStock[item.wixProductId] = true;
+      if (!(item.wixProductId in productStock)) productStock[item.wixProductId] = false;
+
       results.synced++;
     } catch (err) {
       results.errors.push(`${item.squareItemName}: ${err.message}`);
     }
+  }
+
+  // Update product visibility: hide out-of-stock, show in-stock
+  for (const [wixProductId, hasStock] of Object.entries(productStock)) {
+    await updateProductVisibility(wixProductId, hasStock);
   }
 
   return results;
@@ -874,10 +909,24 @@ export async function syncSingleInventoryItem(item) {
     mapping.lastSynced = new Date();
     await wixData.update(MAPPING_COLLECTION, mapping);
 
+    // Update product visibility based on whether ANY variant has stock.
+    // Check sibling variants (same product) to determine overall stock.
+    const siblings = await wixData.query(MAPPING_COLLECTION)
+      .eq("wixProductId", item.wixProductId)
+      .ne("squareVariationId", "")
+      .find();
+    const siblingVarIds = siblings.items.map(m => m.squareVariationId);
+    let hasAnyStock = item.squareQty > 0;
+    if (!hasAnyStock && siblingVarIds.length > 1) {
+      const counts = await getInventoryCounts(siblingVarIds);
+      hasAnyStock = counts.some(c => Math.max(0, parseFloat(c.quantity) || 0) > 0);
+    }
+    await updateProductVisibility(item.wixProductId, hasAnyStock);
+
     return {
       status: "synced",
       name: item.squareItemName,
-      details: `qty: ${item.squareQty}${item.squareQty === 0 ? " (out of stock)" : ""}`
+      details: `qty: ${item.squareQty}${item.squareQty === 0 ? " (out of stock, hidden)" : ""}`
     };
   } catch (err) {
     return {
@@ -1015,6 +1064,7 @@ export async function syncAllInventoryCounts(results = { inventorySynced: 0, err
     }
 
     // Update each Wix product's inventory
+    const productStock = {};
     for (const mapping of mappingItems) {
       const squareQty = countLookup[mapping.squareVariationId] || 0;
 
@@ -1032,10 +1082,19 @@ export async function syncAllInventoryCounts(results = { inventorySynced: 0, err
         mapping.lastSynced = new Date();
         await wixData.update(MAPPING_COLLECTION, mapping);
 
+        // Track stock per product (true if ANY variant has stock)
+        if (squareQty > 0) productStock[mapping.wixProductId] = true;
+        if (!(mapping.wixProductId in productStock)) productStock[mapping.wixProductId] = false;
+
         results.inventorySynced++;
       } catch (err) {
         results.errors.push(`Inventory sync error for ${mapping.squareItemName}: ${err.message}`);
       }
+    }
+
+    // Update product visibility: hide out-of-stock, show in-stock
+    for (const [wixProductId, hasStock] of Object.entries(productStock)) {
+      await updateProductVisibility(wixProductId, hasStock);
     }
   } catch (err) {
     results.errors.push(`Inventory sync fatal error: ${err.message}`);
@@ -1295,6 +1354,11 @@ export async function syncSingleProductComplete(sku) {
         log.push(`  ${varName ? varName + ": " : ""}qty ${squareQty}${squareQty === 0 ? " (out of stock)" : ""}`);
       }
 
+      // Update product visibility based on overall stock
+      const hasAnyStock = variationMappings.items.some(m => (countLookup[m.squareVariationId] || 0) > 0);
+      await updateProductVisibility(wixProductId, hasAnyStock);
+      log.push(hasAnyStock ? "Product visible (in stock)." : "Product hidden (out of stock).");
+
       log.push(`Inventory synced for ${variationMappings.items.length} variant(s).`);
     } else {
       log.push("No variation mapping found — skipping inventory.");
@@ -1429,10 +1493,12 @@ export async function syncSingleProductInventory(wixProductId) {
   }
 
   // Sync all variations for this product
+  let hasAnyStock = false;
   for (const m of mappings.items) {
     const counts = await getInventoryCounts([m.squareVariationId]);
     if (counts.length > 0) {
       const squareQty = Math.max(0, parseFloat(counts[0].quantity) || 0);
+      if (squareQty > 0) hasAnyStock = true;
       await elevatedUpdateInventoryVariants(wixProductId, {
         trackQuantity: true,
         variants: [{
@@ -1446,6 +1512,9 @@ export async function syncSingleProductInventory(wixProductId) {
     m.lastSynced = new Date();
     await wixData.update(MAPPING_COLLECTION, m);
   }
+
+  // Update product visibility
+  await updateProductVisibility(wixProductId, hasAnyStock);
 
   return { success: true };
 }
