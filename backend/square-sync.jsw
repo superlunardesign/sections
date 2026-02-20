@@ -56,9 +56,10 @@ async function queryAll(query) {
  */
 async function updateProductVisibility(wixProductId, hasAnyStock) {
   try {
-    const product = await wixData.get("Stores/Products", wixProductId);
-    if (!product) return;
-    const currentlyVisible = product.visible !== false;
+    // Use elevatedGetProduct so we can read products that are already hidden
+    const result = await elevatedGetProduct(wixProductId);
+    if (!result || !result.product) return;
+    const currentlyVisible = result.product.visible !== false;
     if (hasAnyStock && !currentlyVisible) {
       await elevatedUpdateProduct(wixProductId, { visible: true });
     } else if (!hasAnyStock && currentlyVisible) {
