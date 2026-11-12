@@ -561,6 +561,7 @@
                 {%- endif -%}
               {%- elsif block.settings.image != blank -%}
                 {%- assign image = block.settings.image -%}
+                {%- assign mobile_image = block.settings.mobile_image | default: image -%}
                 <picture class="criminal-hero__picture">
                   <source
                     media="(min-width: 750px)"
@@ -570,9 +571,9 @@
                     sizes="100vw"
                   >
                   <source
-                    srcset="{{ image | image_url: width: 750 }} 750w,
-                            {{ image | image_url: width: 1080 }} 1080w,
-                            {{ image | image_url: width: 1500 }} 1500w"
+                    srcset="{{ mobile_image | image_url: width: 750 }} 750w,
+                            {{ mobile_image | image_url: width: 1080 }} 1080w,
+                            {{ mobile_image | image_url: width: 1500 }} 1500w"
                     sizes="100vw"
                   >
                   <img
@@ -640,6 +641,7 @@
           {%- endif -%}
         {%- elsif section.settings.image != blank -%}
           {%- assign image = section.settings.image -%}
+          {%- assign mobile_image = section.settings.mobile_image | default: image -%}
           <picture class="criminal-hero__picture">
             <source
               media="(min-width: 750px)"
@@ -649,9 +651,9 @@
               sizes="100vw"
             >
             <source
-              srcset="{{ image | image_url: width: 750 }} 750w,
-                      {{ image | image_url: width: 1080 }} 1080w,
-                      {{ image | image_url: width: 1500 }} 1500w"
+              srcset="{{ mobile_image | image_url: width: 750 }} 750w,
+                      {{ mobile_image | image_url: width: 1080 }} 1080w,
+                      {{ mobile_image | image_url: width: 1500 }} 1500w"
               sizes="100vw"
             >
             <img
@@ -806,6 +808,12 @@
       "type": "image_picker",
       "id": "image",
       "label": "Background Image"
+    },
+    {
+      "type": "image_picker",
+      "id": "mobile_image",
+      "label": "Mobile Background Image",
+      "info": "Optional. If set, this image will be used on mobile devices instead of the main background image."
     },
     {
       "type": "video",
@@ -1399,6 +1407,12 @@
           "type": "image_picker",
           "id": "image",
           "label": "Slide Image"
+        },
+        {
+          "type": "image_picker",
+          "id": "mobile_image",
+          "label": "Mobile Slide Image",
+          "info": "Optional. If set, this image will be used on mobile devices."
         },
         {
           "type": "video",
