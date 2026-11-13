@@ -33,30 +33,6 @@
     }
   }
 
-  /* Stacked Layout (image above text) */
-  #CriminalHero-{{ section.id }}.criminal-hero--stacked {
-    height: auto;
-    flex-direction: column;
-  }
-
-  #CriminalHero-{{ section.id }}.criminal-hero--stacked .criminal-hero__background {
-    position: relative;
-    width: 100%;
-    height: {{ section.settings.stacked_image_height }}px;
-  }
-
-  #CriminalHero-{{ section.id }}.criminal-hero--stacked .criminal-hero__content-wrapper {
-    position: relative;
-    height: auto;
-    padding-top: {{ section.settings.stacked_content_padding }}px;
-    padding-bottom: {{ section.settings.stacked_content_padding }}px;
-    background-color: {{ section.settings.stacked_content_bg }};
-  }
-
-  #CriminalHero-{{ section.id }}.criminal-hero--stacked .criminal-hero__content {
-    align-self: flex-start;
-  }
-
   /* Stacked on mobile only */
   @media screen and (max-width: 749px) {
     #CriminalHero-{{ section.id }}.criminal-hero--stacked-mobile {
@@ -67,15 +43,15 @@
     #CriminalHero-{{ section.id }}.criminal-hero--stacked-mobile .criminal-hero__background {
       position: relative;
       width: 100%;
-      height: {{ section.settings.stacked_image_height }}px;
+      height: {{ section.settings.mobile_stacked_image_height }}px;
     }
 
     #CriminalHero-{{ section.id }}.criminal-hero--stacked-mobile .criminal-hero__content-wrapper {
       position: relative;
       height: auto;
-      padding-top: {{ section.settings.stacked_content_padding }}px;
-      padding-bottom: {{ section.settings.stacked_content_padding }}px;
-      background-color: {{ section.settings.stacked_content_bg }};
+      padding-top: {{ section.settings.mobile_stacked_padding }}px;
+      padding-bottom: {{ section.settings.mobile_stacked_padding }}px;
+      background-color: {{ section.settings.mobile_stacked_bg }};
     }
 
     #CriminalHero-{{ section.id }}.criminal-hero--stacked-mobile .criminal-hero__content {
@@ -561,9 +537,7 @@
 
 {%- liquid
   assign layout_class = ''
-  if section.settings.layout_style == 'stacked'
-    assign layout_class = 'criminal-hero--stacked'
-  elsif section.settings.layout_style == 'stacked_mobile'
+  if section.settings.mobile_stacked_layout
     assign layout_class = 'criminal-hero--stacked-mobile'
   endif
 -%}
@@ -924,52 +898,44 @@
     },
     {
       "type": "header",
-      "content": "Layout Style"
+      "content": "Mobile Layout"
     },
     {
-      "type": "select",
-      "id": "layout_style",
-      "label": "Layout Style",
-      "options": [
-        { "value": "overlay", "label": "Overlay (text over image)" },
-        { "value": "stacked", "label": "Stacked (image above text)" },
-        { "value": "stacked_mobile", "label": "Stacked on mobile only" }
-      ],
-      "default": "overlay",
-      "info": "Choose how the image and text are displayed"
+      "type": "checkbox",
+      "id": "mobile_stacked_layout",
+      "label": "Stack image above content on mobile",
+      "default": false,
+      "info": "Shows image above text instead of as background on mobile devices"
     },
     {
       "type": "range",
-      "id": "stacked_image_height",
-      "label": "Stacked Image Height",
+      "id": "mobile_stacked_image_height",
+      "label": "Mobile Stacked Image Height",
       "min": 150,
-      "max": 600,
+      "max": 500,
       "step": 10,
-      "default": 300,
-      "unit": "px",
-      "info": "Height of image when using stacked layout"
+      "default": 250,
+      "unit": "px"
     },
     {
       "type": "range",
-      "id": "stacked_content_padding",
-      "label": "Stacked Content Padding",
-      "min": 20,
-      "max": 100,
-      "step": 5,
-      "default": 40,
-      "unit": "px",
-      "info": "Padding around text content in stacked layout"
+      "id": "mobile_stacked_padding",
+      "label": "Mobile Stacked Content Padding",
+      "min": 16,
+      "max": 80,
+      "step": 4,
+      "default": 32,
+      "unit": "px"
     },
     {
       "type": "color",
-      "id": "stacked_content_bg",
-      "label": "Stacked Content Background",
-      "default": "#1a1a1a",
-      "info": "Background color for text area in stacked layout"
+      "id": "mobile_stacked_bg",
+      "label": "Mobile Stacked Content Background",
+      "default": "#1a1a1a"
     },
     {
       "type": "header",
-      "content": "Height Settings (Overlay Mode)"
+      "content": "Height Settings"
     },
     {
       "type": "range",
