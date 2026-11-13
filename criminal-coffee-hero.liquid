@@ -828,6 +828,43 @@
   "settings": [
     {
       "type": "header",
+      "content": "Mobile Layout"
+    },
+    {
+      "type": "checkbox",
+      "id": "mobile_stacked_layout",
+      "label": "Stack image above content on mobile",
+      "default": false,
+      "info": "Shows image above text instead of as background on mobile devices"
+    },
+    {
+      "type": "range",
+      "id": "mobile_stacked_image_height",
+      "label": "Mobile Stacked Image Height",
+      "min": 150,
+      "max": 500,
+      "step": 10,
+      "default": 250,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "mobile_stacked_padding",
+      "label": "Mobile Stacked Content Padding",
+      "min": 16,
+      "max": 80,
+      "step": 4,
+      "default": 32,
+      "unit": "px"
+    },
+    {
+      "type": "color",
+      "id": "mobile_stacked_bg",
+      "label": "Mobile Stacked Content Background",
+      "default": "#1a1a1a"
+    },
+    {
+      "type": "header",
       "content": "Background Settings"
     },
     {
@@ -895,43 +932,6 @@
       "default": 30,
       "unit": "%",
       "info": "Higher value = more overlay color visible"
-    },
-    {
-      "type": "header",
-      "content": "Mobile Layout"
-    },
-    {
-      "type": "checkbox",
-      "id": "mobile_stacked_layout",
-      "label": "Stack image above content on mobile",
-      "default": false,
-      "info": "Shows image above text instead of as background on mobile devices"
-    },
-    {
-      "type": "range",
-      "id": "mobile_stacked_image_height",
-      "label": "Mobile Stacked Image Height",
-      "min": 150,
-      "max": 500,
-      "step": 10,
-      "default": 250,
-      "unit": "px"
-    },
-    {
-      "type": "range",
-      "id": "mobile_stacked_padding",
-      "label": "Mobile Stacked Content Padding",
-      "min": 16,
-      "max": 80,
-      "step": 4,
-      "default": 32,
-      "unit": "px"
-    },
-    {
-      "type": "color",
-      "id": "mobile_stacked_bg",
-      "label": "Mobile Stacked Content Background",
-      "default": "#1a1a1a"
     },
     {
       "type": "header",
