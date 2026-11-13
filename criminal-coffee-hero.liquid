@@ -33,6 +33,56 @@
     }
   }
 
+  /* Stacked Layout (image above text) */
+  #CriminalHero-{{ section.id }}.criminal-hero--stacked {
+    height: auto;
+    flex-direction: column;
+  }
+
+  #CriminalHero-{{ section.id }}.criminal-hero--stacked .criminal-hero__background {
+    position: relative;
+    width: 100%;
+    height: {{ section.settings.stacked_image_height }}px;
+  }
+
+  #CriminalHero-{{ section.id }}.criminal-hero--stacked .criminal-hero__content-wrapper {
+    position: relative;
+    height: auto;
+    padding-top: {{ section.settings.stacked_content_padding }}px;
+    padding-bottom: {{ section.settings.stacked_content_padding }}px;
+    background-color: {{ section.settings.stacked_content_bg }};
+  }
+
+  #CriminalHero-{{ section.id }}.criminal-hero--stacked .criminal-hero__content {
+    align-self: flex-start;
+  }
+
+  /* Stacked on mobile only */
+  @media screen and (max-width: 749px) {
+    #CriminalHero-{{ section.id }}.criminal-hero--stacked-mobile {
+      height: auto;
+      flex-direction: column;
+    }
+
+    #CriminalHero-{{ section.id }}.criminal-hero--stacked-mobile .criminal-hero__background {
+      position: relative;
+      width: 100%;
+      height: {{ section.settings.stacked_image_height }}px;
+    }
+
+    #CriminalHero-{{ section.id }}.criminal-hero--stacked-mobile .criminal-hero__content-wrapper {
+      position: relative;
+      height: auto;
+      padding-top: {{ section.settings.stacked_content_padding }}px;
+      padding-bottom: {{ section.settings.stacked_content_padding }}px;
+      background-color: {{ section.settings.stacked_content_bg }};
+    }
+
+    #CriminalHero-{{ section.id }}.criminal-hero--stacked-mobile .criminal-hero__content {
+      align-self: flex-start;
+    }
+  }
+
   /* Background Container - holds overlay color */
   #CriminalHero-{{ section.id }} .criminal-hero__background {
     position: absolute;
@@ -234,7 +284,7 @@
 
   #CriminalHero-{{ section.id }} .criminal-hero__content-wrapper {
     position: relative;
-    z-index: 15;
+    z-index: 2;
     width: 100%;
     height: 100%;
     display: flex;
@@ -509,9 +559,17 @@
 {%- comment -%} Calculate image opacity: higher overlay = lower image opacity {%- endcomment -%}
 {%- assign image_opacity = 100 | minus: section.settings.overlay_opacity | times: 0.01 -%}
 
+{%- liquid
+  assign layout_class = ''
+  if section.settings.layout_style == 'stacked'
+    assign layout_class = 'criminal-hero--stacked'
+  elsif section.settings.layout_style == 'stacked_mobile'
+    assign layout_class = 'criminal-hero--stacked-mobile'
+  endif
+-%}
 <section
   id="CriminalHero-{{ section.id }}"
-  class="criminal-hero criminal-hero-{{ section.id }} section-{{ section.id }}-padding"
+  class="criminal-hero criminal-hero-{{ section.id }} section-{{ section.id }}-padding {{ layout_class }}"
   data-section-id="{{ section.id }}"
   data-slideshow-enabled="{{ section.settings.enable_slideshow }}"
   data-slideshow-speed="{{ section.settings.slideshow_speed }}"
@@ -866,7 +924,52 @@
     },
     {
       "type": "header",
-      "content": "Height Settings"
+      "content": "Layout Style"
+    },
+    {
+      "type": "select",
+      "id": "layout_style",
+      "label": "Layout Style",
+      "options": [
+        { "value": "overlay", "label": "Overlay (text over image)" },
+        { "value": "stacked", "label": "Stacked (image above text)" },
+        { "value": "stacked_mobile", "label": "Stacked on mobile only" }
+      ],
+      "default": "overlay",
+      "info": "Choose how the image and text are displayed"
+    },
+    {
+      "type": "range",
+      "id": "stacked_image_height",
+      "label": "Stacked Image Height",
+      "min": 150,
+      "max": 600,
+      "step": 10,
+      "default": 300,
+      "unit": "px",
+      "info": "Height of image when using stacked layout"
+    },
+    {
+      "type": "range",
+      "id": "stacked_content_padding",
+      "label": "Stacked Content Padding",
+      "min": 20,
+      "max": 100,
+      "step": 5,
+      "default": 40,
+      "unit": "px",
+      "info": "Padding around text content in stacked layout"
+    },
+    {
+      "type": "color",
+      "id": "stacked_content_bg",
+      "label": "Stacked Content Background",
+      "default": "#1a1a1a",
+      "info": "Background color for text area in stacked layout"
+    },
+    {
+      "type": "header",
+      "content": "Height Settings (Overlay Mode)"
     },
     {
       "type": "range",
